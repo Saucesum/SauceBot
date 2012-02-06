@@ -12,7 +12,7 @@ exports.description = 'Provides counters that can be set like commands.'
 
 io.module '[Counter] Init'
 
-# Base module
+# Counter module
 # - Handles:
 #  !<counter>
 #  !<counter> unset

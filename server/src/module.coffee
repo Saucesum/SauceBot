@@ -36,6 +36,6 @@ exports.instance = (name) ->
     module = exports.MODULES[name]
     
     if (!module.New?)
-        throw new Error "Invalid module '#{name}"
+        throw new Error "Invalid module '#{name}'"
         
     module.New()

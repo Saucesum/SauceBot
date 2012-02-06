@@ -27,7 +27,7 @@ class User
         @mod[chan] = level
         
     isMod: (chan, level) ->
-        level = Sauce.Level.Mod unless level?
+        level ?= Sauce.Level.Mod
         
         @isGlobal() or @mod[chan] >= level
 

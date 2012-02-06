@@ -83,7 +83,7 @@ class Counter
 
             op    = arg.charAt(0)
             vals  = arg.slice(1)
-            value = if (vals isnt '') then parseInt(arg.slice(1)) else null
+            value = if (vals isnt '') then parseInt arg.slice(1), 10 else null
 
             if value isnt NaN
 

@@ -56,13 +56,13 @@ class News
         # Save news
         newsid = 0
         db.setChanData @channel.id, 'news',
-                        ['chanid'    , 'newsid' , 'message'],
-                        ([@channel.id,  newsid++,  message ] for message in @news)
+                        ['newsid' , 'message'],
+                        ([newsid++,  message ] for message in @news)
                        
         # Save news config
         db.setChanData @channel.id, 'newsconf',
-                        ['chanid'    , 'state', 'seconds', 'messages'],
-                        [[@channel.id, @state , @seconds , @messages]]
+                        ['state', 'seconds', 'messages'],
+                        [[@state , @seconds , @messages]]
                         
         io.module "News saved"
 

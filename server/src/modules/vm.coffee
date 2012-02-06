@@ -38,8 +38,8 @@ class VM
        
         # Set the data to the channel's obtained blocks
         db.setChanData @channel.id, 'vm',
-                      ['chanid'    , 'block'], 
-                      ([@channel.id,  block ] for block in blocksLC when @obtained[block]?)
+                      ['block'], 
+                      ([block ] for block in blocksLC when @obtained[block]?)
     
     load: (chan) ->
         @channel = chan if chan?

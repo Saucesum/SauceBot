@@ -54,11 +54,11 @@ getWildcards = (num) ->
 
 
 exports.addChanData = (channel, table, fields, datalist) ->
-    wc = getWildcards fields.length
+    wc = getWildcards (fields.length + 1)
 
-    query = "REPLACE INTO #{table} (#{fields.join ', '}) VALUES (#{wc})"
-
-    client.query query, data for data in datalist 
+    query = "REPLACE INTO #{table} (chanid, #{fields.join ', '}) VALUES (#{wc})"
+    
+    client.query query, [channel].concat data for data in datalist 
 
 
 exports.setChanData = (channel, table, fields, data) ->
@@ -67,19 +67,21 @@ exports.setChanData = (channel, table, fields, data) ->
 
 exports.loadData = (channel, table, fields, callback) ->
     isObj = typeof fields is 'object'
-    key = key?.field
+    key = if isObj then fields.key else null
     val = if isObj then fields.value else fields
     
-    data = if isObj then {} else []
+    data = if key? then {} else []
 
     client.query(
         "SELECT * FROM #{table} WHERE chanid = ?",
-        [channel], (err, results) ->
+        [channel], (err, results) =>
             throw err if err
-            if (isObj)
-                data[result[key]] = result[val] for result in results
-            else
-                data.push result[val]           for result in results
+            
+            for result in results
+                if (key?)
+                    data[result[key]] = result[val]
+                else
+                    data.push result[val]
              
             callback data
     )

@@ -69,7 +69,7 @@ class SauceBot
                 msg  : message
 
         io.say '>> '.red + message
-        socket.write "#{json}\n"
+        @socket.write "#{json}\n"
 
 
     # Sends a 'say' message to the client

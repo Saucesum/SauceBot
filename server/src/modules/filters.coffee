@@ -73,8 +73,8 @@ class Filters
         io.module "Saving filter data for #{table}..."
         
         db.setChanData @channel.id, table,
-                        ['chanid', field],
-                        ([@channel.id, value] for value in @lists[table])
+                        [field],
+                        ([value] for value in @lists[table])
 
 
     loadStates: ->
@@ -92,8 +92,8 @@ class Filters
         io.module 'Saving filter states...'
         
         db.setChanData @channel.id, 'filterstate',
-                        ['chanid'    , 'url', 'caps', 'emotes', 'words'],
-                        [[@channel.id,  url ,  caps ,  emotes ,  words]]
+                        ['url', 'caps', 'emotes', 'words'],
+                        [[url ,  caps ,  emotes ,  words]]
 
 
     load: (chan) ->
@@ -154,7 +154,7 @@ class Filters
         
             idx = list.indexOf(value)
             if (idx is -1)
-                res = "No such value '#{value}"
+                res = "No such value '#{value}'"
             else
                 list.splice(idx, 1)
                 res = "Removed '#{value}'."
@@ -179,8 +179,9 @@ class Filters
             filter = args[0]
             state  = args[1]
             
-            res = @handleFilterStateCommand filter, state unless filterNames.indexOf(filter) is -1
-            return "[Filter] #{res}"
+            if (filter in filterNames)
+                res = @handleFilterStateCommand filter, state
+                return "[Filter] #{res}"
             
         else if (command in tableNames)
                 

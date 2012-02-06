@@ -63,12 +63,7 @@ class Counter
         return "Counter '#{ctr}' = #{@counters[ctr]}"
         
     handle: (user, command, args, sendMessage) ->
-        return unless (command is "counter")
         
-        # !counter - Default counter
-        if (!args? or args[0] is '')
-            args[0] = null
-
         res = @count(args)
 
         sendMessage "[Counter] #{res}" if res?

@@ -9,5 +9,5 @@ exports.Level =
 # Database configuration
 exports.DB =
     username: 'sauce'
-    password: 'asdf'
+    password: 'vz6ns4ygd'
     database: 'saucetest'

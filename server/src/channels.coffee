@@ -8,6 +8,8 @@ users = require './users'
 io    = require './ioutil'
 mod   = require './module'
 
+sys   = require 'sys'
+
 # Module names
 moduleNames = Object.keys mod.MODULES
 
@@ -33,6 +35,7 @@ class Channel
             @modules.push module
         catch error
             io.error "#{error}"
+            sys.puts error.stack
     
     loadChannelModules: ->
         db.getChanDataEach @id, 'module', (result) =>

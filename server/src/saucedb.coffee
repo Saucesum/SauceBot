@@ -7,7 +7,7 @@ mysql = require 'mysql'
 
 client = mysql.createClient
         user     : Sauce.DB.username
-        password : sauce.DB.password
+        password : Sauce.DB.password
 
 client.useDatabase Sauce.DB.database
 
@@ -23,7 +23,7 @@ exports.getChanData = (channel, table, callback) ->
 exports.getChanDataEach = (channel, table, callback, lastcb) ->
     exports.getChanData channel, table, (results) ->
         callback result for result in results
-        lastcb()
+        lastcb() if lastcb
 
 
 exports.getData = (table, callback) ->
@@ -38,7 +38,7 @@ exports.getData = (table, callback) ->
 exports.getDataEach = (table, callback, lastcb) ->
     exports.getData table, (results) ->
         callback result for result in results
-        lastcb()
+        lastcb() if lastcb
 
 
 exports.clearChanData = (channel, table, cb) ->
@@ -50,7 +50,7 @@ exports.removeChanData = (channel, table, field, value, cb) ->
 
 
 getWildcards = (num) ->
-    ('?' for [0..num]).join ', '
+    ('?' for [1..num]).join ', '
 
 
 exports.addChanData = (channel, table, fields, datalist) ->
@@ -67,7 +67,7 @@ exports.setChanData = (channel, table, fields, data) ->
 
 exports.loadData = (channel, table, fields, callback) ->
     isObj = typeof fields is 'object'
-    key = key.field
+    key = key?.field
     val = if isObj then fields.value else fields
     
     data = if isObj then {} else []

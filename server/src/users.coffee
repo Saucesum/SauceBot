@@ -30,3 +30,41 @@ class User
         level = Sauce.Level.Mod unless level?
         
         @isGlobal() or @mod[chan] >= level
+
+
+# Returns a user by their username in lowercase
+exports.getByName = (name) ->
+    users[name]
+    
+
+# Returns a user by their UserID
+exports.getById = (id) ->
+    getByName names[id]
+
+
+# Populates the user list
+exports.load = (callback) ->
+    
+    # Clear user list
+    users = {}
+    names = {}
+    
+    db.getDataEach 'users', (u) ->
+        {userid, username, global} = u
+        
+        username = username.toLowerCase()
+        
+        user = new User u
+        users[username] = user
+        names[userid]   = username
+    , ->
+        updateModLevels callback
+        
+        
+updateModLevels = (callback) ->
+    db.getDataEach 'moderator', (m) ->
+        user = users[names[m.userid]]
+        user.setMod m.chanid, m.level
+    , ->
+        callback users if callback
+         

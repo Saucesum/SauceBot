@@ -17,6 +17,7 @@ io    = require './ioutil'
 
 # Node.js
 net   = require 'net'
+sys   = require 'sys'
 url   = require 'url'
 color = require 'colors'
 
@@ -31,6 +32,7 @@ chans.load (chanlist) ->
     io.debug "Loaded #{(Object.keys chanlist).length} channels."
 
 
+# SauceBot connection handler class
 class SauceBot
     constructor: (@socket) ->
         @socket.on 'data', (rawdatas) =>
@@ -60,6 +62,7 @@ class SauceBot
         , =>
             
 
+    # Sends an error to the client
     sendError: (message) ->
         json = JSON.stringify
                 error: 1,
@@ -69,9 +72,12 @@ class SauceBot
         socket.write "#{json}\n"
 
 
+    # Sends a 'say' message to the client
     say: (channel, message) ->
-        send 'say', channel, message
+        @send 'say', channel, message
 
+
+    # Sends a message to the client
     send: (action, channel, message) ->
         json = JSON.stringify
                 act : action
@@ -80,4 +86,20 @@ class SauceBot
 
         io.say '>> '.magenta + "#{action} #{channel}: #{message}"
         @socket.write "#{json}\n"
+
+# Main
+server = net.createServer (socket) ->
+    socket.setEncoding 'utf8'
+    ip = socket.remoteAddress
+    
+    io.say 'Client connected: '.magenta + ip
+    
+    client = new SauceBot socket
+
+    socket.on 'end', ->
+        io.say 'Client disconnected: '.magenta + ip
+
+port = 8455
+server.listen port
+io.say "Server started on port #{port}".cyan
 

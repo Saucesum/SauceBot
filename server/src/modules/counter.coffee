@@ -7,7 +7,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Counter'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Provides counters that can be set like commands.'
 
 io.module '[Counter] Init'
@@ -25,9 +25,20 @@ class Counter
         @counters = {}
         
     load: (chan) ->
-        # TODO Load from DB ~.~
         @channel = chan if chan?
-        io.module '[Counter] Loading'
+
+        io.module "[Counter] Loading counters for #{@channel.id}: #{@channel.name}"
+        db.loadData @channel.id, 'counter',
+               key  : 'name',
+               value: 'value',
+               (counters) =>
+                  @commands = counters
+                  io.module "[Counters] Counters loaded"
+
+    counterSave: (ctr) ->
+       db.addChanData @channel.id, 'counter',
+              ['name', 'value'],
+              [[ctr, @counters(ctr)]]
 
     # Handle !<counter>
     counterCheck: (ctr) ->
@@ -36,12 +47,17 @@ class Counter
 
     # Handle !<counter> =<value>
     counterSet: (ctr, value) ->
-        if !@counters[ctr]?
-            @counters[ctr] = value
-            return "#{ctr} created and set to #{value}."
+        if value?
+            if !@counters[ctr]?
+                @counters[ctr] = value
 
-        @counters[ctr] = value
-        counterCheck ctr
+                @counterSave ctr
+                return "#{ctr} created and set to #{value}."
+
+            @counters[ctr] = value
+
+            @counterSave ctr
+            @counterCheck ctr
 
     # Handle !<counter> +<value>
     # Handle !<counter> -<value>
@@ -50,11 +66,14 @@ class Counter
             return "Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
 
         @counters[ctr] += value
-        counterCheck ctr
+
+        @counterSave ctr
+        @counterCheck ctr
 
     # Handle !<counter> unset
     counterUnset: (ctr) ->
         if @counters[ctr]?
+            db.removeChanData @channel.id, 'counter', '', command
             return "#{ctr} removed."
         
     handle: (user, command, args, sendMessage) ->
@@ -62,18 +81,21 @@ class Counter
 
         if arg?
 
-            op = arg.charAt(0)
-            value = parseInt(arg.slice(1))
+            op    = arg.charAt(0)
+            vals  = arg.slice(1)
+            value = if (vals isnt '') then parseInt(arg.slice(1)) else null
 
             if value isnt NaN
 
-                switch op.charAt(0)
+                res = switch op.charAt(0)
                   when '='
-                    res = @counterSet command, value
+                    @counterSet command, value
                   when '+'
-                    res = @counterAdd command, value
+                    value ?= 1
+                    @counterAdd command, value
                   when '-'
-                    res = @counterAdd command, 0-value
+                    value ?= 1
+                    @counterAdd command, 0-value
 
         else
             res = @counterCheck command

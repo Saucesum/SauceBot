@@ -11,4 +11,3 @@ exports.DB =
     username: 'sauce'
     password: 'asdf'
     database: 'saucetest'
-

@@ -63,15 +63,17 @@ class Counter
         if arg?
 
             op = arg.charAt(0)
-            value = arg.slice(1)
+            value = parseInt(arg.slice(1))
 
-            switch op.charAt(0)
-              when '='
-                res = @counterSet command, value
-              when '+'
-                res = @counterAdd command, value
-              when '-'
-                res = @counterAdd command, 0-value
+            if value isnt NaN
+
+                switch op.charAt(0)
+                  when '='
+                    res = @counterSet command, value
+                  when '+'
+                    res = @counterAdd command, value
+                  when '-'
+                    res = @counterAdd command, 0-value
 
         else
             res = @counterCheck command

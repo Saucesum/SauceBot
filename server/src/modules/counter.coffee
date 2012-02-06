@@ -79,7 +79,7 @@ class Counter
     handle: (user, command, args, sendMessage) ->
         arg = args[0] ? null
 
-        if arg?
+        if (arg[0]? and arg[0] isnt '')
 
             op    = arg.charAt(0)
             vals  = arg.slice(1)

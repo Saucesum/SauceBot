@@ -38,7 +38,7 @@ class Counter
     counterSave: (ctr) ->
        db.addChanData @channel.id, 'counter',
               ['name', 'value'],
-              [[ctr, @counters(ctr)]]
+              [[ctr, @counters[ctr]]]
 
     # Handle !<counter>
     counterCheck: (ctr) ->

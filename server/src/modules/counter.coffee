@@ -48,6 +48,7 @@ class Counter
     # Handle !<counter> =<value>
     counterSet: (ctr, value) ->
         if value?
+            io.debug "#{value}"
             if !@counters[ctr]?
                 @counters[ctr] = value
 
@@ -79,15 +80,15 @@ class Counter
     handle: (user, command, args, sendMessage) ->
         arg = args[0] ? null
 
-        if (arg[0]? and arg[0] isnt '')
+        if (arg? and arg isnt '')
 
-            op    = arg.charAt(0)
-            vals  = arg.slice(1)
-            value = if (vals isnt '') then parseInt arg.slice(1), 10 else null
+            symbol = arg.charAt(0)
+            vals   = arg.slice(1)
+            value  = if (vals isnt '') then parseInt(vals, 10) else null
 
-            if value isnt NaN
+            unless isNaN value
 
-                res = switch op.charAt(0)
+                res = switch symbol
                   when '='
                     @counterSet command, value
                   when '+'

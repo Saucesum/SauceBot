@@ -7,7 +7,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Counter'
-exports.version     = '1.1 build 2'
+exports.version     = '1.1'
 exports.description = 'Provides counters that can be set like commands.'
 
 io.module '[Counter] Init'
@@ -49,22 +49,32 @@ class Counter
         if !@counters[ctr]?
             return "Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
 
-        else
-            @counters[ctr] += value
-
+        @counters[ctr] += value
         counterCheck ctr
 
     # Handle !<counter> unset
     counterUnset: (ctr) ->
-
-        @counters[ctr] ?= 0
-        @counters[ctr] += 1
-
-        return "Counter '#{ctr}' = #{@counters[ctr]}"
+        if @counters[ctr]?
+            return "#{ctr} removed."
         
     handle: (user, command, args, sendMessage) ->
-        
-        res = @count(args)
+        arg = args[0] ? null
+
+        if arg?
+
+            op = arg.charAt(0)
+            value = arg.slice(1)
+
+            switch op.charAt(0)
+              when '='
+                res = @counterSet command, value
+              when '+'
+                res = @counterAdd command, value
+              when '-'
+                res = @counterAdd command, 0-value
+
+        else
+            res = @counterCheck command
 
         sendMessage "[Counter] #{res}" if res?
 

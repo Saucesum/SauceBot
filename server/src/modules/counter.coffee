@@ -32,7 +32,7 @@ class Counter
                key  : 'name',
                value: 'value',
                (counters) =>
-                  @commands = counters
+                  @counters = counters
                   io.module "[Counters] Counters loaded"
 
     counterSave: (ctr) ->

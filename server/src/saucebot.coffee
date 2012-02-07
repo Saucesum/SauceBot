@@ -76,6 +76,30 @@ class SauceBot
     say: (channel, message) ->
         @send 'say', channel, message
 
+  
+    # Sends a 'timeout' message to the client
+    # - Times out the target user for 10 minutes
+    timeout: (channel, user) ->
+        @send 'timeout', channel, user
+        
+    
+    # Sends a 'clear' message to the client
+    # - Clears the targets messages
+    clear: (channel, user) ->
+        @send 'clear', channel, user
+        
+        
+    # Sends a 'ban' message to the client
+    # - Bans the target user
+    ban: (channel, user) ->
+        @send 'ban', channel, user
+
+
+    # Sends an 'unban' message to the client
+    # - Unbans the target user
+    unban: (channel, user) ->
+        @send 'unban', channel, user
+
 
     # Sends a message to the client
     send: (action, channel, message) ->

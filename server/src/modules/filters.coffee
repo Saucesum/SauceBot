@@ -203,7 +203,7 @@ class Filters
             res = @handleCommand command, args
             
         
-        # Not op - filter their message instead. :>    
+        # Not op - filter their message instead. :>
         else
             res = @checkFilters(name, [command].concat(args))
         

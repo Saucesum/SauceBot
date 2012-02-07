@@ -10,6 +10,7 @@ exports.setVerbose = (state) -> VERBOSE = state
 
 # Returns the current stack trace's last location
 getPrevStack = ->
+    # I almost added a semicolon here due to its ugliness. :D
     line = new Error().stack.split("\n")[3].trim()
     line.substring(line.indexOf('bin/') + 4).replace(')', '')
 

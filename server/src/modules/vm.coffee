@@ -9,7 +9,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'VM'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Victory Monument live tracker'
 
 blocks = [

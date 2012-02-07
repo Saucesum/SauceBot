@@ -35,7 +35,6 @@ class Channel
             @modules.push module
         catch error
             io.error "#{error}"
-            sys.puts error.stack
     
     loadChannelModules: ->
         db.getChanDataEach @id, 'module', (result) =>

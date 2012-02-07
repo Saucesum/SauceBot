@@ -143,31 +143,31 @@ class Filters
     handleFilterCommand: (command, filter, arg, value) ->
         list = @lists[command]
         
-        # Add filter value
-        if      (arg is 'add')
-            
-            list.push value
-            res = "Added '#{value}'."
-            
-        # Remove filter value
-        else if (arg is 'remove')
+        switch arg
         
-            idx = list.indexOf(value)
-            if (idx is -1)
-                res = "No such value '#{value}'"
+            # Add filter value
+            when 'add'
+                list.push value
+                res = "Added '#{value}'."
+                
+            # Remove filter value
+            when 'remove'
+                idx = list.indexOf value
+                
+                if (idx is -1)
+                    res = "No such value '#{value}'"
+                else
+                    list.splice idx, 1
+                    res = "Removed '#{value}'."
+            
+            # Clear all filter values
+            when 'clear'
+                @lists[command] = []
+                res = "Cleared."
+                
             else
-                list.splice(idx, 1)
-                res = "Removed '#{value}'."
-        
-        # Clear all filter values
-        else if (arg is 'clear')
-    
-            @lists[command] = []    
-            res = "Cleared."
-            
-        else
-            return
-            
+                return
+             
         
         @saveTable(command)
         return "[#{command}] #{res}"
@@ -175,22 +175,22 @@ class Filters
     
     # Handle !-commands
     handleCommand: (command, args)->
+        
+        # !filter <filter type> <state>
         if (command is 'filter')
-            filter = args[0]
-            state  = args[1]
+            [filter, state] = args
             
             if (filter in filterNames)
                 res = @handleFilterStateCommand filter, state
                 return "[Filter] #{res}"
             
+        # !<filter list> <action> <value>
         else if (command in tableNames)
                 
             field = tableFields[command]
-                 
-            arg   = args[0] # arg  : add/remove/clear
-            value = args[1] # value: url, word, or emote
+            [action, value] = args
         
-            res = @handleFilterCommand command, filter, arg, value
+            res = @handleFilterCommand command, filter, action, value
                     
         
     handle: (user, command, args, sendMessage) ->

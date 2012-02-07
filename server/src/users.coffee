@@ -58,6 +58,7 @@ exports.load = (callback) ->
         username = username.toLowerCase()
         
         user = new User u
+        io.error user
         
         # Add user to caches
         users[username] = user

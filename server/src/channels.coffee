@@ -46,7 +46,7 @@ class Channel
             
             
     getUser: (username, op) ->
-        op = null unless op
+        op or= null
         
         chan = @name
         user = users.getByName username
@@ -69,7 +69,7 @@ class Channel
         for module in @modules
             module.handle user, command, arguments, sendMessage
         
-        finished() if finished?
+        finished?()
         
         
 
@@ -88,11 +88,13 @@ exports.load = (finished) ->
         name = chan.name.toLowerCase()
         desc = chan.description
         
-        channel        = new Channel chan
+        channel = new Channel chan
+        
+        # Add channel to caches
         channels[name] = channel
         names[id]      = name
         
     , ->
-        finished channels if finished?
+        finished? channels
 
     

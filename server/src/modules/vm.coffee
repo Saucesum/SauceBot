@@ -1,11 +1,12 @@
 # SauceBot Module: VM
 
-Sauce = require '../sauce'
-db    = require '../saucedb'
+Sauce    = require '../sauce'
+db       = require '../saucedb'
 
+# Include the base-Monument module
 Monument = require '../Monument'
 
-io    = require '../ioutil'
+io       = require '../ioutil'
 
 # Module description
 exports.name        = 'VM'

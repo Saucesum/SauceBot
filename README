@@ -6,10 +6,11 @@ SauceBot node.js server:
   $ coffee --compile --output server/bin/ server/src/
 
   Running:
-  $ node server/bin/saucebot.js
+  $ cd server/bin
+  $ saucebot.js
 
   Requirements:
     - CoffeeScript
     - Node.js
-    - NPM
+    + NPM
         - colors

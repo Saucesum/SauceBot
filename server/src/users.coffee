@@ -20,12 +20,15 @@ class User
         @mod = {}
     
     
+    # Returns whether the user is a global administrator
     isGlobal: ->
         @global is 1
         
+    # Sets the user's mod-level in the specified channel
     setMod: (chan, level) ->
         @mod[chan] = level
         
+    # Returns whether the user is a mod in the specified channel
     isMod: (chan, level) ->
         level ?= Sauce.Level.Mod
         
@@ -55,16 +58,27 @@ exports.load = (callback) ->
         username = username.toLowerCase()
         
         user = new User u
+        
+        # Add user to caches
         users[username] = user
         names[userid]   = username
     , ->
-        updateModLevels callback
+        updatePermissions callback
         
         
-updateModLevels = (callback) ->
+# Updates user permissions
+updatePermissions = (callback) ->
+    
+    # Clear user permissions
+    user.mod = {} for user in users
+    
     db.getDataEach 'moderator', (m) ->
-        user = users[names[m.userid]]
-        user.setMod m.chanid, m.level
+        {userid, chanid, level} = m
+        
+        user = users[names[userid]]
+        
+        # Update the user's permissions
+        user.setMod chanid, level
     , ->
         callback users if callback
          

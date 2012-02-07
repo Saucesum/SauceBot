@@ -34,7 +34,10 @@ chans.load (chanlist) ->
 
 # SauceBot connection handler class
 class SauceBot
+    
     constructor: (@socket) ->
+        
+        # Set up input-handler for the client
         @socket.on 'data', (rawdatas) =>
             return unless rawdatas
 
@@ -123,7 +126,7 @@ server = net.createServer (socket) ->
     socket.on 'end', ->
         io.say 'Client disconnected: '.magenta + ip
 
-port = 8455
-server.listen port
-io.say "Server started on port #{port}".cyan
+
+server.listen Sauce.PORT
+io.say "Server started on port #{Sauce.PORT}".cyan
 

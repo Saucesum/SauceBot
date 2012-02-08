@@ -35,18 +35,32 @@ for channelname in channelnames.split ':'
                 
                 match = /^(?:!(\w+)\s*)?(.*)/.exec message
                 
+                op = null
+                
+                # I'm not sure if this is how it works, but just to be safe...
+                if from[0] is '@'
+                    from = from.substring 1
+                    op = 1
+                
                 sauce.emit 'msg',
                     chan: channelname
                     user: from
-                    op  : 1
+                    op  : op
                     cmd : match[1]
                     args: match[2]
                 
                 io.debug "#{channelname}: <#{from}> (#{match[1]}) #{match[2]}"
 
-#sauce.emit 'msg',
-#        chan: 'ravn_tm'
-#        user: 'ravn_tm'
-#        cmd : 'vm'
-#        args: ''
+    channels[channelname] = channel
+    
+    
+sauce.on 'say', (data) ->
+    {chan, msg} = data
+    
+    channel = channels[chan]
+    
+    unless chan??
+        io.error "No such channel: #{chan}"
+        return
 
+    channel.say msg

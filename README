@@ -1,16 +1,44 @@
 SauceBot! :D
 
-SauceBot node.js server:
+SauceBot server:
 
   Build:
   $ coffee --compile --output server/bin/ server/src/
 
   Running:
   $ cd server/bin
-  $ saucebot.js
+  $ supervisor saucebot.js
 
-  Requirements:
+  Dependencies:
     - CoffeeScript
     - Node.js
     + NPM
         - colors
+        - socket.io
+        - supervisor
+        
+
+SauceBot client:
+
+  Build:
+  $ coffee --compile --output client/bin/ client/src/
+
+  Running:
+  $ cd client/bin
+  $ supervisor saucebot.js <channels> <username> <password>
+    - <channels>: A list of JTV channels to join, separated by :
+    - <username>: The bot's Justin.tv username
+    - <password>: The bot's Justin.tv password
+    
+  Example:
+  $ supervisor saucebot.js channel1:channel2:channel3 MyBot mahb0tpwd
+
+  Dependencies:
+    - CoffeeScript
+    - Node.js
+    + NPM
+        - colors
+        - socket.io
+        - irc
+        - supervisor
+        

@@ -16,6 +16,7 @@ chans = require './channels'
 io    = require './ioutil'
 
 # Node.js
+sio   = require 'socket.io'
 net   = require 'net'
 sys   = require 'sys'
 url   = require 'url'
@@ -36,19 +37,12 @@ chans.load (chanlist) ->
 class SauceBot
     
     constructor: (@socket) ->
-        
-        # Set up input-handler for the client
-        @socket.on 'data', (rawdatas) =>
-            return unless rawdatas
 
-            rawdata = rawdatas.split "\n"
-            for raw in rawdata
-                continue unless raw
-
-                try
-                    @handle JSON.parse(raw)
-                catch error
-                    @sendError "Syntax error: #{error}"
+        @socket.on 'msg', (data) ->
+            try
+                @handle data
+            catch
+                @sendError "Syntax error: #{error}"
 
     handle: (json) ->
         chan      = json.chan
@@ -67,12 +61,10 @@ class SauceBot
 
     # Sends an error to the client
     sendError: (message) ->
-        json = JSON.stringify
-                error: 1,
-                msg  : message
-
         io.say '>> '.red + message
-        @socket.write "#{json}\n"
+
+        @socket.emit 'error',
+              msg  : message
 
 
     # Sends a 'say' message to the client
@@ -106,27 +98,17 @@ class SauceBot
 
     # Sends a message to the client
     send: (action, channel, message) ->
-        json = JSON.stringify
-                act : action
+        io.say '>> '.magenta + "#{action} #{channel}: #{message}"
+
+        @socket.emit act,
                 chan: channel
                 msg : message
 
-        io.say '>> '.magenta + "#{action} #{channel}: #{message}"
-        @socket.write "#{json}\n"
 
-# Main
-server = net.createServer (socket) ->
-    socket.setEncoding 'utf8'
-    ip = socket.remoteAddress
-    
-    io.say 'Client connected: '.magenta + ip
-    
-    client = new SauceBot socket
-
-    socket.on 'end', ->
-        io.say 'Client disconnected: '.magenta + ip
-
-
-server.listen Sauce.PORT
+sio.listen Sauce.PORT
 io.say "Server started on port #{Sauce.PORT}".cyan
+
+sio.sockets.on 'connection', (socket) ->
+    io.say 'Client connected: '.magenta + socket.remoteAddress
+    new SauceBot socket
 

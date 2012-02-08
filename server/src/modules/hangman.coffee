@@ -5,6 +5,8 @@ db    = require '../saucedb'
 
 io    = require '../ioutil'
 
+fs    = require 'fs'
+
 # Module description
 exports.name        = 'Hangman'
 exports.version     = '1.0'
@@ -23,7 +25,7 @@ wordlists = {}
 
 # Hangman module
 # - Handles:
-#  !hm
+#  !hm top
 #  !hm new
 #  !hm stop
 #  !hm <word>
@@ -32,14 +34,28 @@ wordlists = {}
 class Hangman
     constructor: (@channel) ->
         
+        # TODO: Allow for different wordlists depending on channel
+        @language = 'english'
+
         
     load: (chan) ->
         @channel = chan if chan?
         
+        loadWordList @language unless wordListLoaded @language
+
 
     handle: (user, command, args, sendMessage) ->
         
         
+        
+randomWord = (listname) ->
+    list = wordList listname
+    list[randIdx list]
+
+
+randIdx = (arr) ->
+    Math.floor (Math.random() * arr.length)
+
 
 wordList = (list) ->
     wordlists[list]
@@ -49,8 +65,16 @@ wordListLoaded = (list) ->
     wordlists[list]?
 
 
-loadWordList = (list) ->
-
+loadWordList = (listname) ->
+    fs.readFile wordfiles[listname], 'utf8', (err, data) ->
+        throw err if err?
+        
+        list = wordList listname
+        
+        for word in data.split '\n'
+            list.push word if word.length > 4
+            
+        io.module "[HM] Loaded #{listname} - #{list.length} words"
 
 exports.New = (channel) ->
     new Hangman channel

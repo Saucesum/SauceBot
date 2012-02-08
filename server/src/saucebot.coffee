@@ -38,11 +38,12 @@ class SauceBot
     
     constructor: (@socket) ->
 
-        @socket.on 'msg', (data) ->
+        @socket.on 'msg', (data) =>
             try
                 @handle data
-            catch
+            catch error
                 @sendError "Syntax error: #{error}"
+                io.error error
 
     handle: (json) ->
         chan      = json.chan
@@ -100,15 +101,16 @@ class SauceBot
     send: (action, channel, message) ->
         io.say '>> '.magenta + "#{action} #{channel}: #{message}"
 
-        @socket.emit act,
+        @socket.emit action,
                 chan: channel
                 msg : message
 
 
-sio.listen Sauce.PORT
+server = sio.listen Sauce.PORT
+server.set 'log level', 1
 io.say "Server started on port #{Sauce.PORT}".cyan
 
-sio.sockets.on 'connection', (socket) ->
-    io.say 'Client connected: '.magenta + socket.remoteAddress
+server.sockets.on 'connection', (socket) ->
+    io.say 'Client connected: '.magenta + socket.handshake.address.address
     new SauceBot socket
 

@@ -26,7 +26,7 @@ wordlists = {}
 # Hangman module
 # - Handles:
 #  !hm top
-#  !hm new
+#  !hm new [language]
 #  !hm stop
 #  !hm <word>
 #  !hm <character>
@@ -45,7 +45,8 @@ class Hangman
 
 
     handle: (user, command, args, sendMessage) ->
-        
+        @word = randomWord @language
+        sendMessage @word
         
         
 randomWord = (listname) ->
@@ -58,7 +59,10 @@ randIdx = (arr) ->
 
 
 wordList = (list) ->
-    wordlists[list]
+    if wordListLoaded list
+        wordlists[list]
+    else
+        wordlists[list] = []
 
 
 wordListLoaded = (list) ->
@@ -72,9 +76,11 @@ loadWordList = (listname) ->
         list = wordList listname
         
         for word in data.split '\n'
-            list.push word if word.length > 4
+            list.push word if word.length > 5
             
         io.module "[HM] Loaded #{listname} - #{list.length} words"
+
+
 
 exports.New = (channel) ->
     new Hangman channel

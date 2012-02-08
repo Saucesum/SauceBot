@@ -1,42 +1,28 @@
 # SauceBot IRC Client
 
-irc   = require 'irc'
-net   = require 'net'
+sio   = require 'socket.io-client'
 color = require 'colors'
 
 io    = require './ioutil'
+irc   = require './sauceirc'
 
-[node, filename, servname, username, password] = process.argv
+[node, filename, channelnames, username, password] = process.argv
 
 unless (password)
-    io.error "usage: #{node} #{filename} <channel> <username> <password>"
+    io.error "usage: #{node} #{filename} <channel1:channel2:...:channelN> <username> <password>"
     return
-  
-  
+
 
   
+sauce = sio.connect 'localhost:8455'
 
-bot = new irc.Client "#{servname}.jtvirc.com", username,
-      debug: true
-      channels: ['#' + servname]
-      userName: username
-      realName: username
-      password: password
-      floodProtection: true
-      stripColors    : true
-      
-      
-      
-bot.addListener 'error', (message) ->
-    io.error "#{message.command}: #{message.args.join ' '}"
-      
-      
-      
-bot.addListener 'message', (from, to, message) ->
-  return unless to[0] is '#'
-  
-  chan = to.substring 1 # Strip out the '#'
-  
-  io.debug "[#{to}] <#{from}> #{message}"
-  
-  
+# Channel list: name -> obj[SauceIRC]
+channels = {}
+
+
+for channelname in channelnames.split ':'
+    io.say "Connecting to #{channelname.magenta}..."
+
+    channel = irc.setup channelname, username, password
+
+    channels[channelname] = channel

@@ -11,6 +11,7 @@
 #
 
 db = require './saucedb'
+io = require './ioutil'
 
 # Data Transfer Object abstract base class
 class DTO
@@ -39,7 +40,7 @@ class DTO
 # Data Transfer Object for arrays
 class ArrayDTO extends DTO
     constructor: (channel, table, @valueField) ->
-        super table, channel
+        super channel, table
         @data = []
         
         
@@ -86,7 +87,7 @@ class ArrayDTO extends DTO
 # Data Transfer Object for hashes
 class HashDTO extends DTO
     constructor: (channel, table, @keyField, @valueField) ->
-        super table, channel
+        super channel, table
         @data = {}
     
     
@@ -100,16 +101,17 @@ class HashDTO extends DTO
 
     
     save: ->
-        db.setChanData @channel.id, @table, [@keyField, @valueField], [@data]
+        dataList = ([key, value] for key, value of @data)
+        db.setChanData @channel.id, @table, [@keyField, @valueField], dataList
 
     
     add: (key, value) ->
         @data[key] = value
-        db.addChanData @channel.id, [@keyField, @valueField], [[key, value]]
+        db.addChanData @channel.id, @table, [@keyField, @valueField], [[key, value]]
         
         
     remove: (key) ->
-        delete @data[key] 
+        delete @data[key]
         db.removeChanData @channel.id, @table, @keyField, key
         
    
@@ -130,3 +132,7 @@ class HashDTO extends DTO
     
 equalsIgnoreCase: (a, b) ->
     a.toLowerCase() is b.toLowerCase()
+
+
+exports.HashDTO  = HashDTO
+exports.ArrayDTO = ArrayDTO

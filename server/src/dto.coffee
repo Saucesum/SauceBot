@@ -14,7 +14,7 @@ db = require './saucedb'
 
 # Data Transfer Object abstract base class
 class DTO
-    constructor: (@table, @channel) ->
+    constructor: (@channel, @table) ->
         # Constructs the DTO
         
     load: ->
@@ -38,7 +38,7 @@ class DTO
 
 # Data Transfer Object for arrays
 class ArrayDTO extends DTO
-    constructor: (table, channel, @valueField) ->
+    constructor: (channel, table, @valueField) ->
         super table, channel
         @data = []
         
@@ -49,9 +49,44 @@ class ArrayDTO extends DTO
             io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
         
      
+     add: (item) ->
+         
+         # XXX: This will "fail" when the item is in @data, only with
+         #      a different case. I'll fix it later. Maybe.
+         return if item in @data
+         @data.push item
+         
+         db.addChanData @channel.id, [@valueField], [[item]]
+        
+         
+    remove: (item) ->
+        @data = (elem for elem in @data when not equalsIgnoreCase item, elem)
+        
+        db.removeChanData @channel.id, @table, @valueField, item
+        
+    
+    clear: ->
+        @data = []
+        db.clearChanData @channel.id, @table
+        
+    
+    set: (items) ->
+        @data = items
+        
+        db.setChanData @channel.id, @table, [@valueFields], [@data]
+        
+        
+    get: ->
+        @data
+     
+     
+     
 # Data Transfer Object for hashes
 class HashDTO extends DTO
-    constructor: (table, channel, @keyField, @valueField) ->
+    constructor: (channel, table, @keyField, @valueField) ->
         super table, channel
         @data = {}
     
+    
+equalsIgnoreCase: (a, b) ->
+    a.toLowerCase() is b.toLowerCase()

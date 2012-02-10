@@ -61,7 +61,7 @@ class ArrayDTO extends DTO
          return if item in @data
          
          @data.push item
-         db.addChanData @channel.id, [@valueField], [[item]]
+         db.addChanData @channel.id, @table, [@valueField], [[item]]
         
          
     remove: (item) ->
@@ -91,6 +91,7 @@ class HashDTO extends DTO
         @data = {}
     
     
+    # Loads the database data into the underlying hash
     load: ->
         db.loadData @channel.id, @table, 
                 key: @keyField
@@ -100,31 +101,38 @@ class HashDTO extends DTO
                 io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
 
     
+    # Saves the data to the database
     save: ->
         dataList = ([key, value] for key, value of @data)
         db.setChanData @channel.id, @table, [@keyField, @valueField], dataList
 
     
+    # Adds a (key, value)-pair to the database
     add: (key, value) ->
         @data[key] = value
         db.addChanData @channel.id, @table, [@keyField, @valueField], [[key, value]]
         
-        
+    
+    # Removes a row from the database
     remove: (key) ->
         delete @data[key]
         db.removeChanData @channel.id, @table, @keyField, key
         
    
+    # Clears the database data
     clear: ->
         @data = {}
         db.clearChanData @channel.id, @table
         
 
+    # Sets the hash data
     set: (items) ->
         @data = items
         @save()
         
-        
+    
+    # Returns the underlying hash.
+    # Be sure to call HashDTO.save() if you have modified it.
     get: ->
         @data
         

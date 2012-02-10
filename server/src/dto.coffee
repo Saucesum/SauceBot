@@ -1,14 +1,5 @@
 # SauceBot Data Transfer Object
-#
-# TODO:
-#  - load array
-#  - load hash
-#  - load single-row table
-#  - add item
-#  - remove item
-#  - clear items
-#  - set items
-#
+
 
 db = require './saucedb'
 io = require './ioutil'
@@ -137,6 +128,21 @@ class HashDTO extends DTO
         @data
         
     
+# HashDTO for id-based tables
+class EnumDTO extends HashDTO
+        getNewID: ->
+            id = 0
+            for key of @data
+                if `key == id` then id++
+            id
+     
+        add: (value) ->
+            super @getNewID(), value
+        
+        get: ->
+            (value for key, value of @data)
+            
+    
     
 equalsIgnoreCase: (a, b) ->
     a.toLowerCase() is b.toLowerCase()
@@ -144,3 +150,4 @@ equalsIgnoreCase: (a, b) ->
 
 exports.HashDTO  = HashDTO
 exports.ArrayDTO = ArrayDTO
+exports.EnumDTO  = EnumDTO

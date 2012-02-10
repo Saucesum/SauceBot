@@ -5,6 +5,14 @@ db    = require '../saucedb'
 
 io    = require '../ioutil'
 
+{ # Import DTO classes
+    ArrayDTO,
+    ConfigDTO,
+    HashDTO,
+    EnumDTO
+} = require '../dto'
+
+
 # Module description
 exports.name        = 'News'
 exports.version     = '1.1'
@@ -24,11 +32,8 @@ io.module '[News] Init'
 class News
     constructor: (@channel) ->
       
-        # Configurations
-        @news     = []
-        @state    = 0
-        @seconds  = 150
-        @messages = 15
+        @news   = new EnumDTO   @channel, 'news'    , 'newsid', 'message'
+        @config = new ConfigDTO @channel, 'newsconf', ['state', 'seconds', 'messages']
         
         # News index
         @index    = 0
@@ -37,51 +42,38 @@ class News
         @lastTime     = io.now()
         @messageCount = 0
         
-    load: (chan) ->
-        @channel = chan if chan?
+    load: ->
+        @news.load()
+        @config.load()
         
-        # Load news data
-        db.loadData @channel.id, 'news', 'message', (data) =>
-             @news = data
-             io.module "Updated news for #{@channel.id}: #{@channel.name}"
-        
-        # Load news configurations
-        db.getChanDataEach @channel.id, 'newsconf', (conf) =>
-            @state    = conf.state
-            @seconds  = conf.seconds
-            @messages = conf.messages
-
     save: ->
         
-        # Save news
-        newsid = 0
-        db.setChanData @channel.id, 'news',
-                        ['newsid' , 'message'],
-                        ([newsid++,  message ] for message in @news)
-                       
-        # Save news config
-        db.setChanData @channel.id, 'newsconf',
-                        ['state', 'seconds', 'messages'],
-                        [[@state , @seconds , @messages]]
-                        
+        @news.save()
+        @config.save()
+        
         io.module "News saved"
 
     getNext: ->
-        return if @news.length is 0
+        @data = @news.get()
+        return if @data.length is 0
         
         # Wrap around the news list
-        @index = 0 if @index >= @news.length
+        @index = 0 if @index >= @data.length
         
-        "[News] #{@news[@index++]}"
+        "[News] #{@data[@index++]}"
         
         
     tickNews: ->
         now = io.now()
         @messageCount++
         
-        return unless ((@state        is (1))                    and 
-                       (now           >  (@lastTime + @seconds)) and
-                       (@messageCount >= (@messages)))
+        state    = @config.get 'state'
+        seconds  = @config.get 'seconds'
+        messages = @config.get 'messages'
+        
+        return unless ((state         is (1))                   and 
+                       (now           >  (@lastTime + seconds)) and
+                       (@messageCount >= (messages)))
         
         @lastTime = now
         @messageCount = 0
@@ -113,46 +105,36 @@ class News
                   res = '<News> No auto-news found. Add with !news add <message>'
         
         else
-            updated = true
             res = switch arg
             
                 # !news on - Enable auto-news
                 when 'on'
-                    @state = 1
+                    @config.add 'state', 1
                     '<News> Auto-news is now enabled.'
                     
                 # !news off - Disable auto-news
                 when 'off'
-                    @state = 0
+                    @config.add 'state', 0
                     '<News> Auto-news is now disabled.'
-                     
-                # !news seconds <seconds> - Set the minimum delay
-                when 'seconds'
-                    @seconds = parseInt args[1], 10 if args[1]?
-                    "<News> Auto-news minimum delay set to #{@seconds} seconds."
-            
-                # !news messages <messages> - Set the minimum messages
-                when 'messages'
-                    @messages = parseInt args[1], 10 if args[1]?
-                    "<News> Auto-news minimum messages set to #{@messages}."
                     
+                    
+                # !news (seconds/messages) <value> - Sets minimum seconds/messages
+                when 'seconds', 'messages'
+                    @config.add arg, parseInt(args[1], 10) if args[1]?
+                    "<News> Auto-news minimum delay set to #{@config.get arg} #{arg}."
+
                 # !news add <line> - Adds a news line
                 when 'add'
                     line = args.slice(1).join ' '
-                    @news.push line
+                    @news.add line
                     '<News> Auto-news added.'
                     
                 # !news clear - Clears the news list
                 when 'clear'
-                    @news = []
+                    @news.clear()
                     '<News> Auto-news cleared.'
                     
-                else
-                    updated = null
-                    
             
-            @save() if updated?    
-           
         sendMessage res if res?
 
 

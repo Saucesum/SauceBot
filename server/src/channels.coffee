@@ -28,13 +28,15 @@ class Channel
         @modules = []
         @loadChannelModules()
     
+    
     addModule: (moduleName) ->
         try
-            module = mod.instance moduleName
-            module.load this
+            module = mod.instance moduleName, this
+            module.load()
             @modules.push module
         catch error
-            io.error "#{error}"
+            io.error "Error loading module #{moduleName}: #{error}"
+            io.debug error.stack
     
     loadChannelModules: ->
         db.getChanDataEach @id, 'module', (result) =>
@@ -62,7 +64,7 @@ class Channel
 
     handle: (data, sendMessage, finished) ->
         user      = @getUser data.user, data.op
-        command   = data.cmd
+        command   = data.cmd or ''
         arguments = data.args
         
         for module in @modules

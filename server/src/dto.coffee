@@ -170,7 +170,7 @@ class ConfigDTO extends DTO
         
         
     set: (items) ->
-        throw new Error "Can't set ConfigDTO"
+        throw new Error "Can't set ConfigDTO. You probably meant to call add."
     
     
     get: (field) ->
@@ -202,7 +202,7 @@ equalsIgnoreCase = (a, b) ->
 
 
 
-exports.ArrayDTO = ArrayDTO
-exports.HashDTO  = HashDTO
+exports.ArrayDTO  = ArrayDTO
+exports.HashDTO   = HashDTO
 exports.ConfigDTO = ConfigDTO
-exports.EnumDTO  = EnumDTO
+exports.EnumDTO   = EnumDTO

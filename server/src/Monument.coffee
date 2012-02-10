@@ -5,12 +5,20 @@ db    = require './saucedb'
 
 io    = require './ioutil'
 
+{ # Import DTO classes
+    ArrayDTO,
+    ConfigDTO,
+    HashDTO,
+    EnumDTO
+} = require './dto'
+
+
 
 class Monument
     constructor: (@channel, @name, @blocks, @usage) ->
-        @obtained = {}
-        
         @command = @name.toLowerCase()
+
+        @obtained = new ArrayDTO @channel, @command, 'block'
         
         @blocksLC = (block.toLowerCase() for block in @blocks)
         
@@ -18,29 +26,23 @@ class Monument
         io.module "[#{@name}] Saving #{@channel.name} ..."
        
         # Set the data to the channel's obtained blocks
-        db.setChanData @channel.id, @command,
-                      ['block'], 
-                      ([block ] for block in @blocksLC when @obtained[block]?)
+        @obtained.save()
+        
     
-    load: (chan) ->
-        @channel = chan if chan?
-
+    load: ->
         io.module "[#{@name}] Loading #{@channel.id}: #{@channel.name}"
         
         # Load monument data
-        db.loadData @channel.id, @command, 'block', (blocks) =>
-            for block in blocks
-                @obtained[block] = true
+        @obtained.load()
+        
     
     clearMonument: ->
-        @obtained = {}
-        @save()
+        @obtained.clear()
         'Cleared'
     
     
     getMonument: ->
-        obtained = (block for block in @blocks when @obtained[block.toLowerCase()]?)
-        "Blocks: #{obtained.join(', ') or 'None'}"
+        "Blocks: #{@obtained.get().join(', ') or 'None'}"
     
 
     setMonument: (args) ->
@@ -52,8 +54,7 @@ class Monument
         unless (idx >= 0)
             return "Unknown block '#{block}'. Usage: #{@usage}"
         
-        @obtained[block] = true
-        @save()
+        @obtained.add block
         "Added #{@blocks[idx]}."
     
     handle: (user, command, args, sendMessage) ->

@@ -5,6 +5,13 @@ db    = require '../saucedb'
 
 io    = require '../ioutil'
 
+{ # Import DTO classes
+    ArrayDTO,
+    ConfigDTO,
+    HashDTO,
+    EnumDTO
+} = require '../dto'
+
 # Module description
 exports.name        = 'Filters'
 exports.version     = '1.1'
@@ -47,58 +54,36 @@ class Filters
     constructor: (@channel) ->
         
         # Filter states
-        @state = 
-            url   : 0
-            caps  : 0
-            words : 0
-            emotes: 0
+        @states = new ConfigDTO @channel, 'filterstate', filterNames
         
         # Filter lists
         @lists =
-            whitelist: []
-            blacklist: []
-            badwords : []
-            emotes   : []
+            whitelist: (new ArrayDTO @channel, 'whitelist', 'url')
+            blacklist: (new ArrayDTO @channel, 'blacklist', 'url')
+            badwords : (new ArrayDTO @channel, 'badwords' , 'word')
+            emotes   : (new ArrayDTO @channel, 'emotes'   , 'emote')
 
 
     loadTable: (table) ->
-        db.loadData @channel.id, table, tableFields[table], (data) =>
-            @lists[table] = data
-            io.module "Updated #{table} for #{@channel.id}:#{@channel.name}"
+        list = @lists[table]
+        list.load()
 
 
     saveTable: (table) ->
-        field = tableFields[table]
-        
-        io.module "Saving filter data for #{table}..."
-        
-        db.setChanData @channel.id, table,
-                        [field],
-                        ([value] for value in @lists[table])
+        @lists[table].save()
 
 
     loadStates: ->
-        db.getChanDataEach @channel.id, 'filterstate', (data) =>
-            {url, caps, emotes, words} = data
-            @state.url    = url
-            @state.caps   = caps
-            @state.words  = words
-            @state.emotes = emotes
+        @states.load()
         
         
     saveStates: ->
-        {url, caps, emotes, words} = @state
-        
-        io.module 'Saving filter states...'
-        
-        db.setChanData @channel.id, 'filterstate',
-                        ['url', 'caps', 'emotes', 'words'],
-                        [[url ,  caps ,  emotes ,  words]]
+        @states.save()
 
 
-    load: (chan) ->
+    load:  ->
         @channel = chan if chan?
-
+        
         # Load lists
         @loadTable table for table in tableNames
             
@@ -116,14 +101,12 @@ class Filters
             
             # Enable filter
             if (state is 'on')
-                @state[filter] = 1
-                @saveStates()
+                @states.add filter, 1
                 return "#{filter} is now enabled."
                 
             # Disable filter
             else if (state is 'off')
-                @state[filter] = 0
-                @saveStates()
+                @states.add filter, 0
                 return "#{filter} is now disabled."
                 
             else
@@ -131,7 +114,7 @@ class Filters
             
         else
             # Filter is enabled
-            if (@state[filter] is 1)
+            if (@states.get filter)
                 return "#{filter}-filter enabled."
                 
             # Filter is disabled
@@ -147,29 +130,22 @@ class Filters
         
             # Add filter value
             when 'add'
-                list.push value
+                list.add value
                 res = "Added '#{value}'."
                 
             # Remove filter value
             when 'remove'
-                idx = list.indexOf value
-                
-                if (idx is -1)
-                    res = "No such value '#{value}'"
-                else
-                    list.splice idx, 1
-                    res = "Removed '#{value}'."
+                list.remove value
+                res = "Removed '#{value}'."
             
             # Clear all filter values
             when 'clear'
-                @lists[command] = []
+                list.clear()
                 res = "Cleared."
                 
             else
                 return
              
-        
-        @saveTable(command)
         return "[#{command}] #{res}"
             
     

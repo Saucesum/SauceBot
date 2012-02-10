@@ -29,7 +29,7 @@ loadModule = (name) ->
 
  
  
-exports.instance = (name) ->
+exports.instance = (name, chan) ->
     if (!exports.MODULES[name]?)
         throw new Error "No such module '#{name}'" unless loadModule name
         
@@ -38,4 +38,4 @@ exports.instance = (name) ->
     if (!module.New?)
         throw new Error "Invalid module '#{name}'"
         
-    module.New()
+    module.New chan

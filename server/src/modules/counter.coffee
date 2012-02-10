@@ -5,6 +5,13 @@ db    = require '../saucedb'
 
 io    = require '../ioutil'
 
+{ # Import DTO classes
+    ArrayDTO,
+    ConfigDTO,
+    HashDTO,
+    EnumDTO
+} = require '../dto'
+
 # Module description
 exports.name        = 'Counter'
 exports.version     = '1.2'
@@ -22,59 +29,48 @@ io.module '[Counter] Init'
 #
 class Counter
     constructor: (@channel) ->
-        @counters = {}
+        @counters = new HashDTO @channel, 'counter', 'name', 'value'
         
-    load: (chan) ->
-        @channel = chan if chan?
-
+        
+    load: ->
         io.module "[Counter] Loading counters for #{@channel.id}: #{@channel.name}"
-        db.loadData @channel.id, 'counter',
-               key  : 'name',
-               value: 'value',
-               (counters) =>
-                  @counters = counters
-                  io.module "[Counters] Counters loaded"
+        @counters.load()
 
-    counterSave: (ctr) ->
-       db.addChanData @channel.id, 'counter',
-              ['name', 'value'],
-              [[ctr, @counters[ctr]]]
 
     # Handle !<counter>
     counterCheck: (ctr) ->
-        if @counters[ctr]?
-            return "#{ctr} = #{@counters[ctr]}"
+        if @counters.get(ctr)?
+            return "#{ctr} = #{@counters.get ctr}"
+
 
     # Handle !<counter> =<value>
     counterSet: (ctr, value) ->
         if value?
             io.debug "#{value}"
-            if !@counters[ctr]?
-                @counters[ctr] = value
+            if !@counters.get(ctr)?
+                @counters.add ctr, value
 
-                @counterSave ctr
                 return "#{ctr} created and set to #{value}."
 
-            @counters[ctr] = value
-
-            @counterSave ctr
+            @counters.add ctr, value
             @counterCheck ctr
+
 
     # Handle !<counter> +<value>
     # Handle !<counter> -<value>
     counterAdd: (ctr, value) ->
-        if !@counters[ctr]?
+        counter = @counters.get ctr
+        
+        if !counter?
             return "Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
 
-        @counters[ctr] += value
-
-        @counterSave ctr
+        @counters.add ctr, counter + value
         @counterCheck ctr
 
     # Handle !<counter> unset
     counterUnset: (ctr) ->
-        if @counters[ctr]?
-            db.removeChanData @channel.id, 'counter', '', command
+        if @counters.get(ctr)?
+            @counters.remove(ctr)
             return "#{ctr} removed."
         
     handle: (user, command, args, sendMessage) ->
@@ -102,6 +98,7 @@ class Counter
             res = @counterCheck command
 
         sendMessage "[Counter] #{res}" if res?
+
 
 exports.New = (channel) ->
     new Counter channel

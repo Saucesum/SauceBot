@@ -5,6 +5,13 @@ db    = require '../saucedb'
 
 io    = require '../ioutil'
 
+{ # Import DTO classes
+    ArrayDTO,
+    ConfigDTO,
+    HashDTO,
+    EnumDTO
+} = require '../dto'
+
 # Module description
 exports.name        = 'Commands'
 exports.version     = '1.1'
@@ -20,28 +27,20 @@ io.module '[Commands] Init'
 #
 class Commands
     constructor: (@channel) ->
-        @commands = {}
+        @commands = new HashDTO @channel, 'commands', 'cmdtrigger', 'message'
         
-    load: (chan) ->
-        @channel = chan if chan?
-        
+    load: ->
         # Load custom commands
-        db.loadData @channel.id, 'commands',
-                key  : 'cmdtrigger',
-                value: 'message',
-                (commands) =>
-                    @commands = commands
-                    io.module "[Commands] Loaded commands for #{@channel.id}: #{@channel.name}"
-
+        @commands.load()
+        
+        
     unsetCommand: (command) ->
-        delete @commands[command]
-        db.removeChanData @channel.id, 'commands', 'cmdtrigger', command
+        @commands.remove command
+        
         
     setCommand: (command, message) ->
-        @commands[command] = message
-        db.addChanData @channel.id, 'commands',
-                ['cmdtrigger', 'message'],
-                [[command, message]]
+        @commands.add command, message
+        
 
     handle: (user, command, args, sendMessage) ->
         {op} = user
@@ -65,7 +64,7 @@ class Commands
                 res = "Command set: #{cmd}"
                 
         else
-            res = @commands[command]
+            res = @commands.get command
 
         sendMessage res if res?
 

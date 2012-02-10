@@ -59,7 +59,7 @@ sauce.on 'say', (data) ->
     
     channel = channels[chan]
     
-    unless chan??
+    unless chan?
         io.error "No such channel: #{chan}"
         return
 

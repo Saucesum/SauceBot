@@ -67,15 +67,15 @@ class Channel
         
         for module in @modules
             module.handle user, command, arguments, sendMessage
-        
+
         finished?()
-        
-        
+
+
 
 # Handles a message in the appropriate channel instance
 exports.handle = (channel, data, sendMessage, finished) ->
     channels[channel].handle data, sendMessage, finished
-    
+
 # Loads the channel list
 exports.load = (finished) ->
     # Clear the channel list

@@ -122,11 +122,60 @@ class HashDTO extends DTO
         @save()
         
     
-    # Returns the underlying hash.
+    # Returns the underlying hash, or the specified element.
     # Be sure to call HashDTO.save() if you have modified it.
-    get: ->
-        @data
+    get: (key) ->
+        if key? then @data[key] else @data 
         
+    
+# Data Transfer Object for "single-row" tables, i.e. config tables.
+class ConfigDTO extends DTO
+    constructor: (channel, table, @fields) ->
+        super channel, table
+        @data = {}
+        @data[field] = 0 for field in @fields
+            
+            
+    load: ->
+        db.getChanDataEach @channel.id, @table, (data) =>
+            @data = data
+
+
+    save: ->
+        db.setChanData @channel.id, @table,
+                (field for field in @fields),
+                [(@data[field] for field in @fields)]
+        
+
+    add: (field, value) ->
+        return unless field in @fields
+        
+        @data[field] = value
+        @save()
+        value
+    
+        
+    remove: (field) ->
+        return unless field in @fields
+        
+        value = 0
+        @data[field] = value
+        @save()
+        value
+        
+    
+    clear: ->
+        @data[field] = 0 for field in @fields
+        @save()
+        
+        
+    set: (items) ->
+        throw new Error "Can't set ConfigDTO"
+    
+    
+    get: (field) ->
+        if field? then @data[field] else @data
+    
     
 # HashDTO for id-based tables
 class EnumDTO extends HashDTO
@@ -136,18 +185,24 @@ class EnumDTO extends HashDTO
                 if `key == id` then id++
             id
      
+     
         add: (value) ->
             super @getNewID(), value
+        
         
         get: ->
             (value for key, value of @data)
             
     
+
     
-equalsIgnoreCase: (a, b) ->
+    
+equalsIgnoreCase = (a, b) ->
     a.toLowerCase() is b.toLowerCase()
 
 
-exports.HashDTO  = HashDTO
+
 exports.ArrayDTO = ArrayDTO
+exports.HashDTO  = HashDTO
+exports.ConfigDTO = ConfigDTO
 exports.EnumDTO  = EnumDTO

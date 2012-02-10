@@ -42,7 +42,8 @@ class Monument
     
     
     getMonument: ->
-        "Blocks: #{@obtained.get().join(', ') or 'None'}"
+        obtained = (block for block in @blocks when block.toLowerCase() in @obtained.get())
+        "Blocks: #{obtained.join(', ') or 'None'}"
     
 
     setMonument: (args) ->

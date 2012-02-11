@@ -7,10 +7,6 @@ PATH = './modules/'
 
 exports.MODULES = {}
 
-exports.PRI_TOP   = 0  # Reserved for what, if anything, needs it.
-exports.PRI_HIGH  = 1  # Could be used for sub commands, like '!vm reset'
-exports.PRI_MID   = 2  # For simple commands, like '!time'
-exports.PRI_LOW   = 3  # For greedy commands, like counter creation.
 
 fs.readdirSync(PATH).forEach (file) ->
     return unless match = /(\w+)\.js$/i.exec file

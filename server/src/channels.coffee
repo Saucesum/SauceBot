@@ -68,25 +68,22 @@ class Channel
         command   = data.cmd or ''
         arguments = data.args
 
-        msg = data.cmd.cat data.args.join ' ' # TODO: Find out how to get the full message string. I honestly don't know how.
+        msg = data.cmd.cat data.args.join ' ' # TODO: Find out how to get the full message string. I don't know where this object is made.
         
         for trigger in @triggers
-            if msg.match trigger.pattern
+            if trigger.matches msg
                 trigger.execute user, command, args, sendMessage
                 break
 
         finished?()
 
-    register: (module, priority, pattern, callback) ->
+    register: (trigger) ->
         index = 0
-        index++ for t in @triggers when priority >= t.priority
 
-        @triggers.splice index, 0, {
-            module  : module
-            pattern : pattern
-            execute : callback
-            priority: priority
-        }
+        for t in @triggers
+            index++ if trigger.priority >= t.priority
+
+        @triggers.splice index, 0, trigger
 
 
 

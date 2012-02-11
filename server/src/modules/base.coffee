@@ -27,10 +27,10 @@ class Base
         @channel.register trig.SimpleTrigger this, "saucebot", ->
           '[SauceBot] SauceBot version 3.1 - Node.js'
 
-        @channel.register trig.SimpleTrigger this, "test", cmdTest)
+        @channel.register trig.SimpleTrigger this, "test", ->
             'Test command!' if user.op?
 
-        @channel.register trig.SimpleTrigger this, "time", cmdTime)
+        @channel.register trig.SimpleTrigger this, "time", ->
             "[Time] #{date.getHours()}:#{date.getMinutes()}"
 
     handle: (user, command, args, sendMessage) ->

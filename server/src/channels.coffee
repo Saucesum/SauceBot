@@ -4,6 +4,8 @@ Sauce = require './sauce'
 
 db    = require './saucedb'
 users = require './users'
+trig  = require './trigger'
+
 
 io    = require './ioutil'
 mod   = require './module'

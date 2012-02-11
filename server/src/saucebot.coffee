@@ -64,7 +64,7 @@ class SauceBot
     #  ? args: [OPT] Arguments
     #
     handle: (json) ->
-       chan      = json.chan
+        chan      = json.chan
 
         # Normalize json.op
         json.op   = if json.op then 1 else null

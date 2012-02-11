@@ -16,7 +16,7 @@ SauceBot server:
         - colors
         - socket.io
         - supervisor
-        
+        - groan
 
 SauceBot client:
 
@@ -41,4 +41,4 @@ SauceBot client:
         - socket.io
         - irc
         - supervisor
-        
+

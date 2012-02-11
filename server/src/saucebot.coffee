@@ -23,15 +23,17 @@ sys   = require 'sys'
 url   = require 'url'
 color = require 'colors'
 
-# Load users from the database
-io.debug 'Loading users...'
-users.load (userlist) ->
-    io.debug "Loaded #{(Object.keys userlist).length} users."
+# Loads user data
+loadUsers = ->
+    users.load (userlist) ->
+        io.debug "Loaded #{(Object.keys userlist).length} users."
 
-# Load channels from the database
-io.debug 'Loading channels...'
-chans.load (chanlist) ->
-    io.debug "Loaded #{(Object.keys chanlist).length} channels."
+
+# Loads channel data
+loadChannels = ->
+    chans.load (chanlist) ->
+        io.debug "Loaded #{(Object.keys chanlist).length} channels."
+
 
 
 # SauceBot connection handler class
@@ -81,7 +83,7 @@ class SauceBot
             
     # Update (upd):
     #  * cookie: [REQ] Session cookie for authentication
-    #  * chan  : [REQ] Source channel
+    #  ? chan  : [OPT] Source channel
     #  * type  : [REQ] Update type
     #
     # Types:
@@ -100,18 +102,18 @@ class SauceBot
         
         io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
         
-#         
-        # switch type
-            # when 'Users'
-                # users.load()
-#                 
-            # when 'Channels'
-                # chans.load()
-#                 
-            # else
-                # #chans.handleModuleUpdate type
-#                 
-#                 
+        
+        switch type
+            when 'Users'
+                loadUsers()
+                
+            when 'Channels'
+                loadChannels()
+                
+            else
+                io.debug "Updating module: #{type}"
+                
+                
             
 
     # Sends an error to the client
@@ -189,10 +191,19 @@ class SauceBot
                 msg : message
 
 
+# Load data
+io.debug 'Loading users...'
+loadUsers()
+
+io.debug 'Loading channels...'
+loadChannels()
+
+# Start server
 server = sio.listen Sauce.PORT
 server.set 'log level', 1
 io.say "Server started on port #{Sauce.PORT}".cyan
 
+# Set up connection listener
 server.sockets.on 'connection', (socket) ->
     io.say 'Client connected: '.magenta + socket.handshake.address.address
     new SauceBot socket

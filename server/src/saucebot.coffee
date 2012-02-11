@@ -11,6 +11,7 @@ Sauce = require './sauce'
 db    = require './saucedb'
 users = require './users'
 chans = require './channels'
+auth  = require './session'
 
 # Utility
 io    = require './ioutil'
@@ -22,15 +23,17 @@ sys   = require 'sys'
 url   = require 'url'
 color = require 'colors'
 
-# Load users from the database
-io.debug 'Loading users...'
-users.load (userlist) ->
-    io.debug "Loaded #{(Object.keys userlist).length} users."
+# Loads user data
+loadUsers = ->
+    users.load (userlist) ->
+        io.debug "Loaded #{(Object.keys userlist).length} users."
 
-# Load channels from the database
-io.debug 'Loading channels...'
-chans.load (chanlist) ->
-    io.debug "Loaded #{(Object.keys chanlist).length} channels."
+
+# Loads channel data
+loadChannels = ->
+    chans.load (chanlist) ->
+        io.debug "Loaded #{(Object.keys chanlist).length} channels."
+
 
 
 # SauceBot connection handler class
@@ -52,7 +55,7 @@ class SauceBot
             try
                 @handleUpdate data
             catch error
-                @sendError "Syntax error: #{error}"
+                @sendError "#{error}"
                 io.error error
             
 
@@ -79,9 +82,9 @@ class SauceBot
             
             
     # Update (upd):
-    #  * chan: [REQ] Source channel
-    #  * type: [REQ] Update type
-    #  ? user: [OPT] User that performed the update
+    #  * cookie: [REQ] Session cookie for authentication
+    #  ? chan  : [OPT] Source channel
+    #  * type  : [REQ] Update type
     #
     # Types:
     #  + Module name: reloads module
@@ -89,7 +92,28 @@ class SauceBot
     #  + Channels   : reloads channel data
     #
     handleUpdate: (json) ->
-        # TODO
+        {cookie, chan, type} = json
+        
+        userID = auth.getUserID cookie
+        
+        throw new Error 'You are not logged in' unless userID?
+        
+        user = users.getById userID
+        
+        io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
+        
+        
+        switch type
+            when 'Users'
+                loadUsers()
+                
+            when 'Channels'
+                loadChannels()
+                
+            else
+                io.debug "Updating module: #{type}"
+                
+                
             
 
     # Sends an error to the client
@@ -167,10 +191,19 @@ class SauceBot
                 msg : message
 
 
+# Load data
+io.debug 'Loading users...'
+loadUsers()
+
+io.debug 'Loading channels...'
+loadChannels()
+
+# Start server
 server = sio.listen Sauce.PORT
 server.set 'log level', 1
 io.say "Server started on port #{Sauce.PORT}".cyan
 
+# Set up connection listener
 server.sockets.on 'connection', (socket) ->
     io.say 'Client connected: '.magenta + socket.handshake.address.address
     new SauceBot socket

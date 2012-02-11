@@ -16,5 +16,5 @@ exports.module = (message) ->
 
 # Logs an error message
 exports.error = (message) ->
-    console.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse
+    console.log ('[ERROR] '.bold + ' ' + message).red.inverse
 

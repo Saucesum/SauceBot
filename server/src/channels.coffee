@@ -30,23 +30,53 @@ class Channel
         @loadChannelModules()
     
     
-    addModule: (moduleName) ->
-        try
-            module = mod.instance moduleName, this
-            module.load()
-            @modules.push module
-        catch error
-            io.error "Error loading module #{moduleName}: #{error}"
-            io.debug error.stack
+    # Returns whether a module with the specified name
+    # has been loaded for this channel.
+    getLoadedModule: (moduleName) ->
+        for module in @modules
+            return module if module.name is moduleName
     
+    
+    # Loads a module by its name and returns the module instance.
+    #
+    # Note: This *only* loads unloaded modules.
+    #       Already loaded modules get returned as-is.
+    loadModule: (moduleName) ->
+        module = @getLoadedModule moduleName
+        
+        unless module?
+            try
+                # Initialize and load the module
+                module = mod.instance moduleName, this
+                module.load()
+            catch error
+                io.error "Error loading module #{moduleName}: #{error}"
+        
+        return module
+        
+    
+    # Attempts to load all modules associated with this channel.
+    #
+    # Calling this multiple times only loads each modules once,
+    # unless they were unloaded first.
+    #
+    # To unload a module, remove its entry from the database
+    # and call this again.
     loadChannelModules: ->
+        newModules = []
+        
         db.getChanDataEach @id, 'module', (result) =>
-            @addModule result.module
-            io.debug "Channel #{@name} uses module #{result.module}"
+            module = @loadModule result.module
+            newModules.push module
         , =>
+            @modules = newModules
             io.debug "Done loading modules for #{@name}"
             
             
+    # Returns a {name, op}-object for the specified user.
+    #
+    # If op is passed as an argument, it is used instead of
+    # the user's moderator level for the channel.
     getUser: (username, op) ->
         op or= null
         
@@ -63,6 +93,8 @@ class Channel
             op  : op
         }
 
+
+    # Handles a message by passing it on to all loaded modules.
     handle: (data, sendMessage, finished) ->
         user      = @getUser data.user, data.op
         command   = data.cmd or ''
@@ -93,22 +125,34 @@ exports.handle = (channel, data, sendMessage, finished) ->
 
 # Loads the channel list
 exports.load = (finished) ->
-    # Clear the channel list
-    channels = {}
-    names    = {}
+    newChannels = {}
+    newNames    = {}
     
     db.getDataEach 'channel', (chan) ->
         id   = chan.chanid
         name = chan.name.toLowerCase()
         desc = chan.description
         
-        channel = new Channel chan
-        
+        # If a channel with that ID is loaded, update it.
+        if oldName = names[id]
+            channel = channels[oldName]
+
+            # Update channel name, description and modules.
+            channel.desc = desc
+            channel.name = name
+            channel.loadChannelModules()
+            
+        # Otherwise, set up a new channel.
+        else
+            channel = new Channel chan
+            
         # Add channel to caches
-        channels[name] = channel
-        names[id]      = name
+        newChannels[name] = channel
+        newNames[id]      = name
         
     , ->
+        channels = newChannels
+        names    = newNames
+        
         finished? channels
-
-    
+            

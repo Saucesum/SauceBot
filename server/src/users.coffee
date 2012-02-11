@@ -42,7 +42,7 @@ exports.getByName = (name) ->
 
 # Returns a user by their UserID
 exports.getById = (id) ->
-    getByName names[id]
+    exports.getByName names[id]
 
 
 # Populates the user list

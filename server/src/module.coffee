@@ -39,4 +39,9 @@ exports.instance = (name, chan) ->
     if (!module.New?)
         throw new Error "Invalid module '#{name}'"
         
-    module.New chan
+    obj = module.New chan
+    
+    obj.name        = module.name
+    obj.description = module.description
+    obj.version     = module.version
+    return obj

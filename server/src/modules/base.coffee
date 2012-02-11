@@ -31,8 +31,10 @@ class Base
                 date = new Date
                 "[Time] #{date.getHours()}:#{date.getMinutes()}"
         
-    load: (chan) ->
-        @channel = chan if chan?
+        
+    load:->
+        # Nothing to load
+        
         
     handle: (user, command, args, sendMessage) ->
         handler = @handlers[command]

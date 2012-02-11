@@ -11,6 +11,7 @@ Sauce = require './sauce'
 db    = require './saucedb'
 users = require './users'
 chans = require './channels'
+auth  = require './session'
 
 # Utility
 io    = require './ioutil'
@@ -52,7 +53,7 @@ class SauceBot
             try
                 @handleUpdate data
             catch error
-                @sendError "Syntax error: #{error}"
+                @sendError "#{error}"
                 io.error error
             
 
@@ -64,7 +65,7 @@ class SauceBot
     #  ? args: [OPT] Arguments
     #
     handle: (json) ->
-       chan      = json.chan
+        chan      = json.chan
 
         # Normalize json.op
         json.op   = if json.op then 1 else null
@@ -79,9 +80,9 @@ class SauceBot
             
             
     # Update (upd):
-    #  * chan: [REQ] Source channel
-    #  * type: [REQ] Update type
-    #  ? user: [OPT] User that performed the update
+    #  * cookie: [REQ] Session cookie for authentication
+    #  * chan  : [REQ] Source channel
+    #  * type  : [REQ] Update type
     #
     # Types:
     #  + Module name: reloads module
@@ -89,7 +90,28 @@ class SauceBot
     #  + Channels   : reloads channel data
     #
     handleUpdate: (json) ->
-        # TODO
+        {cookie, chan, type} = json
+        
+        userID = auth.getUserID cookie
+        
+        throw new Error 'You are not logged in' unless userID?
+        
+        user = users.getById userID
+        
+        io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
+        
+#         
+        # switch type
+            # when 'Users'
+                # users.load()
+#                 
+            # when 'Channels'
+                # chans.load()
+#                 
+            # else
+                # #chans.handleModuleUpdate type
+#                 
+#                 
             
 
     # Sends an error to the client

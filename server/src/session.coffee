@@ -22,7 +22,10 @@ getSession = (cookie) ->
     
     path = getSessionFile cookie
     
-    if data = fs.readFileSync path then parser data.toString 'utf8'
+    try
+        if data = fs.readFileSync path then parser data.toString 'utf8'
+    catch error
+        # Ignore. We don't want the client to know of errors.
 
 
 # Fetches the userid associated with the specified PHP cookie.

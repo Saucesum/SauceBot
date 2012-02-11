@@ -102,7 +102,7 @@ class Channel
         command   = data.cmd or ''
         arguments = data.args
 
-        msg = data.cmd.cat data.args.join ' ' # TODO: Find out how to get the full message string. I don't know where this object is made.
+        msg = data.msg
         
         for trigger in @triggers
             if trigger.matches msg
@@ -117,6 +117,7 @@ class Channel
         for t in @triggers
             index++ if trigger.priority >= t.priority
 
+        io.debug "Placing trigger at #{index}"
         @triggers.splice index, 0, trigger
 
 

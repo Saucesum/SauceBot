@@ -21,17 +21,18 @@ io.module '[Base] Init'
 #
 class Base
     constructor: (@channel) ->
-        
 
     load:->
-        @channel.register trig.SimpleTrigger this, "saucebot", ->
-          '[SauceBot] SauceBot version 3.1 - Node.js'
+        io.module "[Base] Loading for #{@channel.id}"
 
-        @channel.register trig.SimpleTrigger this, "test", (user) ->
-            'Test command!' if user.op?
+        @channel.register trig.SimpleTrigger(this, "saucebot", ->
+          '[SauceBot] SauceBot version 3.1 - Node.js')
 
-        @channel.register trig.SimpleTrigger this, "time", ->
-            "[Time] #{date.getHours()}:#{date.getMinutes()}"
+        @channel.register trig.SimpleTrigger(this, "test", (user) ->
+            'Test command!' if user.op?)
+
+        @channel.register trig.SimpleTrigger(this, "time", ->
+            "[Time] #{date.getHours()}:#{date.getMinutes()}")
 
     handle: (user, command, args, sendMessage) ->
         

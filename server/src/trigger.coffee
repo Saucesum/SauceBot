@@ -13,7 +13,7 @@ PRI_LOW   = 3  # For greedy commands, like counter creation.
 exports.SimpleTrigger = (module, name, callback) ->
     new Trigger module,
                 exports.PRI_MID,
-                new RegExp("^!#{name}( .*)?$"),
+                new RegExp("^!#{name}(?:\s+(.+))?$"),
                 callback
 
 class Trigger

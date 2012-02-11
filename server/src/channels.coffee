@@ -29,13 +29,19 @@ class Channel
         @loadChannelModules()
     
     
-    getModule: (moduleName) ->
+    # Returns whether a module with the specified name
+    # has been loaded for this channel.
+    getLoadedModule: (moduleName) ->
         for module in @modules
             return module if module.name is moduleName
     
     
-    getLoadedModule: (moduleName) ->
-        module = @getModule moduleName
+    # Loads a module by its name and returns the module instance.
+    #
+    # Note: This *only* loads unloaded modules.
+    #       Already loaded modules get returned as-is.
+    loadModule: (moduleName) ->
+        module = @getLoadedModule moduleName
         
         unless module?
             try
@@ -48,17 +54,28 @@ class Channel
         return module
         
     
+    # Attempts to load all modules associated with this channel.
+    #
+    # Calling this multiple times only loads each modules once,
+    # unless they were unloaded first.
+    #
+    # To unload a module, remove its entry from the database
+    # and call this again.
     loadChannelModules: ->
         newModules = []
         
         db.getChanDataEach @id, 'module', (result) =>
-            module = @getLoadedModule result.module
+            module = @loadModule result.module
             newModules.push module
         , =>
             @modules = newModules
             io.debug "Done loading modules for #{@name}"
             
             
+    # Returns a {name, op}-object for the specified user.
+    #
+    # If op is passed as an argument, it is used instead of
+    # the user's moderator level for the channel.
     getUser: (username, op) ->
         op or= null
         
@@ -75,6 +92,8 @@ class Channel
             op  : op
         }
 
+
+    # Handles a message by passing it on to all loaded modules.
     handle: (data, sendMessage, finished) ->
         user      = @getUser data.user, data.op
         command   = data.cmd or ''

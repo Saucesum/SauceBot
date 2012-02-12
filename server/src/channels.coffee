@@ -97,10 +97,10 @@ class Channel
     handle: (data, sendMessage, finished) ->
         user      = @getUser data.user, data.op
         command   = data.cmd or ''
-        arguments = data.args
+        args      = data.args
         
         for module in @modules
-            module.handle user, command, arguments, sendMessage
+            module.handle user, command, args, sendMessage
 
         finished?()
 

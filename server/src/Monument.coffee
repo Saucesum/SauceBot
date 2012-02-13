@@ -31,51 +31,43 @@ class Monument
     
     load: ->
         io.module "[#{@name}] Loading #{@channel.id}: #{@channel.name}"
+
+        @channel.register this, "#{@command}",       Sauce.Level.Mod, @cmdMonument
+        @channel.register this, "#{@command} clear", Sauce.Level.Mod, @cmdMonumentClear
         
         # Load monument data
         @obtained.load()
         
-    
-    clearMonument: ->
-        @obtained.clear()
-        'Cleared'
-    
-    
-    getMonument: ->
+
+    getMonumentState: ->
         obtained = (block for block in @blocks when block.toLowerCase() in @obtained.get())
         "Blocks: #{obtained.join(', ') or 'None'}"
-    
 
-    setMonument: (args) ->
-        return unless args?
+
+    # !<name> - Print monument
+    # !<name> <block> - Add the block to the obtained-list
+    cmdMonument: (user, args, sendMessage) ->
+        unless args?
+            return sendMessage @getMonumentState
         
         block = args[0].toLowerCase()
         idx   = @blocksLC.indexOf block
         
         unless (idx >= 0)
-            return "Unknown block '#{block}'. Usage: #{@usage}"
+            return sendMessage "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
         
         @obtained.add block
-        "Added #{@blocks[idx]}."
-    
+        sendMessage "[#{@name}] Added #{@blocks[idx]}."
+
+
+    # !<name> clear - Clear the monument
+    cmdMonumentClear: (user, args, sendMessage) ->
+        @obtained.clear()
+        sendMessage "[#{@name}] Cleared"
+
+
     handle: (user, command, args, sendMessage) ->
-        {name, op} = user
         
-        return unless (op? and command is @command)
-        
-        # !<name> - Print monument
-        unless (args? and args[0])
-            res = @getMonument()
-            
-        # !<name> clear - Clear the monument
-        else if (args[0] is 'clear')
-            res = @clearMonument()
-            
-        # !<name> <block> - Add the block to the obtained-list
-        else
-            res = @setMonument args
-        
-        sendMessage "[#{@name}] #{res}" if res?
 
 exports.New = (channel, name, blocks, usage) ->
     new Monument channel, name, blocks, usage 

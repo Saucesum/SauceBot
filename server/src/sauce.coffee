@@ -12,6 +12,7 @@ exports.Session =
 
 # Moderator levels
 exports.Level =
+    User : 0
     Mod  : 1
     Admin: 2
     Owner: 3

@@ -25,14 +25,17 @@ class Base
     load:->
         io.module "[Base] Loading for #{@channel.id}"
 
-        @channel.register trig.SimpleTrigger(this, "saucebot", ->
-          '[SauceBot] SauceBot version 3.1 - Node.js')
+        @channel.register  this, "saucebot", Sauce.Level.User,
+            (user,args,sendMessage) ->
+              sendMessage '[SauceBot] SauceBot version 3.1 - Node.js'
 
-        @channel.register trig.SimpleTrigger(this, "test", (user) ->
-            'Test command!' if user.op?)
+        @channel.register  this, "test", Sauce.Level.Mod,
+            (user,args,sendMessage) ->
+              sendMessage 'Test command!' if user.op?
 
-        @channel.register trig.SimpleTrigger(this, "time", ->
-            "[Time] #{date.getHours()}:#{date.getMinutes()}")
+        @channel.register  this, "time", Sauce.Level.User,
+            (user,args,sendMessage) ->
+              sendMessage "[Time] #{date.getHours()}:#{date.getMinutes()}"
 
     handle: (user, command, args, sendMessage) ->
         

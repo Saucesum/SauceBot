@@ -4,24 +4,47 @@
 db = require './saucedb'
 io = require './ioutil'
 
-PRI_TOP   = 0  # Reserved for what, if anything, needs it.
-PRI_HIGH  = 1  # Could be used for sub commands, like '!vm reset'
-PRI_MID   = 2  # For simple commands, like '!time'
-PRI_LOW   = 3  # For greedy commands, like counter creation.
+PRI_TOP  =   0  # Reserved for what, if anything, needs it.
+PRI_HIGH = 100  # Could be used for sub commands, like '!vm clear'
+PRI_MID  = 200  # For simple commands, like '!time'
+PRI_LOW  = 300  # For greedy commands, like counter creation.
 
-# Creates a trigger that matches !name followed by 0 or more words
-exports.SimpleTrigger = (module, name, callback) ->
-    new Trigger module,
-                exports.PRI_MID,
-                new RegExp("^!#{name}(?:\s+(.+))?$"),
-                callback
+WORD_BONUS = -10  # Modifier based on word count to give sub commands priority
+OP_BONUS   =  -1  # Modifier based on oplevel to give mod versions priority
 
+# Returns a Trigger responding to !<name>, where name is one or more words.
+# A priority will be assigned that gives preference primarily to longer
+# commands, and then to higher op status requirements.
+
+exports.buildTrigger = (module, name, oplevel, callback) ->
+    words = name.split /\s+/
+    regex = new RegExp "^!" + words.join("\\s+") + "(?:\\s+(.+))?$"
+
+    priority = PRI_MID + WORD_BONUS*(words.length-1) + OP_BONUS*oplevel
+    
+    new Trigger module, priority, oplevel, regex, callback
+
+
+# A trigger is an object used to associate bot commands with RegExp patterns.
+#
+# The pattern must be a RegExp object.  A single capturing group should be used
+#   to capture all arguments to the command.
 class Trigger
-    constructor: (@module, @priority, @pattern, @execute) ->
-        # Constructs the Trigger
+    constructor: (@module, @priority, @oplevel, @pattern, @execute) ->
 
-    matches: (msg) ->
-        msg.match @pattern
+    test: (msg) ->
+        @pattern.test msg
+
+    # Returns an array of arguments (individual words in the first capturing
+    #  group), or null if there are none
+    getArgs: (msg) ->
+        match = @pattern.exec(msg) ? [""]
+        capture = match[1] ? ""
+
+        # Return null if there are no non-space characters
+        return null unless /\S/.test capture
+
+        capture.split /\s+/
 
 exports.PRI_TOP   = PRI_TOP
 exports.PRI_HIGH  = PRI_HIGH

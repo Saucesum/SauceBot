@@ -103,22 +103,41 @@ class Channel
         arguments = data.args
 
         msg = data.msg
-        
+     
         for trigger in @triggers
-            if trigger.matches msg
-                trigger.execute user, command, args, sendMessage
+            # check for match
+            if trigger.test msg
+                args = trigger.getArgs
+                trigger.execute user, args, sendMessage
                 break
 
         finished?()
 
-    register: (trigger) ->
+    # register(trigger)   - Registers a Trigger
+    # register(module,name,callback)   - Registers a Trigger built from
+    #                                    args using buildTrigger
+    register: (args...) ->
+        # handle pseudo-overloads
+        switch args.length
+          when 1
+            [trigger] = args
+          when 4
+            trigger = trig.buildTrigger args...
+          else
+            argstrings = String(arg) for arg in args
+            io.error "Bad number of arguments when registering trigger: " +
+                     argstrings.join(" ")
+            return false
+
         index = 0
 
         for t in @triggers
             index++ if trigger.priority >= t.priority
 
-        io.debug "Placing trigger at #{index}"
         @triggers.splice index, 0, trigger
+
+        return true
+
 
 
 

@@ -48,7 +48,7 @@ for channelname in channelnames.split ':'
                     op  : op
                     cmd : match[1]
                     args: match[2]
-                    data: message
+                    msg : message
                 
                 io.debug "#{channelname}: <#{from}> (#{match[1]}) #{match[2]}"
 

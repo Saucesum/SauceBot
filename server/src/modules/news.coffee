@@ -94,9 +94,12 @@ class News
         @channel.register  this, "news", Sauce.Level.Mod,
           (user, args, sendMessage) ->
             sendMessage @getNext() ? '<News> No auto-news found. Add with !news add <message>'
+
+    unload:->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
         
     save: ->
-        
         @news.save()
         @config.save()
         

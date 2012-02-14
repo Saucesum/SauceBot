@@ -47,58 +47,54 @@ class News
         @config.load()
 
         # !news on - Enable auto-news
-        @channel.register  this, "news on", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @config.add 'state', 1
-            sendMessage '<News> Auto-news is now enabled.'
-
+        @channel.register this, "news on"      , Sauce.Level.Mod, cmdNewsEnable
         # !news off - Disable auto-news
-        @channel.register  this, "news off", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @config.add 'state', 0
-            sendMessage '<News> Auto-news is now disabled.'
-
-        # !news seconds <value> - Sets minimum seconds/messages
-        @channel.register  this, "news seconds", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @config.add 'seconds', parseInt(args[0], 10) if args[0]?
-            sendMessage "<News> Auto-news minimum delay set to"+
-                        " #{@config.get 'seconds'} seconds."
-
-        # !news messages <value> - Sets minimum seconds/messages
-        @channel.register  this, "news messages", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @config.add 'messages', parseInt(args[0], 10) if args[0]?
-            sendMessage "<News> Auto-news minimum delay set to"+
-                        " #{@config.get 'messages'} messages."
-
+        @channel.register this, "news off"     , Sauce.Level.Mod, cmdNewsDisable
+        # !news seconds <value> - Sets minimum seconds
+        @channel.register this, "news seconds" , Sauce.Level.Mod, cmdNewsSeconds
+        # !news messages <value> - Sets minimum messages
+        @channel.register this, "news messages", Sauce.Level.Mod, cmdNewsMinutes
         # !news clear - Clears the news list
-        @channel.register  this, "news clear", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @news.clear()
-            sendMessage '<News> Auto-news cleared.'
-
+        @channel.register this, "news clear"   , Sauce.Level.Mod, cmdNewsClear
         # !news add <line> - Adds a news line
-        @channel.register  this, "news add", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @news.add args.join ' '
-            sendMessage '<News> Auto-news added.'
-
-        # !news add <line> - Adds a news line
-        @channel.register  this, "news", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            @news.add args.join ' '
-            sendMessage '<News> Auto-news added.'
-
+        @channel.register this, "news add"     , Sauce.Level.Mod, cmdNewsAdd
         # !news - Print the next news message
-        @channel.register  this, "news", Sauce.Level.Mod,
-          (user, args, sendMessage) ->
-            sendMessage @getNext() ? '<News> No auto-news found. Add with !news add <message>'
+        @channel.register this, "news"         , Sauce.Level.Mod, cmdNewsNext
 
-    unload:->
+    unload: ->
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+
+    cmdNewsEnable: (user, args, sendMessage) ->
+        @config.add 'state', 1
+        sendMessage '<News> Auto-news is now enabled.'
+
+    cmdNewsDisable: (user, args, sendMessage) ->
+        @config.add 'state', 0
+        sendMessage '<News> Auto-news is now disabled.'
+
+    cmdNewsSeconds: (user, args, sendMessage) ->
+        @config.add 'seconds', parseInt(args[0], 10) if args[0]?
+        sendMessage "<News> Auto-news minimum delay set to " +
+                    "#{@config.get 'seconds'} seconds."
+
+    cmdNewsMessages: (user, args, sendMessage) ->
+        @config.add 'messages', parseInt(args[0], 10) if args[0]?
+        sendMessage "<News> Auto-news minimum delay set to " +
+                    "#{@config.get 'messages'} messages."
+
+    cmdNewsClear: (user, args, sendMessage) ->
+        @news.clear()
+        sendMessage '<News> Auto-news cleared.'
+
+    cmdNewsAdd: (user, args, sendMessage) ->
+        @news.add args.join ' '
+        sendMessage '<News> Auto-news added.'
+
+    cmdNewsNext: (user, args, sendMessage) ->
+        sendMessage @getNext() ? '<News> No auto-news found. Add with !news add <message>'
         
+
     save: ->
         @news.save()
         @config.save()

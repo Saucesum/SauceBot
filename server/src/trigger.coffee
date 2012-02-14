@@ -10,7 +10,7 @@ PRI_MID  = 200  # For simple commands, like '!time'
 PRI_LOW  = 300  # For greedy commands, like counter creation.
 
 WORD_BONUS = -10  # Modifier based on word count to give sub commands priority
-OP_BONUS   =  -1  # Modifier based on oplevel to give mod versions priority
+OP_BONUS   =  -2  # Modifier based on oplevel to give mod versions priority
 
 # Returns a Trigger responding to !<name>, where name is one or more words.
 # A priority will be assigned that gives preference primarily to longer

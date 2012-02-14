@@ -148,7 +148,7 @@ class Channel
         results = @triggers
 
         for attr, value of restrictions
-            results = (elem for elem in results when elem[attr]=value)
+            results = (elem for elem in results when (elem[attr] is value))
 
         results
 

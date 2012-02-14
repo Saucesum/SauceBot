@@ -105,8 +105,8 @@ class Channel
         msg = data.msg
      
         for trigger in @triggers
-            # check for match
-            if trigger.test msg
+            # check for first match that the user is authorized to use
+            if trigger.test msg and (data.op >= trigger.oplevel)
                 args = trigger.getArgs
                 trigger.execute user, args, sendMessage
                 break
@@ -138,7 +138,19 @@ class Channel
 
         return true
 
+    unregister: (triggersToRemove...) ->
+        @triggers = (elem for elem in @triggers when not elem in triggersToRemove)
 
+    # listTriggers (obj) returns a list of registered triggers in the channel.
+    # Any attributes defined on the restrictions object will be matched against
+    #  like-named attributes on the triggers to limit results.
+    listTriggers: (restrictions={}) ->
+        results = @triggers
+
+        for attr, value of restrictions
+            results = (elem for elem in results when elem[attr]=value)
+
+        results
 
 
 # Handles a message in the appropriate channel instance

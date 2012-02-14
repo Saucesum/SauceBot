@@ -37,6 +37,10 @@ class Base
             (user,args,sendMessage) ->
               sendMessage "[Time] #{date.getHours()}:#{date.getMinutes()}"
 
+    unload:->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
+
     handle: (user, command, args, sendMessage) ->
         
 

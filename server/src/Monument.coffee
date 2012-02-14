@@ -37,6 +37,10 @@ class Monument
         
         # Load monument data
         @obtained.load()
+
+    unload:->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
         
 
     getMonumentState: ->

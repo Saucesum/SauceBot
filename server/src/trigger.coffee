@@ -12,12 +12,17 @@ PRI_LOW  = 300  # For greedy commands, like counter creation.
 WORD_BONUS = -10  # Modifier based on word count to give sub commands priority
 OP_BONUS   =  -2  # Modifier based on oplevel to give mod versions priority
 
+
+escapeRegex = (string) ->
+    string.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")
+
 # Returns a Trigger responding to !<name>, where name is one or more words.
 # A priority will be assigned that gives preference primarily to longer
 # commands, and then to higher op status requirements.
-
 exports.buildTrigger = (module, name, oplevel, callback) ->
     words = name.split /\s+/
+    words = escapeRegex(word) for word in words
+
     regex = new RegExp "^!" + words.join("\\s+") + "(?:\\s+(.+))?$"
 
     priority = PRI_MID + WORD_BONUS*(words.length-1) + OP_BONUS*oplevel

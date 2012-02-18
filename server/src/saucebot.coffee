@@ -3,6 +3,8 @@
 # - Node.js implementation of the SauceBot Command Server - #
 #                                                           #
  ###########################################################
+ 
+require.paths.push '../../common/bin'
 
 # Config
 Sauce = require './sauce'
@@ -11,10 +13,10 @@ Sauce = require './sauce'
 db    = require './saucedb'
 users = require './users'
 chans = require './channels'
-auth  = require './session'
 
-# Utility
-io    = require './ioutil'
+# Common 
+auth  = require 'session'
+io    = require 'ioutil'
 
 # Node.js
 sio   = require 'socket.io'

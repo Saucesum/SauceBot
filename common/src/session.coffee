@@ -1,9 +1,13 @@
 # SauceBot Session Manager
 
-{Session}  = require './sauce'
-
 fs         = require 'fs'
 parser     = require 'groan'
+
+
+# Session config
+Session = 
+    Dir   : '/tmp/'
+    Prefix: 'sess_'
 
 
 # Cookie format regex

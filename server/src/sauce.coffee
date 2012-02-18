@@ -4,12 +4,6 @@
 exports.PORT = 8455
 
 
-# Session storage
-exports.Session = 
-    Dir   : '/tmp/'
-    Prefix: 'sess_'
-
-
 # Moderator levels
 exports.Level =
     Mod  : 1

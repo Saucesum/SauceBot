@@ -106,8 +106,7 @@ CREATE TABLE `news` (
   `chanid` int(11) NOT NULL DEFAULT '0',
   `newsid` int(11) NOT NULL DEFAULT '0',
   `message` varchar(250) NOT NULL,
-  PRIMARY KEY (`chanid`,`newsid`),
-  UNIQUE KEY `message` (`message`)
+  PRIMARY KEY (`chanid`,`newsid`)
 )
 
 
@@ -129,6 +128,7 @@ CREATE TABLE `users` (
   `username` varchar(30) DEFAULT NULL,
   `password` varchar(50) DEFAULT NULL,
   `global` tinyint(1) DEFAULT '0',
+  `email` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`userid`),
   UNIQUE KEY `username` (`username`)
 )

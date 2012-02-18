@@ -1,3 +1,3 @@
 # SauceBot Utility
 
-exports = require '../../common/bin/ioutil'
+exports = require '../common/ioutil'

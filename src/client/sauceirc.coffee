@@ -2,7 +2,7 @@
 
 irc = require 'irc'
 
-io  = require './ioutil'
+io  = require '../common/ioutil'
 
 
 class SauceIRC

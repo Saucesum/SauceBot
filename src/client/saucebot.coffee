@@ -3,7 +3,7 @@
 sio   = require 'socket.io-client'
 color = require 'colors'
 
-io    = require './ioutil'
+io    = require '../common/ioutil'
 irc   = require './sauceirc'
 
 [node, filename, channelnames, username, password] = process.argv

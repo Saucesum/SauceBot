@@ -4,8 +4,6 @@
 #                                                           #
  ###########################################################
  
-require.paths.push '../../common/bin'
-
 # Config
 Sauce = require './sauce'
 
@@ -15,8 +13,8 @@ users = require './users'
 chans = require './channels'
 
 # Common 
-auth  = require 'session'
-io    = require 'ioutil'
+auth  = require '../common/session'
+io    = require '../common/ioutil'
 
 # Node.js
 sio   = require 'socket.io'

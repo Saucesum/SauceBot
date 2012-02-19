@@ -12,6 +12,11 @@
 # channel - Channel name
 #   - channel -> CilantroGamer
 #
+# rand(val1, [val2, [val3, [...]]]) - Random number generator
+#  - rand(5) -> 4
+#  - rand(10, 15) -> 12
+#  - rand(a, b, c, d, e) -> d
+#
 # time(timezone) - Current time
 #   - timezone('GMT') -> 13:15:22
 # countdown(timezone, ...) - Counts down to something
@@ -47,6 +52,22 @@ handlers =
     
     name      : (channel, user, args) -> user.username
     channel   : (channel, user, args) -> channel.name
+    
+    rand      : (channel, user, args) ->
+        return 0 unless args
+        
+        switch args.length
+                when 1
+                    a = parseInt(args[0], 10)
+                    Math.floor(Math.random() * a)
+                when 2
+                    a = parseInt(args[0], 10)
+                    b = parseInt(args[1], 10)
+                    Math.floor(Math.random() * (b - a)) + a
+                else
+                    idx = Math.floor(Math.random() * args.length)
+                    args[idx]
+                
     
     time      : (channel, user, args) ->
         now = new time.Date()

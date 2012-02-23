@@ -2,6 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
+vars  = require '../vars'
 
 io    = require '../ioutil'
 
@@ -65,6 +66,7 @@ class Commands
                 
         else
             res = @commands.get command
+            if res? then res = vars.parse res
 
         sendMessage res if res?
 

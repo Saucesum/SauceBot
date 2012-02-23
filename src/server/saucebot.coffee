@@ -19,7 +19,6 @@ io    = require '../common/ioutil'
 # Node.js
 sio   = require 'socket.io'
 net   = require 'net'
-sys   = require 'sys'
 url   = require 'url'
 color = require 'colors'
 
@@ -40,9 +39,10 @@ loadChannels = ->
 class SauceBot
     
     constructor: (@socket) ->
-
+        
         # Message handler
         @socket.on 'msg', (data) =>
+            io.debug "Got data: #{data}"
             try
                 @handle data
             catch error

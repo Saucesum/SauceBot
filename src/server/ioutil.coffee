@@ -1,3 +1,6 @@
 # SauceBot Utility
 
-exports = require '../common/ioutil'
+io = require '../common/ioutil'
+
+for key, val of io
+    exports[key] = val

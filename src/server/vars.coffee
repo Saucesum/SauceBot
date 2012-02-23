@@ -26,6 +26,7 @@
 #
 # !greetme : Hello, there, ${name}! Welcome to ${channel}!
 # !now     : The current time for ${channel} is ${time US/Eastern}
+# !dir     : You should go... ${rand Left, Right, Up, Down}!
 # !bot     : [Bot] Running ${botname} version ${botversion}
 #
 

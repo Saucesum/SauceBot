@@ -18,15 +18,17 @@ sauce = sio.connect 'http://localhost:8455'
 setTimeout ->
     
     match = /^(?:!(\w+)\s*)?(.*)/.exec message
-   
+    
     sauce.emit 'msg'
         chan: channel
         user: username
         op  : 1
         cmd : match[1]
         args: match[2]
+        
+    io.debug "Sent to #{channel} - #{username} - #{match[1]}"
     
-, 300
+, 500
     
 sauce.on 'say', (data) ->
     {chan, msg} = data

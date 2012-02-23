@@ -8,8 +8,6 @@ users = require './users'
 io    = require './ioutil'
 mod   = require './module'
 
-sys   = require 'sys'
-
 # Module names
 moduleNames = Object.keys mod.MODULES
 

@@ -2,6 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
+trig  = require '../triggers'
 
 io    = require '../ioutil'
 
@@ -28,45 +29,74 @@ io.module '[Commands] Init'
 class Commands
     constructor: (@channel) ->
         @commands = new HashDTO @channel, 'commands', 'cmdtrigger', 'message'
+
+        @triggers = {}
         
     load: ->
+        @channel.register  this, "set"  , Sauce.Level.Mod, @cmdSet
+        @channel.register  this, "unset", Sauce.Level.Mod, @cmdUnset
+
         # Load custom commands
         @commands.load()
+
+        # Register each command in its own closure wrapper
+        for own cmd of @commands.data
+            do @addTrigger cmd
+
+    unload:->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
         
+    addTrigger: (cmd) ->
+        # Do nothing if the user is just editing an existing command.
+        return if @triggers[cmd]?
+
+        # Create a simple trigger that looks up a key in @commands
+        @triggers[cmd] = trig.buildTrigger  this, cmd, Sauce.Level.User,
+            (user, args, sendMessage) -> sendMessage @commands.get cmd
+
+        @channel.register @triggers[cmd]
+
+    delTrigger: (cmd) ->
+        # Do nothing if the trigger doesn't exist.
+        return unless @triggers[cmd]?
+
+        @channel.unregister @triggers[cmd]
+
+        delete @triggers[cmd]
+
+
+    # !(un)?set <command>  - Unset command
+    cmdUnset: (user, args, sendMessage) ->
+        unless args[0]?
+            return sendMessage "Usage: !unset (name).  Only forgets commands made with !set."
+
+        if @commands.data[args[0]]? or @triggers[cmd]?
+            @commands.remove args[0]
+            @delTrigger      args[0]
+            return sendMessage "Command unset: #{cmd}"
         
-    unsetCommand: (command) ->
-        @commands.remove command
-        
-        
-    setCommand: (command, message) ->
-        @commands.add command, message
-        
+
+    # !set <command> <message>  - Set command
+    # !set <command>            - Unset command
+    cmdSet: (user, args, sendMessage) ->
+        unless args[0]?
+            return sendMessage "Usage: !set (name) (message).  !set (name) or !unset (name) to forget a command."
+
+        # !set <command>
+        if (args.length is 1)
+            return @cmdUnset user, args, sendMessage
+
+        cmd = args.splice 0, 1
+        msg = args.join ' '
+
+        @commands.add cmd, msg
+        @addTrigger   cmd
+
+        return sendMessage "Command set: #{cmd}"
 
     handle: (user, command, args, sendMessage) ->
-        {op} = user
-        res  = undefined
         
-        if (op? and (command in ['set', 'unset']))
-            
-            # !(un)?set <command> - Unset command
-            if (args.length is 1)
-                cmd = args[0]
-                
-                @unsetCommand cmd
-                res = "Command unset: #{cmd}"
-                
-            # !(un)?set <command> <message> - Set message
-            else if (args.length > 1)
-                cmd = args.splice 0, 1
-                msg = args.join ' '
-                
-                @setCommand cmd, msg
-                res = "Command set: #{cmd}"
-                
-        else
-            res = @commands.get command
-
-        sendMessage res if res?
 
 exports.New = (channel) ->
     new Commands channel

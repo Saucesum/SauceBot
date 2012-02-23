@@ -7,6 +7,7 @@ PATH = './modules/'
 
 exports.MODULES = {}
 
+
 fs.readdirSync(PATH).forEach (file) ->
     return unless match = /(\w+)\.js$/i.exec file
     try

@@ -4,6 +4,8 @@ Sauce = require './sauce'
 
 db    = require './saucedb'
 users = require './users'
+trig  = require './trigger'
+
 
 io    = require './ioutil'
 mod   = require './module'
@@ -24,8 +26,9 @@ class Channel
         @id   = data.chanid
         @name = data.name
         @desc = data.description
-   
+    
         @modules = []
+        @triggers = []
         @loadChannelModules()
     
     
@@ -98,12 +101,56 @@ class Channel
         user      = @getUser data.user, data.op
         command   = data.cmd or ''
         args      = data.args
-        
-        for module in @modules
-            module.handle user, command, args, sendMessage
+
+        msg = data.msg
+     
+        for trigger in @triggers
+            # check for first match that the user is authorized to use
+            if trigger.test msg and (data.op >= trigger.oplevel)
+                args = trigger.getArgs
+                trigger.execute user, args, sendMessage
+                break
 
         finished?()
 
+    # register(trigger)   - Registers a Trigger
+    # register(module,name,callback)   - Registers a Trigger built from
+    #                                    args using buildTrigger
+    register: (args...) ->
+        # handle pseudo-overloads
+        switch args.length
+          when 1
+            [trigger] = args
+          when 4
+            trigger = trig.buildTrigger args...
+          else
+            argstrings = String(arg) for arg in args
+            io.error "Bad number of arguments when registering trigger: " +
+                     argstrings.join(" ")
+            return false
+
+        index = 0
+
+        for t in @triggers
+            index++ if trigger.priority >= t.priority
+
+        @triggers.splice index, 0, trigger
+
+        return true
+
+    unregister: (triggersToRemove...) ->
+        @triggers = (elem for elem in @triggers when not elem in triggersToRemove)
+
+    # listTriggers (obj) returns a list of registered triggers in the channel.
+    # Any attributes defined on the restrictions object will be matched against
+    #  like-named attributes on the triggers to limit results.
+    listTriggers: (restrictions={}) ->
+        results = @triggers
+
+        for attr, value of restrictions
+            results = (elem for elem in results when (elem[attr] is value))
+
+        results
 
 
 # Handles a message in the appropriate channel instance

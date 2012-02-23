@@ -32,8 +32,10 @@ class Monument
     load: ->
         io.module "[#{@name}] Loading #{@channel.id}: #{@channel.name}"
 
-        @channel.register this, "#{@command}",       Sauce.Level.Mod, @cmdMonument
-        @channel.register this, "#{@command} clear", Sauce.Level.Mod, @cmdMonumentClear
+        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,sendMessage) =>
+            @cmdMonument user, args, sendMessage
+        @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,sendMessage) =>
+            @cmdMonumentClear user, args, sendMessage
         
         # Load monument data
         @obtained.load()
@@ -52,7 +54,7 @@ class Monument
     # !<name> <block> - Add the block to the obtained-list
     cmdMonument: (user, args, sendMessage) ->
         unless args?
-            return sendMessage @getMonumentState
+            return sendMessage @getMonumentState()
         
         block = args[0].toLowerCase()
         idx   = @blocksLC.indexOf block

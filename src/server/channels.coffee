@@ -103,7 +103,7 @@ class Channel
         for trigger in @triggers
             # check for first match that the user is authorized to use
             if trigger.test(msg) and (user.op >= trigger.oplevel)
-                args = trigger.getArgs()
+                args = trigger.getArgs msg
                 trigger.execute user, args, sendMessage
                 break
 

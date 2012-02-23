@@ -42,7 +42,6 @@ class SauceBot
         
         # Message handler
         @socket.on 'msg', (data) =>
-            io.debug "Got data: #{data}"
             try
                 @handle data
             catch error

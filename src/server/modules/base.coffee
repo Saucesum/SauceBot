@@ -2,6 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
+trig  = require '../trigger'
 
 io    = require '../ioutil'
 
@@ -20,28 +21,28 @@ io.module '[Base] Init'
 #
 class Base
     constructor: (@channel) ->
-        @handlers =
-            saucebot: ->
-                '[SauceBot] SauceBot version 3.1 - Node.js'
-                
-            test: (user) ->
-                'Test command!' if user.op?
-                
-            time: ->
-                date = new Date
-                "[Time] #{date.getHours()}:#{date.getMinutes()}"
-        
-        
+
     load:->
-        # Nothing to load
-        
-        
+        io.module "[Base] Loading for #{@channel.id}"
+
+        @channel.register  this, "saucebot", Sauce.Level.User,
+            (user,args,sendMessage) ->
+              sendMessage '[SauceBot] SauceBot version 3.1 - Node.js'
+
+        @channel.register  this, "test", Sauce.Level.Mod,
+            (user,args,sendMessage) ->
+              sendMessage 'Test command!' if user.op?
+
+        @channel.register  this, "time", Sauce.Level.User,
+            (user,args,sendMessage) ->
+              sendMessage "[Time] #{date.getHours()}:#{date.getMinutes()}"
+
+    unload:->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
+
     handle: (user, command, args, sendMessage) ->
-        handler = @handlers[command]
         
-        if (handler?)
-            result = handler(user, args)
-            sendMessage result if result?
 
 exports.New = (channel) ->
     new Base channel

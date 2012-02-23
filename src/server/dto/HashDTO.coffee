@@ -13,12 +13,13 @@ class HashDTO extends DTO
     
     
     # Loads the database data into the underlying hash
-    load: ->
+    load: (cb) ->
         db.loadData @channel.id, @table, 
                 key: @keyField
                 value: @valueField
             , (data) =>
                 @data = data
+                cb?()
                 io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
 
     

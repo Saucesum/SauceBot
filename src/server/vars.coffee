@@ -121,3 +121,5 @@ handle = (channel, user, cmd, args) ->
     return cmd unless handler = handlers[cmd]
     handler channel, user, args
     
+exports.parse = parse
+exports.formatTime = formatTime

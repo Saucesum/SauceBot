@@ -5,6 +5,7 @@ db    = require '../saucedb'
 trig  = require '../trigger'
 
 io    = require '../ioutil'
+vars  = require '../vars'
 
 # Module description
 exports.name        = 'Base'
@@ -35,13 +36,14 @@ class Base
 
         @channel.register  this, "time", Sauce.Level.User,
             (user,args,sendMessage) ->
-              sendMessage "[Time] #{date.getHours()}:#{date.getMinutes()}"
+              date = new Date()
+              sendMessage "[Time] #{vars.formatTime(date)}"
 
     unload:->
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 
-    handle: (user, command, args, sendMessage) ->
+    handle: (user, msg, sendMessage) ->
         
 
 exports.New = (channel) ->

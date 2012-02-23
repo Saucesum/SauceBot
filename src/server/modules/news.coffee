@@ -47,19 +47,40 @@ class News
         @config.load()
 
         # !news on - Enable auto-news
-        @channel.register this, "news on"      , Sauce.Level.Mod, @cmdNewsEnable
+        @channel.register this, "news on"      , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsEnable user, args, sendMessage
+        
         # !news off - Disable auto-news
-        @channel.register this, "news off"     , Sauce.Level.Mod, @cmdNewsDisable
+        @channel.register this, "news off"     , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsDisable user, args, sendMessage
+        
         # !news seconds <value> - Sets minimum seconds
-        @channel.register this, "news seconds" , Sauce.Level.Mod, @cmdNewsSeconds
+        @channel.register this, "news seconds" , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsSeconds user, args, sendMessage
+        
         # !news messages <value> - Sets minimum messages
-        @channel.register this, "news messages", Sauce.Level.Mod, @cmdNewsMinutes
+        @channel.register this, "news messages", Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsMessages user, args, sendMessage
+        
         # !news clear - Clears the news list
-        @channel.register this, "news clear"   , Sauce.Level.Mod, @cmdNewsClear
+        @channel.register this, "news clear"   , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsClear user, args, sendMessage
+        
         # !news add <line> - Adds a news line
-        @channel.register this, "news add"     , Sauce.Level.Mod, @cmdNewsAdd
+        @channel.register this, "news add"     , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsAdd user, args, sendMessage
+        
         # !news - Print the next news message
-        @channel.register this, "news"         , Sauce.Level.Mod, @cmdNewsNext
+        @channel.register this, "news"         , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdNewsNext user, args, sendMessage
+        
 
     unload: ->
         myTriggers = @channel.listTriggers { module:this }
@@ -74,12 +95,12 @@ class News
         sendMessage '<News> Auto-news is now disabled.'
 
     cmdNewsSeconds: (user, args, sendMessage) ->
-        @config.add 'seconds', parseInt(args[0], 10) if args[0]?
+        @config.add 'seconds', parseInt(args[0], 10) if args? and args[0]?
         sendMessage "<News> Auto-news minimum delay set to " +
                     "#{@config.get 'seconds'} seconds."
 
     cmdNewsMessages: (user, args, sendMessage) ->
-        @config.add 'messages', parseInt(args[0], 10) if args[0]?
+        @config.add 'messages', parseInt(args[0], 10) if args? and args[0]?
         sendMessage "<News> Auto-news minimum delay set to " +
                     "#{@config.get 'messages'} messages."
 
@@ -130,7 +151,7 @@ class News
         @getNext()
     
     # Auto-news
-    handle: (user, command, args, sendMessage) ->
+    handle: (user, msg, sendMessage) ->
  
         # Check if it's time to print some news
         if ((news = @tickNews())?)

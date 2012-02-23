@@ -34,15 +34,17 @@ class Commands
         @triggers = {}
         
     load: ->
-        @channel.register  this, "set"  , Sauce.Level.Mod, @cmdSet
-        @channel.register  this, "unset", Sauce.Level.Mod, @cmdUnset
+        @channel.register  this, "set"  , Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdSet user, args, sendMessage
+        @channel.register  this, "unset", Sauce.Level.Mod,
+            (user,args,sendMessage) =>
+                @cmdUnset user, args, sendMessage
 
         # Load custom commands
-        @commands.load()
-
-        # Register each command in its own closure wrapper
-        for own cmd of @commands.data
-            do @addTrigger cmd
+        @commands.load =>
+            for cmd of @commands.data
+                @addTrigger cmd
 
     unload:->
         myTriggers = @channel.listTriggers { module:this }
@@ -54,7 +56,9 @@ class Commands
 
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, Sauce.Level.User,
-            (user, args, sendMessage) -> sendMessage @commands.get cmd
+            (user, args, sendMessage) =>
+                parsed = vars.parse @channel, user, @commands.get(cmd)
+                sendMessage parsed
 
         @channel.register @triggers[cmd]
 
@@ -69,12 +73,14 @@ class Commands
 
     # !(un)?set <command>  - Unset command
     cmdUnset: (user, args, sendMessage) ->
-        unless args[0]?
+        unless args? and args[0]?
             return sendMessage "Usage: !unset (name).  Only forgets commands made with !set."
 
-        if @commands.data[args[0]]? or @triggers[cmd]?
-            @commands.remove args[0]
-            @delTrigger      args[0]
+        cmd = args[0]
+
+        if @commands.data[cmd]? or @triggers[cmd]?
+            @commands.remove cmd
+            @delTrigger      cmd
             return sendMessage "Command unset: #{cmd}"
         
 
@@ -88,7 +94,7 @@ class Commands
         if (args.length is 1)
             return @cmdUnset user, args, sendMessage
 
-        cmd = args.splice 0, 1
+        cmd = (args.splice 0, 1)[0]
         msg = args.join ' '
 
         @commands.add cmd, msg
@@ -96,7 +102,7 @@ class Commands
 
         return sendMessage "Command set: #{cmd}"
 
-    handle: (user, command, args, sendMessage) ->
+    handle: (user, msg, sendMessage) ->
 
 exports.New = (channel) ->
     new Commands channel

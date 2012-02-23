@@ -46,7 +46,7 @@ class SauceBot
                 @handle data
             catch error
                 @sendError "Syntax error: #{error}"
-                io.error error
+                io.error error + "\n" + error.stack
             
                 
         # Update handler

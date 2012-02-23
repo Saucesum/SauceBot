@@ -47,19 +47,19 @@ class News
         @config.load()
 
         # !news on - Enable auto-news
-        @channel.register this, "news on"      , Sauce.Level.Mod, cmdNewsEnable
+        @channel.register this, "news on"      , Sauce.Level.Mod, @cmdNewsEnable
         # !news off - Disable auto-news
-        @channel.register this, "news off"     , Sauce.Level.Mod, cmdNewsDisable
+        @channel.register this, "news off"     , Sauce.Level.Mod, @cmdNewsDisable
         # !news seconds <value> - Sets minimum seconds
-        @channel.register this, "news seconds" , Sauce.Level.Mod, cmdNewsSeconds
+        @channel.register this, "news seconds" , Sauce.Level.Mod, @cmdNewsSeconds
         # !news messages <value> - Sets minimum messages
-        @channel.register this, "news messages", Sauce.Level.Mod, cmdNewsMinutes
+        @channel.register this, "news messages", Sauce.Level.Mod, @cmdNewsMinutes
         # !news clear - Clears the news list
-        @channel.register this, "news clear"   , Sauce.Level.Mod, cmdNewsClear
+        @channel.register this, "news clear"   , Sauce.Level.Mod, @cmdNewsClear
         # !news add <line> - Adds a news line
-        @channel.register this, "news add"     , Sauce.Level.Mod, cmdNewsAdd
+        @channel.register this, "news add"     , Sauce.Level.Mod, @cmdNewsAdd
         # !news - Print the next news message
-        @channel.register this, "news"         , Sauce.Level.Mod, cmdNewsNext
+        @channel.register this, "news"         , Sauce.Level.Mod, @cmdNewsNext
 
     unload: ->
         myTriggers = @channel.listTriggers { module:this }

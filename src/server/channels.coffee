@@ -86,26 +86,24 @@ class Channel
         if (user?)
             return {
                 name: user.name
-                op  : op or user.isMod chan
+                op  : if (op or user.isMod chan) then 1 else 0
             }
         return {
             name: username
-            op  : op
+            op  : if op then 1 else 0
         }
 
 
     # Handles a message by passing it on to all loaded modules.
     handle: (data, sendMessage, finished) ->
         user      = @getUser data.user, data.op
-        command   = data.cmd or ''
-        args      = data.args
 
         msg = data.msg
      
         for trigger in @triggers
             # check for first match that the user is authorized to use
-            if trigger.test msg and (data.op >= trigger.oplevel)
-                args = trigger.getArgs
+            if trigger.test(msg) and (user.op >= trigger.oplevel)
+                args = trigger.getArgs()
                 trigger.execute user, args, sendMessage
                 break
 

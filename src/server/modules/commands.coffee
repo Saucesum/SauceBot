@@ -2,7 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
-trig  = require '../triggers'
+trig  = require '../trigger'
 vars  = require '../vars'
 
 io    = require '../ioutil'

@@ -15,9 +15,9 @@ chans = require './channels'
 # Common 
 auth  = require '../common/session'
 io    = require '../common/ioutil'
+sio   = require '../common/socket'
 
 # Node.js
-sio   = require 'socket.io'
 net   = require 'net'
 url   = require 'url'
 color = require 'colors'
@@ -63,17 +63,13 @@ class SauceBot
     #  * chan: [REQ] Source channel
     #  * user: [REQ] Source user
     #  ? op  : [OPT] Source user's op status: 1/0
-    #  ? cmd : [OPT] Command
-    #  ? args: [OPT] Arguments
+    #  * msg : [REQ] Message
     #
     handle: (json) ->
         chan      = json.chan
 
         # Normalize json.op
         json.op   = if json.op then 1 else null
-
-        # Split the arguments by space
-        json.args = json.args.split ' '
 
         # Handle the message
         chans.handle chan, json, (data) =>
@@ -186,7 +182,7 @@ class SauceBot
     send: (action, channel, message) ->
         io.say '>> '.magenta + "#{action} #{channel}: #{message}"
 
-        @socket.emit action,
+        server.broadcast action,
                 chan: channel
                 msg : message
 
@@ -199,12 +195,10 @@ io.debug 'Loading channels...'
 loadChannels()
 
 # Start server
-server = sio.listen Sauce.PORT
-server.set 'log level', 1
-io.say "Server started on port #{Sauce.PORT}".cyan
-
-# Set up connection listener
-server.sockets.on 'connection', (socket) ->
-    io.say 'Client connected: '.magenta + socket.handshake.address.address
-    new SauceBot socket
-
+server = new sio.Server Sauce.PORT,
+    (socket) ->
+        io.socket "Client connected"
+        new SauceBot socket
+    , (socket) ->
+        io.socket "Client disconnected: #{socket.remoteAddress()}"
+    

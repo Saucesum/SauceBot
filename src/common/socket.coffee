@@ -23,7 +23,6 @@ class Socket
         
         @sock.on 'connect', =>
             @addr = @sock.remoteAddress
-            io.debug "Connected to #{@addr}..."
 
 
     close: ->
@@ -105,7 +104,7 @@ class Client
 
 class Server
     
-    constructor: (@port, @endHandler) ->
+    constructor: (@port, @connectHandler, @endHandler) ->
         @serv     = null
         
         @handlers = {}
@@ -121,6 +120,8 @@ class Server
             @handleConnection stream
 
         @serv.listen port, 'localhost'
+        
+        io.socket "Server started on port #{port}"
         
         
     disconnect: ->
@@ -140,6 +141,7 @@ class Server
                 handler socket, data
             
         @sockets.push socket
+        @connectHandler socket if @connectHandler?
         
     
     on: (cmd, handler) ->

@@ -26,6 +26,10 @@ exports.debug = (message) ->
 exports.module = (message) ->
     console.log ('[MODULE] '.bold + message).blue
 
+# Logs a socket-related message
+exports.socket = (message) ->
+    console.log ('[SOCKET] '.bold + message).cyan 
+
 # Logs an error message
 exports.error = (message) ->
     console.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse

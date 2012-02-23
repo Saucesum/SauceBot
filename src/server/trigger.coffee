@@ -21,8 +21,8 @@ escapeRegex = (string) ->
 # commands, and then to higher op status requirements.
 exports.buildTrigger = (module, name, oplevel, callback) ->
     words = name.split /\s+/
-    words = escapeRegex(word) for word in words
-
+    words = (escapeRegex(word) for word in words)
+ 
     regex = new RegExp "^!" + words.join("\\s+") + "(?:\\s+(.+))?$"
 
     priority = PRI_MID + WORD_BONUS*(words.length-1) + OP_BONUS*oplevel
@@ -36,6 +36,7 @@ exports.buildTrigger = (module, name, oplevel, callback) ->
 #   to capture all arguments to the command.
 class Trigger
     constructor: (@module, @priority, @oplevel, @pattern, @execute) ->
+        # ...
 
     test: (msg) ->
         @pattern.test msg

@@ -62,24 +62,56 @@ class Filters
             blacklist: (new ArrayDTO @channel, 'blacklist', 'url')
             badwords : (new ArrayDTO @channel, 'badwords' , 'word')
             emotes   : (new ArrayDTO @channel, 'emotes'   , 'emote')
-
-
-    loadTable: (table) ->
-        list = @lists[table]
-        list.load()
-
-
-    saveTable: (table) ->
-        @lists[table].save()
-
-
-    loadStates: ->
-        @states.load()
+        
+        # Permits (filter immunity)
+        @permits = {}
         
         
-    saveStates: ->
-        @states.save()
+        # Register filter list commands
+        for filterName, filterList of @lists
+          do (filterName, filterList) =>
+            # !<filterlist> add <value> - Adds value to filter list
+            @channel.register this, "#{filterName} add"   , Sauce.Level.Mod,
+                (user, args, sendMessage) =>
+                    @cmdFilterAdd    filterName, filterList, args, sendMessage
+                    
+            # !<filterlist> remove <value> - Removes value from filter list
+            @channel.register this, "#{filterName} remove", Sauce.Level.Mod,
+                (user, args, sendMessage) =>
+                    @cmdFilterRemove filterName, filterList, args, sendMessage
 
+            # !<filterlist> clear - Clears the filter list
+            @channel.register this, "#{filterName} clear" , Sauce.Level.Mod,
+                (user, args, sendMessage) =>
+                    @cmdFilterClear  filterName, filterList, args, sendMessage
+
+
+        # Register filter state commands
+        for filter in filterNames
+          do (filter) =>
+            # !filter <filtername> on - Enables filter
+            @channel.register this, "filter #{filter} on" , Sauce.Level.Mod,
+                (user, args, sendMessage) =>
+                    @cmdFilterEnable  filter, sendMessage
+                    
+            # !filter <filtername> off - Disables filter
+            @channel.register this, "filter #{filter} off", Sauce.Level.Mod,
+                (user, args, sendMessage) =>
+                    @cmdFilterDisable filter, sendMessage
+
+            # !filter <filtername> - Shows filter state
+            @channel.register this, "filter #{filter}"    , Sauce.Level.Mod,
+                (user, args, sendMessage) =>
+                    @cmdFilterShow    filter, sendMessage
+            
+
+        # Register misc commands
+        
+        # !permit <username>
+        @channel.register this, 'permit'                  , Sauce.Level.Mod,
+            (user, args, sendMessage) =>
+                @cmdPermitUser args, sendMessage
+        
 
     load:  ->
         @channel = chan if chan?
@@ -90,100 +122,124 @@ class Filters
         # Load states
         @loadStates()
         
-        
-    checkFilters: (name, msglist) ->
-        # TODO: Filter-logic here.
+
+    unload: ->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
 
 
-    # Handle filter-state commands, such as "!filter url on" and "!filter caps off"
-    handleFilterStateCommand: (filter, state) ->
-        if (state?)
-            
-            # Enable filter
-            if (state is 'on')
-                @states.add filter, 1
-                return "#{filter} is now enabled."
-                
-            # Disable filter
-            else if (state is 'off')
-                @states.add filter, 0
-                return "#{filter} is now disabled."
-                
-            else
-                return "Invalid state: '#{state}'. usage: !filter #{filter} <on/off>"
-            
+    # Filter list command handlers
+
+    cmdFilterAdd: (name, dto, args, sendMessage) ->
+        value = args[0] if args? and args[0]?
+        if value?
+            dto.add value
+            sendMessage "[Filter] #{name} - Added."
         else
-            # Filter is enabled
-            if (@states.get filter)
-                return "#{filter}-filter enabled."
-                
-            # Filter is disabled
-            else
-                return "#{filter}-filter disabled."
-        
-        
-    # Handle filter commands, such as "!whitelist" and "!words"
-    handleFilterCommand: (command, filter, arg, value) ->
-        list = @lists[command]
-        
-        switch arg
-        
-            # Add filter value
-            when 'add'
-                list.add value
-                res = "Added '#{value}'."
-                
-            # Remove filter value
-            when 'remove'
-                list.remove value
-                res = "Removed '#{value}'."
-            
-            # Clear all filter values
-            when 'clear'
-                list.clear()
-                res = "Cleared."
-                
-            else
-                return
-             
-        return "[#{command}] #{res}"
-            
+            sendMessage "[Filter] No value specified. Usage: !#{name} add <value>"
     
-    # Handle !-commands
-    handleCommand: (command, args)->
-        
-        # !filter <filter type> <state>
-        if (command is 'filter')
-            [filter, state] = args
+    
+    cmdFilterRemove: (name, dto, args, sendMessage) ->
+        value = args[0] if args? and args[0]?
+        if value?
+            dto.remove value
+            sendMessage "[Filter] #{name} - Removed."
+        else
+            sendMessage "[Filter] No value specified. Usage: !#{name} remove <value>"
             
-            if (filter in filterNames)
-                res = @handleFilterStateCommand filter, state
-                return "[Filter] #{res}"
             
-        # !<filter list> <action> <value>
-        else if (command in tableNames)
-                
-            field = tableFields[command]
-            [action, value] = args
+    cmdFilterClear: (name, dto, args, sendMessage) ->
+        dto.clear()
+        sendMessage "[Filter] #{name} - Cleared."
+
+
+    # Filter state command handlers
+
+    cmdFilterEnable: (filter, sendMessage) ->
+        @states.add filter, 1
+        sendMessage "[Filter] #{filter} filter is now enabled."
+
+    
+    cmdFilterDisable: (filter, sendMessage) ->
+        @states.add filter, 0
+        sendMessage "[Filter] #{filter} filter is now disabled."
+
+
+    cmdFilterShow: (filter, sendMessage) ->
+        if @states.get filter
+            sendMessage "[Filter] #{filter} filter is enabled. Disable with !filter #{filter} off"
+        else
+            sendMessage "[Filter] #{filter} filter is disabled. Enable with !filter #{filter} on"
+       
+       
+    # Misc command handlers       
+       
+    cmdPermitUser: (args, sendMessage) ->
+        permitLength = 3 * 60 # 3 minutes
+        permitTime   = io.now() + permitLength
         
-            res = @handleFilterCommand command, filter, action, value
-                    
+        target = args[0] if args? and args[0]?
+        if target?
+            @permits[target.toLowerCase()] = permitTime
+            sendMessage "[Filter] #{target} permitted for #{permitLength} seconds."
+        else
+            sendMessage "[Filter] No target specified. Usage: !permit <username>"
         
-    handle: (user, command, args, sendMessage) ->
+
+       
+    loadTable: (table) ->
+        list = @lists[table]
+        list.load()
+
+
+    loadStates: ->
+        @states.load()
+        
+
+    checkFilters: (name, msg, sendMessage) ->
+        msg = msg.trim()
+        
+        if @states.get 'words'
+            sendMessage "Bad word, #{name}!"         if @containsBadword msg
+        if @states.get 'emotes'
+            sendMessage "No single emotes, #{name}!" if @isSingleEmote msg
+        if @states.get 'caps'
+            sendMessage "Ease on the caps, #{name}!" if @isMostlyCaps msg
+        if @states.get 'url'
+            sendMessage "Bad URL, #{name}!"          if @containsBadURL msg
+    
+    containsBadword: (msg) ->
+        for word in @lists['badwords'].get()
+            if msg.indexOf(word) isnt -1 then return true
+    
+    
+    isSingleEmote: (msg) ->
+        for emote in @lists['emotes'].get()
+            if msg is emote then return true
+
+
+    isMostlyCaps: (msg) ->
+        return (0.5 <= getCapsRate msg)
+
+    
+    containsBadURL: (msg) ->
+        # TODO
+    
+    handle: (user, msg, sendMessage) ->
         {name, op} = user
         
-        # Op - check for filter commands.
-        if (op?)
-            return unless command? and command isnt ''
+        if op then return
 
-            res = @handleCommand command, args
+        if (permitTime = @permits[name])?
+            if io.now() > permitTime then delete @permits[name] else return
             
         
-        # Not op - filter their message instead. :>
-        else
-            res = @checkFilters(name, [command].concat(args))
+        @checkFilters name, msg, sendMessage
         
-        sendMessage res if res?
+
+getCapsRate = (msg) ->
+    # Yay for functional programming!
+    (true for chr in msg when chr >= 'A' and chr <= 'Z').length / (msg.length * 1.0)
 
 
 exports.New = (channel) ->

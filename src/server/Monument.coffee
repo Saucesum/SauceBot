@@ -72,7 +72,7 @@ class Monument
         sendMessage "[#{@name}] Cleared"
 
 
-    handle: (user, command, args, sendMessage) ->
+    handle: (user, msg, sendMessage) ->
         
 
 exports.New = (channel, name, blocks, usage) ->

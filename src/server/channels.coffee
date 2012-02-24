@@ -106,6 +106,9 @@ class Channel
                 args = trigger.getArgs msg
                 trigger.execute user, args, sendMessage
                 break
+                
+        for module in @modules
+            module.handle user, msg, sendMessage
 
         finished?()
 

@@ -14,7 +14,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Filters'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Filters URLs, caps-lock, words and emotes'
 
 # Filters

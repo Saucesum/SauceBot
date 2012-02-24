@@ -12,11 +12,12 @@ class ArrayDTO extends DTO
         @data = []
         
         
-    load: ->
+    load: (cb) ->
         db.loadData @channel.id, @table, @valueField, (data) =>
             @data = data
             io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
-        
+            cb?()
+            
     
     save: ->
         db.setChanData @channel.id, @table, [@valueFields], [@data] 

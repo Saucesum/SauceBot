@@ -13,9 +13,10 @@ class ConfigDTO extends DTO
         @data[field] = 0 for field in @fields
             
             
-    load: ->
+    load: (cb) ->
         db.getChanDataEach @channel.id, @table, (data) =>
             @data = data
+            cb?()
 
 
     save: ->

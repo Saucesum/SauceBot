@@ -35,8 +35,8 @@ class Counter
         @triggers = {}
         
     load: ->
-        regexBadCtr = new RegExp "^!(\\w+\\s+(?:\\+|\\-).+)$"
-        regexNewCtr = new RegExp "^!(\\w+\\s+=.+)$"
+        regexBadCtr = /^!(\w+\s+(?:\+|\-).+)$/
+        regexNewCtr = /^!(\w+\s+=.+)$/
 
         @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexBadCtr,
             (user, commandString, sendMessage) =>

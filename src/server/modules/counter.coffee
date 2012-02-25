@@ -85,8 +85,9 @@ class Counter
         else
             symbol = arg.charAt(0)
             valstr = arg.slice(1)
-            
-            value  = parseInt(valstr, 10) ? 0
+
+            value  = parseInt(valstr, 10)
+            value  = 0 if isNaN value
 
             res = switch symbol
               when '='
@@ -129,7 +130,6 @@ class Counter
 
     counterSet: (ctr, value) ->
         if value?
-            io.debug "#{value}"
             if !@counters.get(ctr)?
                 @counters.add ctr, value
 
@@ -143,7 +143,7 @@ class Counter
         counter = @counters.get ctr
         
         @counters.add ctr, counter + value
-        @counterCheck ctr + (if (value is 0) then ' (not changed)' else '')
+        @counterCheck(ctr) + (if (value is 0) then ' (not changed)' else '')
 
     counterUnset: (ctr) ->
         if @counters.get(ctr)?

@@ -64,13 +64,16 @@ class Channel
     # and call this again.
     loadChannelModules: ->
         newModules = []
+
+        io.debug "Unloading #{@modules.length} modules for #{@name}"
+        module.unload() for module in @modules
         
         db.getChanDataEach @id, 'module', (result) =>
             module = @loadModule result.module
             newModules.push module
         , =>
             @modules = newModules
-            io.debug "Done loading modules for #{@name}"
+            io.debug "Done loading #{@modules.length} modules for #{@name}"
             
             
     # Returns a {name, op}-object for the specified user.

@@ -101,7 +101,7 @@ class Channel
 
 
     # Handles a message by passing it on to all loaded modules.
-    handle: (data, sendMessage, finished) ->
+    handle: (data, bot) ->
         user      = @getUser data.user, data.op
 
         msg = data.msg
@@ -110,13 +110,12 @@ class Channel
             # check for first match that the user is authorized to use
             if trigger.test(msg) and (user.op >= trigger.oplevel)
                 args = trigger.getArgs msg
-                trigger.execute user, args, sendMessage
+                trigger.execute user, args, bot
                 break
                 
         for module in @modules
-            module.handle user, msg, sendMessage
+            module.handle user, msg, bot
 
-        finished?()
 
     # register(trigger)   - Registers a Trigger
     # register(module,name,callback)   - Registers a Trigger built from
@@ -159,8 +158,8 @@ class Channel
 
 
 # Handles a message in the appropriate channel instance
-exports.handle = (channel, data, sendMessage, finished) ->
-    channels[channel].handle data, sendMessage, finished
+exports.handle = (channel, data, bot) ->
+    channels[channel].handle data, bot
 
 # Loads the channel list
 exports.load = (finished) ->

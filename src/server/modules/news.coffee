@@ -50,38 +50,38 @@ class News
 
         # !news on - Enable auto-news
         @channel.register this, "news on"      , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsEnable user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsEnable user, args, bot
         
         # !news off - Disable auto-news
         @channel.register this, "news off"     , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsDisable user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsDisable user, args, bot
         
         # !news seconds <value> - Sets minimum seconds
         @channel.register this, "news seconds" , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsSeconds user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsSeconds user, args, bot
         
         # !news messages <value> - Sets minimum messages
         @channel.register this, "news messages", Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsMessages user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsMessages user, args, bot
         
         # !news clear - Clears the news list
         @channel.register this, "news clear"   , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsClear user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsClear user, args, bot
         
         # !news add <line> - Adds a news line
         @channel.register this, "news add"     , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsAdd user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsAdd user, args, bot
         
         # !news - Print the next news message
         @channel.register this, "news"         , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdNewsNext user, args, sendMessage
+            (user,args,bot) =>
+                @cmdNewsNext user, args, bot
         
 
     unload: ->
@@ -89,34 +89,34 @@ class News
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 
-    cmdNewsEnable: (user, args, sendMessage) ->
+    cmdNewsEnable: (user, args, bot) ->
         @config.add 'state', 1
-        sendMessage '<News> Auto-news is now enabled.'
+        bot.say '<News> Auto-news is now enabled.'
 
-    cmdNewsDisable: (user, args, sendMessage) ->
+    cmdNewsDisable: (user, args, bot) ->
         @config.add 'state', 0
-        sendMessage '<News> Auto-news is now disabled.'
+        bot.say '<News> Auto-news is now disabled.'
 
-    cmdNewsSeconds: (user, args, sendMessage) ->
-        @config.add 'seconds', parseInt(args[0], 10) if args? and args[0]?
-        sendMessage "<News> Auto-news minimum delay set to " +
-                    "#{@config.get 'seconds'} seconds."
+    cmdNewsSeconds: (user, args, bot) ->
+        @config.add 'seconds', parseInt(args[0], 10) if args[0]?
+        bot.say "<News> Auto-news minimum delay set to " +
+                "#{@config.get 'seconds'} seconds."
 
-    cmdNewsMessages: (user, args, sendMessage) ->
-        @config.add 'messages', parseInt(args[0], 10) if args? and args[0]?
-        sendMessage "<News> Auto-news minimum delay set to " +
-                    "#{@config.get 'messages'} messages."
+    cmdNewsMessages: (user, args, bot) ->
+        @config.add 'messages', parseInt(args[0], 10) if args[0]?
+        bot.say "<News> Auto-news minimum delay set to " +
+                "#{@config.get 'messages'} messages."
 
-    cmdNewsClear: (user, args, sendMessage) ->
+    cmdNewsClear: (user, args, bot) ->
         @news.clear()
-        sendMessage '<News> Auto-news cleared.'
+        bot.say '<News> Auto-news cleared.'
 
-    cmdNewsAdd: (user, args, sendMessage) ->
+    cmdNewsAdd: (user, args, bot) ->
         @news.add args.join ' '
-        sendMessage '<News> Auto-news added.'
+        bot.say '<News> Auto-news added.'
 
-    cmdNewsNext: (user, args, sendMessage) ->
-        sendMessage @getNext() ? '<News> No auto-news found. Add with !news add <message>'
+    cmdNewsNext: (user, args, bot) ->
+        bot.say @getNext() ? '<News> No auto-news found. Add with !news add <message>'
         
 
     save: ->
@@ -154,11 +154,11 @@ class News
         @getNext()
     
     # Auto-news
-    handle: (user, msg, sendMessage) ->
+    handle: (user, msg, bot) ->
  
         # Check if it's time to print some news
         if ((news = @tickNews())?)
-            sendMessage news
+            bot.say news
 
 
 

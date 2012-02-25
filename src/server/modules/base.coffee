@@ -27,24 +27,24 @@ class Base
         io.module "[Base] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register  this, "saucebot", Sauce.Level.User,
-            (user,args,sendMessage) ->
-              sendMessage '[SauceBot] SauceBot version 3.1 - Node.js'
+            (user,args,bot) ->
+              bot.say '[SauceBot] SauceBot version 3.1 - Node.js'
 
         @channel.register  this, "test", Sauce.Level.Mod,
-            (user,args,sendMessage) ->
-              sendMessage 'Test command!' if user.op?
+            (user,args,bot) ->
+              bot.say 'Test command!' if user.op?
 
         @channel.register  this, "time", Sauce.Level.User,
-            (user,args,sendMessage) ->
+            (user,args,bot) ->
               date = new Date()
-              sendMessage "[Time] #{vars.formatTime(date)}"
+              bot.say "[Time] #{vars.formatTime(date)}"
 
     unload:->
         io.module "[Base] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 
-    handle: (user, msg, sendMessage) ->
+    handle: (user, msg, bot) ->
         
 
 exports.New = (channel) ->

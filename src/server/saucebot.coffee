@@ -71,9 +71,12 @@ class SauceBot
         json.op   = if json.op then 1 else null
 
         # Handle the message
-        chans.handle chan, json, (data) =>
-            @say chan, "#{io.noise()} #{data}"
-        , =>
+        chans.handle chan, json,
+            say    : (data) => @say     chan, data
+            ban    : (data) => @ban     chan, data
+            unban  : (data) => @unban   chan, data
+            clear  : (data) => @clear   chan, data
+            timeout: (data) => @timeout chan, data
             
             
     # Update (upd):

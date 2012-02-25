@@ -44,9 +44,9 @@ class Hangman
         loadWordList @language unless wordListLoaded @language
 
 
-    handle: (user, command, args, sendMessage) ->
+    handle: (user, command, args, bot) ->
         @word = randomWord @language
-        sendMessage @word
+        bot.say @word
         
         
 randomWord = (listname) ->

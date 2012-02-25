@@ -41,12 +41,12 @@ class Counter
         regexNewCtr = /^!(\w+\s+=.+)$/
 
         @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexBadCtr,
-            (user, commandString, sendMessage) =>
-                @cmdBadCounter user, commandString, sendMessage
+            (user, commandString, bot) =>
+                @cmdBadCounter user, commandString, bot
 
         @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexNewCtr,
-            (user, commandString, sendMessage) =>
-                @cmdNewCounter user, commandString, sendMessage
+            (user, commandString, bot) =>
+                @cmdNewCounter user, commandString, bot
 
         # Load custom commands
         @counters.load =>
@@ -65,8 +65,8 @@ class Counter
 
         # Create a trigger that manages a counter
         @triggers[ctr] = trig.buildTrigger  this, ctr, Sauce.Level.Mod,
-            (user, args, sendMessage) =>
-                @cmdCounter ctr, user, args, sendMessage
+            (user, args, bot) =>
+                @cmdCounter ctr, user, args, bot
 
         @channel.register @triggers[ctr]
 
@@ -76,7 +76,7 @@ class Counter
     #  !<counter> -<value>
     #  !<counter> =<value>
     #  !<counter> unset
-    cmdCounter: (ctr, user, args, sendMessage) ->
+    cmdCounter: (ctr, user, args, bot) ->
         arg = args[0] ? ''
 
         if arg is 'unset'
@@ -103,11 +103,11 @@ class Counter
                 @counterAdd ctr, 0-value
 
 
-        sendMessage "[Counter] #{res}" if res?
+        bot.say "[Counter] #{res}" if res?
 
     # Handles:
     #  !<not-a-counter> =<value>
-    cmdNewCounter: (user, commandString, sendMessage) ->
+    cmdNewCounter: (user, commandString, bot) ->
         [ctr,arg] = commandString[0..1]
 
         value = parseInt(arg.slice(1), 10)
@@ -115,15 +115,15 @@ class Counter
         unless isNaN value
             res = @counterSet ctr, value
 
-        sendMessage "[Counter] #{res}" if res?
+        bot.say "[Counter] #{res}" if res?
 
     # Handles:
     #  !<not-a-counter> +<value>
     #  !<not-a-counter> -<value>
-    cmdBadCounter: (user, commandString, sendMessage) ->
+    cmdBadCounter: (user, commandString, bot) ->
         ctr = commandString[0]
 
-        sendMessage "[Counter] Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
+        bot.say "[Counter] Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
         
 
     counterCheck: (ctr) ->
@@ -153,7 +153,7 @@ class Counter
             @counters.remove(ctr)
             return "#{ctr} removed."
         
-    handle: (user, command, args, sendMessage) ->
+    handle: (user, command, args, bot) ->
 
 
 

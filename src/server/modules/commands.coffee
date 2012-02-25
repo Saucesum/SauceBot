@@ -37,11 +37,11 @@ class Commands
         io.module "[Commands] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register  this, "set"  , Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdSet user, args, sendMessage
+            (user,args,bot) =>
+                @cmdSet user, args, bot
         @channel.register  this, "unset", Sauce.Level.Mod,
-            (user,args,sendMessage) =>
-                @cmdUnset user, args, sendMessage
+            (user,args,bot) =>
+                @cmdUnset user, args, bot
 
         # Load custom commands
         @commands.load =>
@@ -61,9 +61,9 @@ class Commands
 
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, Sauce.Level.User,
-            (user, args, sendMessage) =>
+            (user, args, bot) =>
                 parsed = vars.parse @channel, user, @commands.get(cmd)
-                sendMessage parsed
+                bot.say parsed
 
         @channel.register @triggers[cmd]
 
@@ -77,27 +77,27 @@ class Commands
 
 
     # !(un)?set <command>  - Unset command
-    cmdUnset: (user, args, sendMessage) ->
+    cmdUnset: (user, args, bot) ->
         unless args[0]?
-            return sendMessage "Usage: !unset (name).  Only forgets commands made with !set."
+            return bot.say "Usage: !unset (name).  Only forgets commands made with !set."
 
         cmd = args[0]
 
         if @commands.data[cmd]? or @triggers[cmd]?
             @commands.remove cmd
             @delTrigger      cmd
-            return sendMessage "Command unset: #{cmd}"
+            return bot.say "Command unset: #{cmd}"
         
 
     # !set <command> <message>  - Set command
     # !set <command>            - Unset command
-    cmdSet: (user, args, sendMessage) ->
+    cmdSet: (user, args, bot) ->
         unless args[0]?
-            return sendMessage "Usage: !set (name) (message).  !set (name) or !unset (name) to forget a command."
+            return bot.say "Usage: !set (name) (message).  !set (name) or !unset (name) to forget a command."
 
         # !set <command>
         if (args.length is 1)
-            return @cmdUnset user, args, sendMessage
+            return @cmdUnset user, args, bot
 
         cmd = (args.splice 0, 1)[0]
         msg = args.join ' '
@@ -105,9 +105,9 @@ class Commands
         @commands.add cmd, msg
         @addTrigger   cmd
 
-        return sendMessage "Command set: #{cmd}"
+        return bot.say "Command set: #{cmd}"
 
-    handle: (user, msg, sendMessage) ->
+    handle: (user, msg, bot) ->
 
 exports.New = (channel) ->
     new Commands channel

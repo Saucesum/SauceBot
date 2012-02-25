@@ -72,18 +72,18 @@ class Filters
           do (filterName, filterList) =>
             # !<filterlist> add <value> - Adds value to filter list
             @channel.register this, "#{filterName} add"   , Sauce.Level.Mod,
-                (user, args, sendMessage) =>
-                    @cmdFilterAdd    filterName, filterList, args, sendMessage
+                (user, args, bot) =>
+                    @cmdFilterAdd    filterName, filterList, args, bot
                     
             # !<filterlist> remove <value> - Removes value from filter list
             @channel.register this, "#{filterName} remove", Sauce.Level.Mod,
-                (user, args, sendMessage) =>
-                    @cmdFilterRemove filterName, filterList, args, sendMessage
+                (user, args, bot) =>
+                    @cmdFilterRemove filterName, filterList, args, bot
 
             # !<filterlist> clear - Clears the filter list
             @channel.register this, "#{filterName} clear" , Sauce.Level.Mod,
-                (user, args, sendMessage) =>
-                    @cmdFilterClear  filterName, filterList, args, sendMessage
+                (user, args, bot) =>
+                    @cmdFilterClear  filterName, filterList, args, bot
 
 
         # Register filter state commands
@@ -91,26 +91,26 @@ class Filters
           do (filter) =>
             # !filter <filtername> on - Enables filter
             @channel.register this, "filter #{filter} on" , Sauce.Level.Mod,
-                (user, args, sendMessage) =>
-                    @cmdFilterEnable  filter, sendMessage
+                (user, args, bot) =>
+                    @cmdFilterEnable  filter, bot
                     
             # !filter <filtername> off - Disables filter
             @channel.register this, "filter #{filter} off", Sauce.Level.Mod,
-                (user, args, sendMessage) =>
-                    @cmdFilterDisable filter, sendMessage
+                (user, args, bot) =>
+                    @cmdFilterDisable filter, bot
 
             # !filter <filtername> - Shows filter state
             @channel.register this, "filter #{filter}"    , Sauce.Level.Mod,
-                (user, args, sendMessage) =>
-                    @cmdFilterShow    filter, sendMessage
+                (user, args, bot) =>
+                    @cmdFilterShow    filter, bot
             
 
         # Register misc commands
         
         # !permit <username>
         @channel.register this, 'permit'                  , Sauce.Level.Mod,
-            (user, args, sendMessage) =>
-                @cmdPermitUser args, sendMessage
+            (user, args, bot) =>
+                @cmdPermitUser args, bot
         
 
     load:  ->
@@ -133,60 +133,60 @@ class Filters
 
     # Filter list command handlers
 
-    cmdFilterAdd: (name, dto, args, sendMessage) ->
+    cmdFilterAdd: (name, dto, args, bot) ->
         value = args[0] if args[0]?
         if value?
             dto.add value
-            sendMessage "[Filter] #{name} - Added."
+            bot.say "[Filter] #{name} - Added."
         else
-            sendMessage "[Filter] No value specified. Usage: !#{name} add <value>"
+            bot.say "[Filter] No value specified. Usage: !#{name} add <value>"
     
     
-    cmdFilterRemove: (name, dto, args, sendMessage) ->
+    cmdFilterRemove: (name, dto, args, bot) ->
         value = args[0] if args[0]?
         if value?
             dto.remove value
-            sendMessage "[Filter] #{name} - Removed."
+            bot.say "[Filter] #{name} - Removed."
         else
-            sendMessage "[Filter] No value specified. Usage: !#{name} remove <value>"
+            bot.say "[Filter] No value specified. Usage: !#{name} remove <value>"
             
             
-    cmdFilterClear: (name, dto, args, sendMessage) ->
+    cmdFilterClear: (name, dto, args, bot) ->
         dto.clear()
-        sendMessage "[Filter] #{name} - Cleared."
+        bot.say "[Filter] #{name} - Cleared."
 
 
     # Filter state command handlers
 
-    cmdFilterEnable: (filter, sendMessage) ->
+    cmdFilterEnable: (filter, bot) ->
         @states.add filter, 1
-        sendMessage "[Filter] #{filter} filter is now enabled."
+        bot.say "[Filter] #{filter} filter is now enabled."
 
     
-    cmdFilterDisable: (filter, sendMessage) ->
+    cmdFilterDisable: (filter, bot) ->
         @states.add filter, 0
-        sendMessage "[Filter] #{filter} filter is now disabled."
+        bot.say "[Filter] #{filter} filter is now disabled."
 
 
-    cmdFilterShow: (filter, sendMessage) ->
+    cmdFilterShow: (filter, bot) ->
         if @states.get filter
-            sendMessage "[Filter] #{filter} filter is enabled. Disable with !filter #{filter} off"
+            bot.say "[Filter] #{filter} filter is enabled. Disable with !filter #{filter} off"
         else
-            sendMessage "[Filter] #{filter} filter is disabled. Enable with !filter #{filter} on"
+            bot.say "[Filter] #{filter} filter is disabled. Enable with !filter #{filter} on"
        
        
     # Misc command handlers       
        
-    cmdPermitUser: (args, sendMessage) ->
+    cmdPermitUser: (args, bot) ->
         permitLength = 3 * 60 # 3 minutes
         permitTime   = io.now() + permitLength
         
         target = args[0] if args[0]?
         if target?
             @permits[target.toLowerCase()] = permitTime
-            sendMessage "[Filter] #{target} permitted for #{permitLength} seconds."
+            bot.say "[Filter] #{target} permitted for #{permitLength} seconds."
         else
-            sendMessage "[Filter] No target specified. Usage: !permit <username>"
+            bot.say "[Filter] No target specified. Usage: !permit <username>"
         
 
        
@@ -199,17 +199,19 @@ class Filters
         @states.load()
         
 
-    checkFilters: (name, msg, sendMessage) ->
+    checkFilters: (name, msg, bot) ->
         msg = msg.trim()
         
+        # TODO: These should ban/timeout/clear instead of just telling them off. 
+        
         if @states.get 'words'
-            sendMessage "Bad word, #{name}!"         if @containsBadword msg
+            bot.say "Bad word, #{name}!"         if @containsBadword msg
         if @states.get 'emotes'
-            sendMessage "No single emotes, #{name}!" if @isSingleEmote msg
+            bot.say "No single emotes, #{name}!" if @isSingleEmote msg
         if @states.get 'caps'
-            sendMessage "Ease on the caps, #{name}!" if @isMostlyCaps msg
+            bot.say "Ease on the caps, #{name}!" if @isMostlyCaps msg
         if @states.get 'url'
-            sendMessage "Bad URL, #{name}!"          if @containsBadURL msg
+            bot.say "Bad URL, #{name}!"          if @containsBadURL msg
     
     containsBadword: (msg) ->
         for word in @lists['badwords'].get()
@@ -222,13 +224,13 @@ class Filters
 
 
     isMostlyCaps: (msg) ->
-        return (0.5 <= getCapsRate msg)
+        return (0.55 <= getCapsRate msg)
 
     
     containsBadURL: (msg) ->
         # TODO
     
-    handle: (user, msg, sendMessage) ->
+    handle: (user, msg, bot) ->
         {name, op} = user
         
         if op then return
@@ -237,7 +239,7 @@ class Filters
             if io.now() > permitTime then delete @permits[name] else return
             
         
-        @checkFilters name, msg, sendMessage
+        @checkFilters name, msg, bot
         
 
 getCapsRate = (msg) ->

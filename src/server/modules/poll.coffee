@@ -21,18 +21,18 @@ class Poll
         
         # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
         @channel.register this, 'poll'    , Sauce.Level.Mod,
-            (user, args, sendMessage) =>
-                @cmdPollStart args, sendMessage
+            (user, args, bot) =>
+                @cmdPollStart args, bot
         
         # !poll end - Ends the active poll
         @channel.register this, 'poll end', Sauce.Level.Mod,
-            (user, args, sendMessage) =>
-                @cmdPollEnd args, sendMessage
+            (user, args, bot) =>
+                @cmdPollEnd args, bot
         
         # !vote <value> - Adds a vote to the current poll
         @channel.register this, 'vote'    , Sauce.Level.User,
-            (user, args, sendMessage) =>
-                @cmdPollVote user, args, sendMessage
+            (user, args, bot) =>
+                @cmdPollVote user, args, bot
 
         
     load: ->
@@ -60,40 +60,38 @@ class Poll
         @channel.unregister myTriggers...
 
 
-    cmdPollStart: (args, sendMessage) ->
+    cmdPollStart: (args, bot) ->
         unless args[0]?
-            sendMessage '[Poll] No poll specified. Usage: !poll <name> <opt1> <opt2> ...'
-            return
+            return bot.say '[Poll] No poll specified. Usage: !poll <name> <opt1> <opt2> ...'
             
         pollName = args.shift().toLowerCase()
         
         unless args.length
             unless @polls[pollName]?
-                sendMessage "[Poll] Unknown poll. Create it with !poll #{pollName} <opt1> <opt2> ..."
-                return
+                return bot.say "[Poll] Unknown poll. Create it with !poll #{pollName} <opt1> <opt2> ..."
                 
             @reset()
             poll = @polls[pollName]
             @activePoll = pollName
             @votes = (0 for opt in poll)
             
-            sendMessage "[Poll] '#{pollName}' started! Vote with !vote <option>. Options: #{poll.join ', '}"
+            bot.say "[Poll] '#{pollName}' started! Vote with !vote <option>. Options: #{poll.join ', '}"
             
         else
             options = args.join ' '
             @pollDTO.add pollName, options
             @updatePollList()
-            sendMessage "[Poll] '#{pollName}' created! Start with !poll #{pollName}"
+            bot.say "[Poll] '#{pollName}' created! Start with !poll #{pollName}"
             
         
         
-    cmdPollEnd: (args, sendMessage) ->
+    cmdPollEnd: (args, bot) ->
         unless @activePoll?
-            sendMessage '[Poll] No active poll. Start with !poll <name>'
+            bot.say '[Poll] No active poll. Start with !poll <name>'
             return
             
         results = @getResults()
-        sendMessage "[Poll] #{@activePoll} results: #{results}"
+        bot.say "[Poll] #{@activePoll} results: #{results}"
         @reset()
         
         
@@ -111,16 +109,16 @@ class Poll
          
        
         
-    cmdPollVote: (user, args, sendMessage) ->
+    cmdPollVote: (user, args, bot) ->
         user = user.name
         return if !@activePoll? or user in @hasVoted 
 
         if args[0]? and (idx = @polls[@activePoll].indexOf(args[0])) isnt -1
             @hasVoted.push user
             @votes[idx]++
-            sendMessage "[Poll] #{user} voted!"
+            bot.say "[Poll] #{user} voted!"
 
-    handle: (user, msg, sendMessage) ->
+    handle: (user, msg, bot) ->
         
 exports.New = (channel) -> new Poll channel
         

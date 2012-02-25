@@ -32,10 +32,10 @@ class Monument
     load: ->
         io.module "[#{@name}] Loading for #{@channel.id}: #{@channel.name}"
 
-        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,sendMessage) =>
-            @cmdMonument user, args, sendMessage
-        @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,sendMessage) =>
-            @cmdMonumentClear user, args, sendMessage
+        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,bot) =>
+            @cmdMonument user, args, bot
+        @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,bot) =>
+            @cmdMonumentClear user, args, bot
         
         # Load monument data
         @obtained.load()
@@ -53,27 +53,27 @@ class Monument
 
     # !<name> - Print monument
     # !<name> <block> - Add the block to the obtained-list
-    cmdMonument: (user, args, sendMessage) ->
+    cmdMonument: (user, args, bot) ->
         unless args[0]?
-            return sendMessage @getMonumentState()
+            return bot.say @getMonumentState()
         
         block = args[0].toLowerCase()
         idx   = @blocksLC.indexOf block
         
         unless (idx >= 0)
-            return sendMessage "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
+            return bot.say "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
         
         @obtained.add block
-        sendMessage "[#{@name}] Added #{@blocks[idx]}."
+        bot.say "[#{@name}] Added #{@blocks[idx]}."
 
 
     # !<name> clear - Clear the monument
-    cmdMonumentClear: (user, args, sendMessage) ->
+    cmdMonumentClear: (user, args, bot) ->
         @obtained.clear()
-        sendMessage "[#{@name}] Cleared"
+        bot.say "[#{@name}] Cleared"
 
 
-    handle: (user, msg, sendMessage) ->
+    handle: (user, msg, bot) ->
         
 
 exports.New = (channel, name, blocks, usage) ->

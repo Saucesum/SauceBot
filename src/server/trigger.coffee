@@ -47,8 +47,8 @@ class Trigger
         match = @pattern.exec(msg) ? [""]
         capture = match[1] ? ""
 
-        # Return null if there are no non-space characters
-        return null unless /\S/.test capture
+        # Return one blank arg if there are no non-space characters
+        return [""] unless /\S/.test capture
 
         capture.split /\s+/
 

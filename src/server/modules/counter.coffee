@@ -35,6 +35,8 @@ class Counter
         @triggers = {}
         
     load: ->
+        io.module "[Counter] Loading for #{@channel.id}: #{@channel.name}"
+
         regexBadCtr = /^!(\w+\s+(?:\+|\-).+)$/
         regexNewCtr = /^!(\w+\s+=.+)$/
 
@@ -46,13 +48,14 @@ class Counter
             (user, commandString, sendMessage) =>
                 @cmdNewCounter user, commandString, sendMessage
 
-        io.module "[Counter] Loading counters for #{@channel.id}: #{@channel.name}"
-
         # Load custom commands
         @counters.load =>
             for ctr of @counters.data
                 @addTrigger ctr
+#        io.module "[Counter] Loaded #{@counters.length()} counters"
+
     unload:->
+        io.module "[Counter] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 

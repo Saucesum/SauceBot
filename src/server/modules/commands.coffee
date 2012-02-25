@@ -34,6 +34,8 @@ class Commands
         @triggers = {}
         
     load: ->
+        io.module "[Commands] Loading for #{@channel.id}: #{@channel.name}"
+
         @channel.register  this, "set"  , Sauce.Level.Mod,
             (user,args,sendMessage) =>
                 @cmdSet user, args, sendMessage
@@ -46,7 +48,10 @@ class Commands
             for cmd of @commands.data
                 @addTrigger cmd
 
+#        io.module "[Commands] Loaded #{@commands.length()} commands"
+
     unload:->
+        io.module "[Commands] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
         

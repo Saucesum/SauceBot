@@ -114,6 +114,8 @@ class Filters
         
 
     load:  ->
+        io.module "[Filters] Loading for #{@channel.id}: #{@channel.name}"
+
         @channel = chan if chan?
         
         # Load lists
@@ -124,6 +126,7 @@ class Filters
         
 
     unload: ->
+        io.module "[Filters] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 

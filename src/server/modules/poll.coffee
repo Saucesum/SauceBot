@@ -36,6 +36,7 @@ class Poll
 
         
     load: ->
+        io.module "[Poll] Loading for #{@channel.id}: #{@channel.name}"
         @pollDTO.load =>
             @updatePollList()
         
@@ -54,6 +55,7 @@ class Poll
 
 
     unload: ->
+        io.module "[Poll] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 

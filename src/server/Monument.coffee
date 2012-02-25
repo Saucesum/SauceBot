@@ -30,7 +30,7 @@ class Monument
         
     
     load: ->
-        io.module "[#{@name}] Loading #{@channel.id}: #{@channel.name}"
+        io.module "[#{@name}] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,sendMessage) =>
             @cmdMonument user, args, sendMessage
@@ -41,6 +41,7 @@ class Monument
         @obtained.load()
 
     unload:->
+        io.module "[#{@name}}] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
         

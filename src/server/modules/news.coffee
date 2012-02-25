@@ -43,6 +43,8 @@ class News
         @messageCount = 0
         
     load: ->
+        io.module "[News] Loading for #{@channel.id}: #{@channel.name}"
+
         @news.load()
         @config.load()
 
@@ -83,6 +85,7 @@ class News
         
 
     unload: ->
+        io.module "[News] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 

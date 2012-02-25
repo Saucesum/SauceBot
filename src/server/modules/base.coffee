@@ -24,7 +24,7 @@ class Base
     constructor: (@channel) ->
 
     load:->
-        io.module "[Base] Loading for #{@channel.id}"
+        io.module "[Base] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register  this, "saucebot", Sauce.Level.User,
             (user,args,sendMessage) ->
@@ -40,6 +40,7 @@ class Base
               sendMessage "[Time] #{vars.formatTime(date)}"
 
     unload:->
+        io.module "[Base] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
 

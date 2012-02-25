@@ -84,19 +84,19 @@ class Counter
 
         else
             symbol = arg.charAt(0)
-            value  = parseInt(arg.slice(1), 10)
+            valstr = arg.slice(1)
+            
+            value  = parseInt(valstr, 10) ? 0
 
-            unless isNaN value
-
-                res = switch symbol
-                  when '='
-                    @counterSet ctr, value
-                  when '+'
-                    value ?= 1
-                    @counterAdd ctr, value
-                  when '-'
-                    value ?= 1
-                    @counterAdd ctr, 0-value
+            res = switch symbol
+              when '='
+                @counterSet ctr, value
+              when '+'
+                value = 1 if valstr is ''
+                @counterAdd ctr, value
+              when '-'
+                value = 1 if valstr is ''
+                @counterAdd ctr, 0-value
 
 
         sendMessage "[Counter] #{res}" if res?
@@ -142,11 +142,8 @@ class Counter
     counterAdd: (ctr, value) ->
         counter = @counters.get ctr
         
-        if !counter?
-            return "Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
-
         @counters.add ctr, counter + value
-        @counterCheck ctr
+        @counterCheck ctr + (if (value is 0) then ' (not changed)' else '')
 
     counterUnset: (ctr) ->
         if @counters.get(ctr)?

@@ -63,18 +63,22 @@ class Channel
     # To unload a module, remove its entry from the database
     # and call this again.
     loadChannelModules: ->
-        newModules = []
-
-        io.debug "Unloading #{@modules.length} modules for #{@name}"
-        module.unload() for module in @modules
+        oldNames = module.name for module in @modules
+        newNames = []
         
         db.getChanDataEach @id, 'module', (result) =>
-            module = @loadModule result.module
-            newModules.push module
+            # Load newly added
+            unless result.module.name in oldNames
+                @modules.push @loadModule result.module
+
+            newNames.push result.module.name
         , =>
-            @modules = newModules
+            # Unload removed
+            for module in @modules
+                unless module.name in newNames
+                    module.unload()
+                    @modules.splice indexOf module, 1
             io.debug "Done loading #{@modules.length} modules for #{@name}"
-            
             
     # Returns a {name, op}-object for the specified user.
     #

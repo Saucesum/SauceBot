@@ -2,6 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
+trig  = require '../trigger'
 
 io    = require '../ioutil'
 
@@ -30,20 +31,101 @@ io.module '[Counter] Init'
 class Counter
     constructor: (@channel) ->
         @counters = new HashDTO @channel, 'counter', 'name', 'value'
-        
+
+        @triggers = {}
         
     load: ->
+        regexBadCtr = new RegExp "^!(\\w+\\s+(?:\\+|\\-).+)$"
+        regexNewCtr = new RegExp "^!(\\w+\\s+=.+)$"
+
+        @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexBadCtr,
+            (user, commandString, sendMessage) =>
+                @cmdBadCounter user, commandString, sendMessage
+
+        @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexNewCtr,
+            (user, commandString, sendMessage) =>
+                @cmdNewCounter user, commandString, sendMessage
+
         io.module "[Counter] Loading counters for #{@channel.id}: #{@channel.name}"
-        @counters.load()
+
+        # Load custom commands
+        @counters.load =>
+            for ctr of @counters.data
+                @addTrigger ctr
+    unload:->
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
 
 
-    # Handle !<counter>
+    addTrigger: (ctr) ->
+        return if @triggers[ctr]?
+
+        # Create a trigger that manages a counter
+        @triggers[ctr] = trig.buildTrigger  this, ctr, Sauce.Level.Mod,
+            (user, args, sendMessage) =>
+                @cmdCounter ctr, user, args, sendMessage
+
+        @channel.register @triggers[ctr]
+
+    # Handles:
+    #  !<counter>
+    #  !<counter> +<value>
+    #  !<counter> -<value>
+    #  !<counter> =<value>
+    #  !<counter> unset
+    cmdCounter: (ctr, user, args, sendMessage) ->
+        arg = args[0] ? null
+
+        if (arg? and arg is 'unset')
+            res = @counterUnset ctr
+
+        else if (arg isnt '')
+            symbol = arg.charAt(0)
+            value  = parseInt(arg.slice(1), 10)
+
+            unless isNaN value
+
+                res = switch symbol
+                  when '='
+                    @counterSet ctr, value
+                  when '+'
+                    value ?= 1
+                    @counterAdd ctr, value
+                  when '-'
+                    value ?= 1
+                    @counterAdd ctr, 0-value
+
+        else
+            res = @counterCheck ctr
+
+        sendMessage "[Counter] #{res}" if res?
+
+    # Handles:
+    #  !<not-a-counter> =<value>
+    cmdNewCounter: (user, commandString, sendMessage) ->
+        [ctr,arg] = commandString[0..1]
+
+        value = parseInt(arg.slice(1), 10)
+
+        unless isNaN value
+            res = @counterSet ctr, value
+
+        sendMessage "[Counter] #{res}" if res?
+
+    # Handles:
+    #  !<not-a-counter> +<value>
+    #  !<not-a-counter> -<value>
+    cmdBadCounter: (user, commandString, sendMessage) ->
+        ctr = commandString[0]
+
+        sendMessage "[Counter] Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
+        
+
     counterCheck: (ctr) ->
         if @counters.get(ctr)?
             return "#{ctr} = #{@counters.get ctr}"
 
 
-    # Handle !<counter> =<value>
     counterSet: (ctr, value) ->
         if value?
             io.debug "#{value}"
@@ -56,8 +138,6 @@ class Counter
             @counterCheck ctr
 
 
-    # Handle !<counter> +<value>
-    # Handle !<counter> -<value>
     counterAdd: (ctr, value) ->
         counter = @counters.get ctr
         
@@ -67,37 +147,13 @@ class Counter
         @counters.add ctr, counter + value
         @counterCheck ctr
 
-    # Handle !<counter> unset
     counterUnset: (ctr) ->
         if @counters.get(ctr)?
             @counters.remove(ctr)
             return "#{ctr} removed."
         
     handle: (user, command, args, sendMessage) ->
-        arg = args[0] ? null
 
-        if (arg? and arg isnt '')
-
-            symbol = arg.charAt(0)
-            vals   = arg.slice(1)
-            value  = if (vals isnt '') then parseInt(vals, 10) else null
-
-            unless isNaN value
-
-                res = switch symbol
-                  when '='
-                    @counterSet command, value
-                  when '+'
-                    value ?= 1
-                    @counterAdd command, value
-                  when '-'
-                    value ?= 1
-                    @counterAdd command, 0-value
-
-        else
-            res = @counterCheck command
-
-        sendMessage "[Counter] #{res}" if res?
 
 
 exports.New = (channel) ->

@@ -53,7 +53,7 @@ class Monument
     # !<name> - Print monument
     # !<name> <block> - Add the block to the obtained-list
     cmdMonument: (user, args, sendMessage) ->
-        unless args?
+        unless args[0]?
             return sendMessage @getMonumentState()
         
         block = args[0].toLowerCase()

@@ -73,7 +73,7 @@ class Commands
 
     # !(un)?set <command>  - Unset command
     cmdUnset: (user, args, sendMessage) ->
-        unless args? and args[0]?
+        unless args[0]?
             return sendMessage "Usage: !unset (name).  Only forgets commands made with !set."
 
         cmd = args[0]

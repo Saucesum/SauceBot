@@ -131,7 +131,7 @@ class Filters
     # Filter list command handlers
 
     cmdFilterAdd: (name, dto, args, sendMessage) ->
-        value = args[0] if args? and args[0]?
+        value = args[0] if args[0]?
         if value?
             dto.add value
             sendMessage "[Filter] #{name} - Added."
@@ -140,7 +140,7 @@ class Filters
     
     
     cmdFilterRemove: (name, dto, args, sendMessage) ->
-        value = args[0] if args? and args[0]?
+        value = args[0] if args[0]?
         if value?
             dto.remove value
             sendMessage "[Filter] #{name} - Removed."
@@ -178,7 +178,7 @@ class Filters
         permitLength = 3 * 60 # 3 minutes
         permitTime   = io.now() + permitLength
         
-        target = args[0] if args? and args[0]?
+        target = args[0] if args[0]?
         if target?
             @permits[target.toLowerCase()] = permitTime
             sendMessage "[Filter] #{target} permitted for #{permitLength} seconds."

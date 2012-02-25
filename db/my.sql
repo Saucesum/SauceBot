@@ -95,6 +95,7 @@ DROP TABLE IF EXISTS `module`;
 CREATE TABLE `module` (
   `chanid` int(11) NOT NULL DEFAULT '0',
   `module` varchar(30) NOT NULL,
+  `state` tinyint(1) DEFAULT 0, 
   PRIMARY KEY (`chanid`,`module`)
 );
 
@@ -150,4 +151,13 @@ CREATE TABLE `whitelist` (
   `chanid` int(11) NOT NULL DEFAULT '0',
   `url` varchar(100) NOT NULL DEFAULT '',
   PRIMARY KEY (`chanid`,`url`)
+);
+
+DROP TABLE IF EXISTS `poll`;
+
+CREATE TABLE `poll` (
+  `chanid` int(11) NOT NULL DEFAULT '0',
+  `name` varchar(20) NOT NULL,
+  `options` varchar(300) NOT NULL,
+  PRIMARY KEY (`chanid`, `name`)
 );

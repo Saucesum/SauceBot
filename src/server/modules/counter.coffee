@@ -79,7 +79,7 @@ class Counter
         if (arg? and arg is 'unset')
             res = @counterUnset ctr
 
-        else if (arg isnt '')
+        else if (arg? and arg isnt '')
             symbol = arg.charAt(0)
             value  = parseInt(arg.slice(1), 10)
 

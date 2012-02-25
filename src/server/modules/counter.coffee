@@ -74,12 +74,15 @@ class Counter
     #  !<counter> =<value>
     #  !<counter> unset
     cmdCounter: (ctr, user, args, sendMessage) ->
-        arg = args[0] ? null
+        arg = args[0] ? ''
 
-        if (arg? and arg is 'unset')
+        if arg is 'unset'
             res = @counterUnset ctr
 
-        else if (arg? and arg isnt '')
+        else if arg is ''
+            res = @counterCheck ctr
+
+        else
             symbol = arg.charAt(0)
             value  = parseInt(arg.slice(1), 10)
 
@@ -95,8 +98,6 @@ class Counter
                     value ?= 1
                     @counterAdd ctr, 0-value
 
-        else
-            res = @counterCheck ctr
 
         sendMessage "[Counter] #{res}" if res?
 

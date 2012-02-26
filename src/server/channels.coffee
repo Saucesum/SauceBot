@@ -71,7 +71,7 @@ class Channel
         
         unless module?
             io.debug "No such module"
-            loadModule moduleName
+            @loadModule moduleName
         else
             io.debug "Reloading!"
             @unloadModule module
@@ -170,7 +170,7 @@ class Channel
         return true
 
     unregister: (triggersToRemove...) ->
-        @triggers = (elem for elem in @triggers when not elem in triggersToRemove)
+        @triggers = (elem for elem in @triggers when not (elem in triggersToRemove))
 
     # listTriggers (obj) returns a list of registered triggers in the channel.
     # Any attributes defined on the restrictions object will be matched against

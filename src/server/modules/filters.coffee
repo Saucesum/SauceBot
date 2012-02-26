@@ -200,7 +200,7 @@ class Filters
         
 
     checkFilters: (name, msg, bot) ->
-        msg = msg.trim()
+        msg = msg.trim().toLowerCase()
         
         # TODO: These should ban/timeout/clear instead of just telling them off. 
         

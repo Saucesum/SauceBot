@@ -19,6 +19,15 @@ channels = {}
 # Name list for quick chanid -> channel name lookup
 names = {}
 
+# Returns a channel by its name in lowercase
+exports.getByName = (name) ->
+    channels[name]
+    
+
+# Returns a channel by its ChanID
+exports.getById = (id) ->
+    exports.getByName names[id]
+
 class Channel
     constructor: (data) ->
         @id   = data.chanid
@@ -55,6 +64,20 @@ class Channel
         return module
         
     
+    reloadModule: (moduleName) ->
+        module = @getLoadedModule moduleName
+        
+        io.debug "Attempting to reload module #{moduleName}..."
+        
+        unless module?
+            io.debug "No such module"
+            loadModule moduleName
+        else
+            io.debug "Reloading!"
+            @unloadModule module
+            @modules.push @loadModule moduleName
+            
+    
     # Attempts to load all modules associated with this channel.
     #
     # Calling this multiple times only loads each modules once,
@@ -74,10 +97,14 @@ class Channel
             newNames.push result.module
         , =>
             # Unload removed
-            for module in @modules when not (module.name in newNames)
-                module.unload()
-                @modules.splice @modules.indexOf(module), 1
+            for module in @modules when module? and not (module.name in newNames)
+                @unloadModule module
             io.debug "Done loading #{@modules.length} modules for #{@name}"
+            
+            
+    unloadModule: (module) ->
+        module.unload()
+        @modules.splice @modules.indexOf(module), 1
             
     # Returns a {name, op}-object for the specified user.
     #

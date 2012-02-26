@@ -99,7 +99,7 @@ class SauceBot
         user = users.getById userID
         
         io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
-        
+        #
         
         switch type
             when 'Users'
@@ -110,6 +110,8 @@ class SauceBot
                 
             else
                 io.debug "Updating module: #{type}"
+                channel = chans.getById chan
+                channel?.reloadModule type
                 
                 
             

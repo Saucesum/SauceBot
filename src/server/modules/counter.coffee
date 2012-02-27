@@ -153,7 +153,7 @@ class Counter
             @counters.remove(ctr)
             return "#{ctr} removed."
         
-    handle: (user, command, args, bot) ->
+    handle: (user, msg, bot) ->
 
 
 

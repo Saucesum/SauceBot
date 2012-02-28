@@ -1,6 +1,8 @@
 # SauceBot Utility
 
 color = require 'colors'
+util  = require 'util'
+
 
 DEBUG   = true
 VERBOSE = true
@@ -20,19 +22,19 @@ exports.say = (message) ->
 
 # Logs a debug message
 exports.debug = (message) ->
-    console.log ('[DEBUG] '.bold + message).green
+    util.log ('[DEBUG] '.bold + message).green if DEBUG
 
 # Logs a module-info message
 exports.module = (message) ->
-    console.log ('[MODULE] '.bold + message).blue
+    util.log ('[MODULE] '.bold + message).blue if VERBOSE
 
 # Logs a socket-related message
 exports.socket = (message) ->
-    console.log ('[SOCKET] '.bold + message).cyan 
+    util.log ('[SOCKET] '.bold + message).cyan 
 
 # Logs an error message
 exports.error = (message) ->
-    console.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse
+    util.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse
 
 
 # Noise characters

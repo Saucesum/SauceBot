@@ -34,7 +34,6 @@ class Poll
         
     updatePollList: ->
         @polls = {}
-        io.module "Polls: #{key + ' ' + val for key, val of @pollDTO.get()}"
         for pollName, pollOptions of @pollDTO.get()
             @polls[pollName] = pollOptions.split /\s+/
             

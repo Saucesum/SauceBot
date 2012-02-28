@@ -32,7 +32,7 @@ class Base
 
         @channel.register  this, "saucebot", Sauce.Level.User,
             (user,args,bot) ->
-              bot.say '[SauceBot] SauceBot version 3.1 - Node.js'
+              bot.say "[SauceBot] SauceBot v#{Sauce.Version} - Node #{process.version}"
 
         @channel.register  this, "test", Sauce.Level.Mod,
             (user,args,bot) ->

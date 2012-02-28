@@ -1,5 +1,8 @@
 # SauceBot Configurations
 
+exports.Version = '3.0 BETA'
+
+
 # Connection info
 exports.PORT = 8455
 

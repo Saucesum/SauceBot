@@ -45,6 +45,10 @@ exports.clearChanData = (channel, table, cb) ->
     client.query "DELETE FROM #{table} WHERE chanid = ?", [channel], cb
 
 
+exports.clearTable = (table) ->
+    client.query "DELETE FROM #{table}"
+
+
 exports.removeChanData = (channel, table, field, value, cb) ->
     client.query "DELETE FROM #{table} WHERE #{field} = ? AND chanid = ?", [value, channel], cb
 
@@ -54,12 +58,13 @@ getWildcards = (num) ->
 
 
 exports.addChanData = (channel, table, fields, datalist) ->
-    wc = getWildcards (fields.length + 1)
+    exports.addData(table, ['chanid'].concat(fields), [channel].concat(data) for data in datalist)
 
-    query = "REPLACE INTO #{table} (chanid, #{fields.join ', '}) VALUES (#{wc})"
+exports.addData = (table, fields, datalist) ->
+    wc = getWildcards fields.length
+    query = "REPLACE INTO #{table} (#{fields.join ', '}) VALUES (#{wc})"
     
-    client.query query, [channel].concat data for data in datalist 
-
+    client.query query, data for data in datalist
 
 exports.setChanData = (channel, table, fields, data) ->
     exports.clearChanData channel, table, ->

@@ -205,4 +205,3 @@ server = new sio.Server Sauce.PORT,
         new SauceBot socket
     , (socket) ->
         io.socket "Client disconnected: #{socket.remoteAddress()}"
-    

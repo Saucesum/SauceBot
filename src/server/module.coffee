@@ -2,33 +2,31 @@
 
 fs = require 'fs'
 io = require './ioutil'
+db = require './saucedb'
 
 PATH = './modules/'
 
 exports.MODULES = {}
 
-
-fs.readdirSync(PATH).forEach (file) ->
-    return unless match = /(\w+)\.js$/i.exec file
-    try
-        module = require(PATH + file)
-        io.debug "Loaded module #{module.name}(#{match[1]}.js) v#{module.version}"
-        exports.MODULES[module.name] = module
-
-    catch error
-      io.error "Could not load module #{match[1]}: #{error}"
-
+INFO_TABLE = 'moduleinfo'
 
 loadModule = (name) ->
     try
-        module = require "#{PATH}#{name.toLowerCase()}.js" 
-        io.debug "Loaded module #{module.name}(#{name.toLowerCase()}.js) v#{module.version}"
+        module = require "#{PATH}#{name.toLowerCase()}" 
+        io.debug "Loaded module #{module.name}(#{name.toLowerCase()}) v#{module.version}"
         exports.MODULES[module.name] = module
+        
+        db.addData INFO_TABLE, ['name', 'description', 'version'], [[module.name, module.description, module.version]]
 
     catch error
       io.error "Could not load module #{name}: #{error}"
 
- 
+
+db.clearTable INFO_TABLE
+
+fs.readdirSync(PATH).forEach (file) ->
+    return unless match = /(\w+)\.js$/i.exec file
+    loadModule(match[1])
  
 exports.instance = (name, chan) ->
     if (!exports.MODULES[name]?)

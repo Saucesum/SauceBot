@@ -32,8 +32,13 @@ class Commands
         @commands = new HashDTO @channel, 'commands', 'cmdtrigger', 'message'
 
         @triggers = {}
+        @loaded = false
+        
         
     load: ->
+        @unload()
+        @loaded = true
+                
         io.module "[Commands] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register  this, "set"  , Sauce.Level.Mod,
@@ -48,12 +53,16 @@ class Commands
             for cmd of @commands.data
                 @addTrigger cmd
 
-#        io.module "[Commands] Loaded #{@commands.length()} commands"
 
     unload:->
+        return unless @loaded
+        @loaded = false
+        
         io.module "[Commands] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        @triggers = {}
+        
         
     addTrigger: (cmd) ->
         # Do nothing if the user is just editing an existing command.
@@ -66,6 +75,7 @@ class Commands
                 bot.say parsed
 
         @channel.register @triggers[cmd]
+
 
     delTrigger: (cmd) ->
         # Do nothing if the trigger doesn't exist.
@@ -107,7 +117,10 @@ class Commands
 
         return bot.say "Command set: #{cmd}"
 
+
     handle: (user, msg, bot) ->
+
+
 
 exports.New = (channel) ->
     new Commands channel

@@ -53,7 +53,9 @@ class Channel
     loadModule: (moduleName) ->
         module = @getLoadedModule moduleName
         
-        unless module?
+        if module?
+            module.load()
+        else
             try
                 # Initialize and load the module
                 module = mod.instance moduleName, this
@@ -65,18 +67,9 @@ class Channel
         
     
     reloadModule: (moduleName) ->
-        module = @getLoadedModule moduleName
-        
         io.debug "Attempting to reload module #{moduleName}..."
+        @loadModule moduleName
         
-        unless module?
-            io.debug "No such module"
-            @loadModule moduleName
-        else
-            io.debug "Reloading!"
-            @unloadModule module
-            @modules.push @loadModule moduleName
-            
     
     # Attempts to load all modules associated with this channel.
     #

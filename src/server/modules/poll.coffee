@@ -17,29 +17,20 @@ class Poll
     constructor: (@channel) ->
         @pollDTO = new HashDTO @channel, 'poll', 'name', 'options'
         
+        @loaded = false
+        
         @reset()
-        
-        # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
-        @channel.register this, 'poll'    , Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdPollStart args, bot
-        
-        # !poll end - Ends the active poll
-        @channel.register this, 'poll end', Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdPollEnd args, bot
-        
-        # !vote <value> - Adds a vote to the current poll
-        @channel.register this, 'vote'    , Sauce.Level.User,
-            (user, args, bot) =>
-                @cmdPollVote user, args, bot
 
         
     load: ->
         io.module "[Poll] Loading for #{@channel.id}: #{@channel.name}"
+            
+        @registerHandlers() unless @loaded
+        @loaded = true
+        
         @pollDTO.load =>
             @updatePollList()
-        
+
         
     updatePollList: ->
         @polls = {}
@@ -55,9 +46,29 @@ class Poll
 
 
     unload: ->
+        return unless @loaded
+        @loaded = false
+        
         io.module "[Poll] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+
+
+    registerHandlers: ->
+        # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
+        @channel.register this, 'poll'    , Sauce.Level.Mod,
+            (user, args, bot) =>
+                @cmdPollStart args, bot
+        
+        # !poll end - Ends the active poll
+        @channel.register this, 'poll end', Sauce.Level.Mod,
+            (user, args, bot) =>
+                @cmdPollEnd args, bot
+        
+        # !vote <value> - Adds a vote to the current poll
+        @channel.register this, 'vote'    , Sauce.Level.User,
+            (user, args, bot) =>
+                @cmdPollVote user, args, bot
 
 
     cmdPollStart: (args, bot) ->
@@ -84,7 +95,6 @@ class Poll
             bot.say "[Poll] '#{pollName}' created! Start with !poll #{pollName}"
             
         
-        
     cmdPollEnd: (args, bot) ->
         unless @activePoll?
             bot.say '[Poll] No active poll. Start with !poll <name>'
@@ -99,6 +109,7 @@ class Poll
         ("#{@polls[@activePoll][key]}: #{@getScore key}" for key in ((key for val, key in @votes).sort (a, b) =>
             @votes[b] - @votes[a])).join ', '
        
+       
     getScore: (key) ->
         score = @votes[key]
         total = 0
@@ -106,7 +117,6 @@ class Poll
         
         percentage = Math.floor((score * 100.0 / total)*10)/10
         "#{score} (#{percentage}%)"
-         
        
         
     cmdPollVote: (user, args, bot) ->
@@ -118,7 +128,9 @@ class Poll
             @votes[idx]++
             bot.say "[Poll] #{user} voted!"
 
+
     handle: (user, msg, bot) ->
+
         
 exports.New = (channel) -> new Poll channel
         

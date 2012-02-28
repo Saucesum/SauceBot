@@ -22,6 +22,8 @@ class Monument
         
         @blocksLC = (block.toLowerCase() for block in @blocks)
         
+        @loaded = false
+        
     save: ->
         io.module "[#{@name}] Saving #{@channel.name} ..."
        
@@ -32,18 +34,26 @@ class Monument
     load: ->
         io.module "[#{@name}] Loading for #{@channel.id}: #{@channel.name}"
 
-        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonument user, args, bot
-        @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonumentClear user, args, bot
+        @registerHandlers() unless @loaded
+        @loaded = true
         
         # Load monument data
         @obtained.load()
 
     unload:->
+        return unless @loaded
+        @loaded = false
+        
         io.module "[#{@name}}] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        
+        
+    registerHandlers: ->
+        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,bot) =>
+            @cmdMonument user, args, bot
+        @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,bot) =>
+            @cmdMonumentClear user, args, bot
         
 
     getMonumentState: ->

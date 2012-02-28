@@ -31,7 +31,6 @@ io.module '[News] Init'
 #
 class News
     constructor: (@channel) ->
-      
         @news   = new EnumDTO   @channel, 'news'    , 'newsid', 'message'
         @config = new ConfigDTO @channel, 'newsconf', ['state', 'seconds', 'messages']
 
@@ -41,13 +40,30 @@ class News
         # News counters
         @lastTime     = io.now()
         @messageCount = 0
+       
+        @loaded = false
+       
         
     load: ->
         io.module "[News] Loading for #{@channel.id}: #{@channel.name}"
 
+        @registerHandlers() unless @loaded
+        @loaded = true
+
         @news.load()
         @config.load()
 
+
+    unload: ->
+        return unless @loaded
+        @loaded = false
+        
+        io.module "[News] Unloading from #{@channel.id}: #{@channel.name}"
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
+
+
+    registerHandlers: ->
         # !news on - Enable auto-news
         @channel.register this, "news on"      , Sauce.Level.Mod,
             (user,args,bot) =>
@@ -82,38 +98,39 @@ class News
         @channel.register this, "news"         , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdNewsNext user, args, bot
-        
 
-    unload: ->
-        io.module "[News] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
 
     cmdNewsEnable: (user, args, bot) ->
         @config.add 'state', 1
         bot.say '<News> Auto-news is now enabled.'
 
+
     cmdNewsDisable: (user, args, bot) ->
         @config.add 'state', 0
         bot.say '<News> Auto-news is now disabled.'
+
 
     cmdNewsSeconds: (user, args, bot) ->
         @config.add 'seconds', parseInt(args[0], 10) if args[0]?
         bot.say "<News> Auto-news minimum delay set to " +
                 "#{@config.get 'seconds'} seconds."
 
+
     cmdNewsMessages: (user, args, bot) ->
         @config.add 'messages', parseInt(args[0], 10) if args[0]?
         bot.say "<News> Auto-news minimum delay set to " +
                 "#{@config.get 'messages'} messages."
 
+
     cmdNewsClear: (user, args, bot) ->
         @news.clear()
         bot.say '<News> Auto-news cleared.'
 
+
     cmdNewsAdd: (user, args, bot) ->
         @news.add args.join ' '
         bot.say '<News> Auto-news added.'
+
 
     cmdNewsNext: (user, args, bot) ->
         bot.say @getNext() ? '<News> No auto-news found. Add with !news add <message>'
@@ -152,6 +169,7 @@ class News
                        (@messageCount >= (messages)))
 
         @getNext()
+    
     
     # Auto-news
     handle: (user, msg, bot) ->

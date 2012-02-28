@@ -33,8 +33,13 @@ class Counter
         @counters = new HashDTO @channel, 'counter', 'name', 'value'
 
         @triggers = {}
+        @loaded = false
+        
         
     load: ->
+        @unload()
+        @loaded = true
+        
         io.module "[Counter] Loading for #{@channel.id}: #{@channel.name}"
 
         regexBadCtr = /^!(\w+\s+(?:\+|\-).+)$/
@@ -54,10 +59,15 @@ class Counter
                 @addTrigger ctr
 #        io.module "[Counter] Loaded #{@counters.length()} counters"
 
+
     unload:->
+        return unless @loaded
+        @loaded = false
+        
         io.module "[Counter] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        @triggers = {}
 
 
     addTrigger: (ctr) ->
@@ -69,6 +79,7 @@ class Counter
                 @cmdCounter ctr, user, args, bot
 
         @channel.register @triggers[ctr]
+
 
     # Handles:
     #  !<counter>
@@ -105,6 +116,7 @@ class Counter
 
         bot.say "[Counter] #{res}" if res?
 
+
     # Handles:
     #  !<not-a-counter> =<value>
     cmdNewCounter: (user, commandString, bot) ->
@@ -116,6 +128,7 @@ class Counter
             res = @counterSet ctr, value
 
         bot.say "[Counter] #{res}" if res?
+
 
     # Handles:
     #  !<not-a-counter> +<value>
@@ -148,10 +161,12 @@ class Counter
         @counters.add ctr, counter + value
         @counterCheck(ctr) + (if (value is 0) then ' (not changed)' else '')
 
+
     counterUnset: (ctr) ->
         if @counters.get(ctr)?
             @counters.remove(ctr)
             return "#{ctr} removed."
+        
         
     handle: (user, msg, bot) ->
 

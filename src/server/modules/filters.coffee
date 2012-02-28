@@ -65,8 +65,34 @@ class Filters
         
         # Permits (filter immunity)
         @permits = {}
+
+    load:  ->
+        io.module "[Filters] Loading for #{@channel.id}: #{@channel.name}"
         
+        @registerHandlers() unless @loaded
+        @loaded = true
+
+        @channel = chan if chan?
         
+        # Load lists
+        @loadTable table for table in tableNames
+            
+        # Load states
+        @loadStates()
+        
+
+    unload: ->
+        return unless @loaded
+        @loaded = false
+        
+        io.module "[Filters] Unloading from #{@channel.id}: #{@channel.name}"
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
+
+
+    registerHandlers: ->
+        io.debug "[Filters] Registering handlers"
+                
         # Register filter list commands
         for filterName, filterList of @lists
           do (filterName, filterList) =>
@@ -112,24 +138,6 @@ class Filters
             (user, args, bot) =>
                 @cmdPermitUser args, bot
         
-
-    load:  ->
-        io.module "[Filters] Loading for #{@channel.id}: #{@channel.name}"
-
-        @channel = chan if chan?
-        
-        # Load lists
-        @loadTable table for table in tableNames
-            
-        # Load states
-        @loadStates()
-        
-
-    unload: ->
-        io.module "[Filters] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-
 
     # Filter list command handlers
 

@@ -22,8 +22,12 @@ io.module '[Base] Init'
 #
 class Base
     constructor: (@channel) ->
+        @loaded = false
 
     load:->
+        return if @loaded
+        @loaded = true
+        
         io.module "[Base] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register  this, "saucebot", Sauce.Level.User,
@@ -38,11 +42,16 @@ class Base
             (user,args,bot) ->
               date = new Date()
               bot.say "[Time] #{vars.formatTime(date)}"
+              
 
     unload:->
+        return unless @loaded
+        @loaded = false
+        
         io.module "[Base] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        
 
     handle: (user, msg, bot) ->
         

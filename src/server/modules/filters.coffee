@@ -208,18 +208,19 @@ class Filters
         
 
     checkFilters: (name, msg, bot) ->
-        msg = msg.trim().toLowerCase()
+        msg = msg.trim()
+        lower = msg.toLowerCase()
         
         # TODO: These should ban/timeout/clear instead of just telling them off. 
         
         if @states.get 'words'
-            bot.say "Bad word, #{name}!"         if @containsBadword msg
+            bot.say "Bad word, #{name}!"         if @containsBadword lower
         if @states.get 'emotes'
-            bot.say "No single emotes, #{name}!" if @isSingleEmote msg
+            bot.say "No single emotes, #{name}!" if @isSingleEmote lower
         if @states.get 'caps'
             bot.say "Ease on the caps, #{name}!" if @isMostlyCaps msg
         if @states.get 'url'
-            bot.say "Bad URL, #{name}!"          if @containsBadURL msg
+            bot.say "Bad URL, #{name}!"          if @containsBadURL lower
     
     containsBadword: (msg) ->
         for word in @lists['badwords'].get()

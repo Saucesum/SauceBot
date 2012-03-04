@@ -54,6 +54,8 @@ class Monument
             @cmdMonument user, args, bot
         @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,bot) =>
             @cmdMonumentClear user, args, bot
+        @channel.register this, "#{@command} remove", Sauce.Level.Mod, (user,args,bot) =>
+            @cmdMonumentRemove user, args, bot
         
 
     getMonumentState: ->
@@ -82,6 +84,20 @@ class Monument
         @obtained.clear()
         bot.say "[#{@name}] Cleared"
 
+
+    # !<name> remove <block> - Removes the block from the obtained-list
+    cmdMonumentRemove: (user, args, bot) ->
+        unless args[0]?
+            return bot.say "[#{@name}] No block specified. Usage: !#{@command} remove <block>"
+        
+        block = args[0].toLowerCase()
+        idx   = @blocksLC.indexOf block
+        
+        unless (idx >= 0)
+            return bot.say "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
+        
+        @obtained.remove block
+        bot.say "[#{@name}] Removed #{@blocks[idx]}."
 
     handle: (user, msg, bot) ->
         

@@ -122,7 +122,7 @@ class Poll
         user = user.name
         return if !@activePoll? or user in @hasVoted 
 
-        if args[0]? and (idx = @polls[@activePoll].indexOf(args[0])) isnt -1
+        if args[0]? and (idx = @polls[@activePoll].indexOf(args[0].toLowerCase())) isnt -1
             @hasVoted.push user
             @votes[idx]++
             bot.say "[Poll] #{user} voted!"

@@ -33,6 +33,9 @@
 
 time       = require 'time'
 color      = require 'colors'
+os         = require 'os'
+
+Sauce      = require './sauce'
 
 varRE = /\$\{(\w+)(?:\s+([^}]+))?\}/
 
@@ -46,14 +49,36 @@ formatTime = (date) ->
     
     "#{hours}:#{mins}:#{secs}"
         
+       
+# MineCraft chat colours
+colors =
+        BLACK       : '§0'
+        DARK_BLUE   : '§1'
+        DARK_GREEN  : '§2'
+        DARK_AQUA   : '§3'
+        DARK_RED    : '§4'
+        DARK_PURPLE : '§5'
+        GOLD        : '§6'
+        GRAY        : '§7'
+        DARK_GRAY   : '§8'
+        BLUE        : '§9'
+        GREEN       : '§a'
+        AQUA        : '§b'
+        RED         : '§c'
+        LIGHT_PURPLE: '§d'
+        YELLOW      : '§e'
+        WHITE       : '§f'
+        MAGIC       : '§k'
 
 handlers =
-    botname   : (channel, user, args) -> 'SauceBot' # TODO
-    botversion: (channel, user, args) -> '3.1'      # TODO
+    botname   : (channel, user, args) -> Sauce.Name
+    botversion: (channel, user, args) -> Sauce.Version
     
-    name      : (channel, user, args) -> user.username
+    name      : (channel, user, args) -> user.name
     channel   : (channel, user, args) -> channel.name
     
+    col       : (channel, user, args) -> if args? and args[0]? then colors[args[0].toUpperCase()] else colors['WHITE']
+
     rand      : (channel, user, args) ->
         return 0 unless args
         

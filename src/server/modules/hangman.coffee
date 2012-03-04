@@ -42,11 +42,16 @@ class Hangman
         @channel = chan if chan?
         
         loadWordList @language unless wordListLoaded @language
+        
+        @channel.register  this, "hm", Sauce.Level.User,
+            (user,args,bot) =>
+                @word = randomWord @language
+                bot.say "Random word: " + @word
+                
+    unload: ->
+        
 
-
-    handle: (user, command, args, bot) ->
-        @word = randomWord @language
-        bot.say @word
+    handle: (user, msg, bot) ->
         
         
 randomWord = (listname) ->
@@ -76,7 +81,7 @@ loadWordList = (listname) ->
         list = wordList listname
         
         for word in data.split '\n'
-            list.push word if word.length > 5
+            list.push word if word.length > 5 and /^[a-zA-Z]+$/.test word
             
         io.module "[HM] Loaded #{listname} - #{list.length} words"
 

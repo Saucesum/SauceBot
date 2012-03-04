@@ -7,6 +7,9 @@ trig  = require '../trigger'
 io    = require '../ioutil'
 vars  = require '../vars'
 
+vm    = require 'vm'
+util  = require 'util'
+
 # Module description
 exports.name        = 'Base'
 exports.version     = '1.1'
@@ -23,6 +26,12 @@ io.module '[Base] Init'
 class Base
     constructor: (@channel) ->
         @loaded = false
+        
+        mathValues =
+            e: 2.718281828459045235360
+            pi: 3.141592
+        
+        @sandbox = vm.createContext mathValues
 
     load:->
         return if @loaded
@@ -42,6 +51,23 @@ class Base
             (user,args,bot) ->
               date = new Date()
               bot.say "[Time] #{vars.formatTime(date)}"
+
+        # Test
+        @channel.register this, "var", Sauce.Level.User,
+            (user, args, bot) =>
+                return unless args
+                bot.say "[Vars] " + vars.parse @channel, user, args.join ' '
+
+        @channel.register this, "calc", Sauce.Level.Mod,
+            (user, args, bot) =>
+                return unless args
+                txt = args.join ''
+                math = txt.replace(/[^()\d*\/+-=\w]/g, '')
+                try
+                    bot.say vm.runInContext math, @sandbox, "#{@channel.name}.vm"
+                catch error
+                    bot.say "[Calc] Invalid expression: #{math}"
+                
               
 
     unload:->

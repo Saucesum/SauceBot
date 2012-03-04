@@ -1,6 +1,7 @@
 # SauceBot Configurations
 
 exports.Version = '3.0 BETA'
+exports.Name    = 'SauceBot'
 
 
 # Connection info

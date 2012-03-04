@@ -4,6 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 
 io    = require '../ioutil'
+vars  = require '../vars'
 
 { # Import DTO classes
     ArrayDTO,
@@ -133,7 +134,7 @@ class News
 
 
     cmdNewsNext: (user, args, bot) ->
-        bot.say @getNext() ? '<News> No auto-news found. Add with !news add <message>'
+        bot.say @getNext(user) ? '<News> No auto-news found. Add with !news add <message>'
         
 
     save: ->
@@ -143,7 +144,7 @@ class News
         io.module "News saved"
 
 
-    getNext: ->
+    getNext: (user) ->
         @lastTime = io.now()
         @messageCount = 0
 
@@ -153,7 +154,9 @@ class News
         # Wrap around the news list
         @index = 0 if @index >= @data.length
         
-        "[News] #{@data[@index++]}"
+        news = vars.parse @channel, user, @data[@index++]
+        
+        "[News] #{news}"
         
         
     tickNews: ->
@@ -168,7 +171,7 @@ class News
                        (now           >  (@lastTime + seconds)) and
                        (@messageCount >= (messages)))
 
-        @getNext()
+        @getNext("SauceBot")
     
     
     # Auto-news

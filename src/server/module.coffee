@@ -16,7 +16,10 @@ loadModule = (name) ->
         io.debug "Loaded module #{module.name}(#{name.toLowerCase()}) v#{module.version}"
         exports.MODULES[module.name] = module
         
-        db.addData INFO_TABLE, ['name', 'description', 'version'], [[module.name, module.description, module.version]]
+        {name, description, version} = module
+        if module.locked then locked = 1 else locked = 0
+        
+        db.addData INFO_TABLE, ['name', 'description', 'version', 'locked'], [[name, description, version, locked]]
 
     catch error
       io.error "Could not load module #{name}: #{error}"

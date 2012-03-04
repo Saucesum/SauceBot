@@ -42,7 +42,7 @@ class Monument
         @obtained.load()
         
         @channel.vars.register @command, (user, args) =>
-            if not args[0] or args[0] is 'listæ'
+            if not args[0] or args[0] is 'list'
                 return @getBlockString()
             
             switch args[0]

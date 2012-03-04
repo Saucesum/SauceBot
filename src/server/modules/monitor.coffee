@@ -10,6 +10,7 @@ fs    = require 'fs'
 exports.name        = 'Monitor'
 exports.version     = '1.0'
 exports.description = 'Chat monitoring'
+exports.locked      = true
 
 io.module '[Monitor] Init'
 

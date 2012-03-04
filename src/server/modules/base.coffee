@@ -14,6 +14,7 @@ util  = require 'util'
 exports.name        = 'Base'
 exports.version     = '1.1'
 exports.description = 'Global base commands such as !time and !saucebot'
+exports.locked      = true
 
 io.module '[Base] Init'
 
@@ -22,6 +23,7 @@ io.module '[Base] Init'
 #  !saucebot
 #  !time
 #  !test
+#  !calc
 #
 class Base
     constructor: (@channel) ->

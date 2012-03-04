@@ -1,0 +1,10 @@
+[Server]
+
+  Modules:
+    * JTV API
+      - Stream title, viewers, followers, etc.
+    
+    
+[Client]
+
+  Actually make one. :D

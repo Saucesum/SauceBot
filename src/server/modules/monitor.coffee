@@ -8,8 +8,8 @@ fs    = require 'fs'
 
 # Module description
 exports.name        = 'Monitor'
-exports.version     = '1.0'
-exports.description = 'Chat monitoring'
+exports.version     = '1.1'
+exports.description = 'Chat monitoring and user listing'
 exports.locked      = true
 
 io.module '[Monitor] Init'

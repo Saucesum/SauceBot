@@ -2,9 +2,10 @@
 
 Sauce = require './sauce'
 
-db    = require './saucedb'
-users = require './users'
-trig  = require './trigger'
+db     = require './saucedb'
+users  = require './users'
+trig   = require './trigger'
+{Vars} = require './vars'
 
 
 io    = require './ioutil'
@@ -37,6 +38,8 @@ class Channel
         @modules = []
         @triggers = []
         @loadChannelModules()
+        
+        @vars = new Vars @
     
     
     # Returns whether a module with the specified name
@@ -98,6 +101,7 @@ class Channel
     unloadModule: (module) ->
         module.unload()
         @modules.splice @modules.indexOf(module), 1
+            
             
     # Returns a {name, op}-object for the specified user.
     #
@@ -162,8 +166,10 @@ class Channel
 
         return true
 
+
     unregister: (triggersToRemove...) ->
         @triggers = (elem for elem in @triggers when not (elem in triggersToRemove))
+
 
     # listTriggers (obj) returns a list of registered triggers in the channel.
     # Any attributes defined on the restrictions object will be matched against

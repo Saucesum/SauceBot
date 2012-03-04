@@ -154,7 +154,7 @@ class News
         # Wrap around the news list
         @index = 0 if @index >= @data.length
         
-        news = vars.parse @channel, user, @data[@index++]
+        news = @channel.vars.parse user, @data[@index++]
         
         "[News] #{news}"
         

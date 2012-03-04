@@ -71,7 +71,7 @@ class Commands
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, Sauce.Level.User,
             (user, args, bot) =>
-                parsed = vars.parse @channel, user, @commands.get(cmd)
+                parsed = @channel.vars.parse user, @commands.get(cmd)
                 bot.say parsed
 
         @channel.register @triggers[cmd]

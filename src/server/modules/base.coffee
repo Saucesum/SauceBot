@@ -56,7 +56,7 @@ class Base
         @channel.register this, "var", Sauce.Level.User,
             (user, args, bot) =>
                 return unless args
-                bot.say "[Vars] " + vars.parse @channel, user, args.join ' '
+                bot.say "[Vars] " + @channel.vars.parse user, args.join ' '
 
         @channel.register this, "calc", Sauce.Level.Mod,
             (user, args, bot) =>

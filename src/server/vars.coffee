@@ -69,82 +69,81 @@ colors =
         YELLOW      : '§e'
         WHITE       : '§f'
         MAGIC       : '§k'
-
-handlers =
-    botname   : (channel, user, args) -> Sauce.Name
-    botversion: (channel, user, args) -> Sauce.Version
-    
-    name      : (channel, user, args) -> user.name
-    channel   : (channel, user, args) -> channel.name
-    
-    col       : (channel, user, args) -> if args? and args[0]? then colors[args[0].toUpperCase()] else colors['WHITE']
-
-    rand      : (channel, user, args) ->
-        return 0 unless args
         
-        switch args.length
-                when 1
-                    a = parseInt(args[0], 10)
-                    Math.floor(Math.random() * a)
-                when 2
-                    a = parseInt(args[0], 10)
-                    b = parseInt(args[1], 10)
-                    Math.floor(Math.random() * (b - a)) + a
-                else
-                    idx = Math.floor(Math.random() * args.length)
-                    args[idx]
+class Vars
+    constructor: (@channel) ->
+        
+        @handlers =
+            botname   : (user, args) -> Sauce.Name
+            botversion: (user, args) -> Sauce.Version
+            
+            name      : (user, args) -> user.name
+            channel   : (user, args) => @channel.name
+            
+            col       : (user, args) -> if args? and args[0]? then colors[args[0].toUpperCase()] else colors['WHITE']
+        
+            rand      : (user, args) ->
+                return 0 unless args
                 
+                switch args.length
+                        when 1
+                            a = parseInt(args[0], 10)
+                            Math.floor(Math.random() * a)
+                        when 2
+                            a = parseInt(args[0], 10)
+                            b = parseInt(args[1], 10)
+                            Math.floor(Math.random() * (b - a)) + a
+                        else
+                            idx = Math.floor(Math.random() * args.length)
+                            args[idx]
+                        
+            
+            time      : (user, args) ->
+                now = new time.Date()
+                try
+                    now.setTimezone args[0]
+                catch error
+                    
+                formatTime now
+                    
+                    
+    addHandler: (cmd, handler) ->
+        @handlers[cmd] = handler
+        
+        
+    removeHandler: (cmd, handler) ->
+        delete @handlers[cmd]
     
-    time      : (channel, user, args) ->
-        now = new time.Date()
-        try
-            now.setTimezone args[0]
-        catch error
-            # ...
+                    
+    parse: (user, message) ->
+        @matchVars message, (m, cmd, args) =>
+            result = @handle user, cmd, args
             
-        formatTime now
-        
-    countdown : (channel, user, args) ->
-        format = dateFormat.masks.isoTime
-        now = new time.Date()
-        
-        try
-            now.setTimezone(args[0])
+            idx = m.index
+            len = m[0].length
             
-            # TODO: Do the actual count down thingy.
+            pre  = message.substring 0, idx
+            post = message.substring idx + len
             
-        catch error
-            # ...
+            message = pre + result + post
         
+        message
+            
+
+    matchVars: (message, cb) ->
+        return unless '{' in message
+        
+        while m = varRE.exec message
+            cmd  = m[1]
+            args = m[2].split ',' if m[2]
+            message = cb m, cmd, args
+            
+
+    handle: (user, cmd, args) ->
+        return cmd unless handler = @handlers[cmd]
+        handler user, args
 
 
-matchVars = (message, cb) ->
-    return unless '{' in message
-    
-    while m = varRE.exec message
-        
-        cmd  = m[1]
-        args = m[2].split ',' if m[2]?
-        message = cb m, cmd, args
-    
 
-parse = (channel, user, message) ->
-    matchVars message, (m, cmd, args) ->
-        result = handle channel, user, cmd, args
-        
-        idx = m.index
-        len = m[0].length
-        
-        pre  = message.substring(0, idx)
-        post = message.substring(idx + len)
-        
-        message = pre + result + post
-        
-    message
-    
-handle = (channel, user, cmd, args) ->
-    return cmd unless handler = handlers[cmd]
-    handler channel, user, args
-    
-exports.parse = parse
+exports.Vars = Vars
 exports.formatTime = formatTime

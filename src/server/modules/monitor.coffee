@@ -21,6 +21,7 @@ class Monitor
         
         @users = {}
         
+        
     writelog: (user, msg) ->
         # TODO: Change the path to something more relative
         @log.destroy() if @log?
@@ -42,7 +43,21 @@ class Monitor
         
         @channel.register this, "users", Sauce.Level.Mod,
             (user, args, bot) =>
-                bot.say "[Users] Active users: #{(user.toLowerCase() for user, val of @users).join ', ' }"
+                bot.say "[Users] Active users: #{Object.keys(@users).join ', '}"
+        
+        @channel.register this, "users clear", Sauce.Level.Mod,
+            (user, args, bot) =>
+                @users = {}
+                bot.say "[Users] Active users cleared."
+
+        @channel.vars.register 'users', (user, args) =>
+                if not args[0]? or args[0] is 'list'
+                    return Object.keys(@users).join ', '
+                
+                switch args[0]
+                    when 'count' then Object.keys(@users).length
+                    when 'rand'  then @getRandomUser()
+                    else 'undefined' 
 
 
     unload:->
@@ -52,6 +67,17 @@ class Monitor
         io.module "[Monitor] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        
+        @channel.vars.unregister 'users'
+        
+        
+    getRandomUser: ->
+        list = Object.keys @users
+        return "N/A" unless list.length
+        
+        list[Math.floor(Math.random() * list.length)]
+        
+        
 
     handle: (user, msg, bot) ->
         @writelog user, msg

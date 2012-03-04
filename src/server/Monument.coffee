@@ -49,7 +49,7 @@ class Monument
                 when 'count'     then @obtained.get().length
                 when 'total'     then @blocks.length
                 when 'remaining' then @blocks.length - @obtained.get().length
-                else  '0'
+                else  'undefined'
             
                 
 

@@ -40,6 +40,7 @@ class Poll
             switch args[0]
                 when 'options' then @polls[@activePoll]
                 when 'votes'   then @hasVoted.length
+                else 'undefined' 
 
         
     updatePollList: ->

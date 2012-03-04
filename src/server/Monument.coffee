@@ -24,6 +24,7 @@ class Monument
         
         @loaded = false
         
+        
     save: ->
         io.module "[#{@name}] Saving #{@channel.name} ..."
        
@@ -39,6 +40,17 @@ class Monument
         
         # Load monument data
         @obtained.load()
+        
+        @channel.vars.register @command, (user, args) =>
+            return @getBlockString() unless args[0]
+            
+            switch args[0]
+                when 'count'     then @obtained.get().length
+                when 'total'     then @blocks.length
+                when 'remaining' then @blocks.length - @obtained.get().length
+                else  '0'
+            
+                
 
     unload:->
         return unless @loaded
@@ -47,6 +59,8 @@ class Monument
         io.module "[#{@name}}] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        
+        @channel.vars.unregister @command
         
         
     registerHandlers: ->
@@ -59,8 +73,12 @@ class Monument
         
 
     getMonumentState: ->
+        "Blocks: " + @getBlockString()
+        
+
+    getBlockString: ->
         obtained = (block for block in @blocks when block.toLowerCase() in @obtained.get())
-        "Blocks: #{obtained.join(', ') or 'None'}"
+        obtained.join(', ') or 'None'
 
 
     # !<name> - Print monument
@@ -75,7 +93,7 @@ class Monument
         unless (idx >= 0)
             return bot.say "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
         
-        @obtained.add block
+        @obtained.add block unless block in @obtained.get()
         bot.say "[#{@name}] Added #{@blocks[idx]}."
 
 
@@ -98,6 +116,7 @@ class Monument
         
         @obtained.remove block
         bot.say "[#{@name}] Removed #{@blocks[idx]}."
+
 
     handle: (user, msg, bot) ->
         

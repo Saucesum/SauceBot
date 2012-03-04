@@ -107,11 +107,11 @@ class Vars
                 formatTime now
                     
                     
-    addHandler: (cmd, handler) ->
+    register: (cmd, handler) ->
         @handlers[cmd] = handler
         
         
-    removeHandler: (cmd, handler) ->
+    unregister: (cmd, handler) ->
         delete @handlers[cmd]
     
                     
@@ -135,7 +135,7 @@ class Vars
         
         while m = varRE.exec message
             cmd  = m[1]
-            args = m[2].split ',' if m[2]
+            args = if m[2] then m[2].split ',' else [] 
             message = cb m, cmd, args
             
 

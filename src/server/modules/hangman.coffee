@@ -48,7 +48,11 @@ class Hangman
                 @word = randomWord @language
                 bot.say "Random word: " + @word
                 
+        @channel.vars.register 'hm', (user, args) =>
+            @word
+                
     unload: ->
+        @channel.vars.unregister 'hm'
         
 
     handle: (user, msg, bot) ->

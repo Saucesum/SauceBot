@@ -42,7 +42,8 @@ class Monument
         @obtained.load()
         
         @channel.vars.register @command, (user, args) =>
-            return @getBlockString() unless args[0]
+            if not args[0] or args[0] is 'listæ'
+                return @getBlockString()
             
             switch args[0]
                 when 'count'     then @obtained.get().length

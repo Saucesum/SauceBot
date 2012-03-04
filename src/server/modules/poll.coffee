@@ -30,6 +30,16 @@ class Poll
         
         @pollDTO.load =>
             @updatePollList()
+            
+        @channel.vars.register 'poll', (user, args) =>
+            return 'N/A' unless @activePoll?
+            
+            if not args[0] or args[0] is 'name'
+                return @activePoll
+            
+            switch args[0]
+                when 'options' then @polls[@activePoll]
+                when 'votes'   then @hasVoted.length
 
         
     updatePollList: ->
@@ -51,6 +61,8 @@ class Poll
         io.module "[Poll] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        
+        @channel.vars.unregister 'poll'
 
 
     registerHandlers: ->

@@ -148,6 +148,7 @@ class Counter
         if value?
             if !@counters.get(ctr)?
                 @counters.add ctr, value
+                @addTrigger ctr
 
                 return "#{ctr} created and set to #{value}."
 

@@ -184,8 +184,12 @@ class Channel
 
 
 # Handles a message in the appropriate channel instance
-exports.handle = (channel, data, bot) ->
-    channels[channel].handle data, bot
+exports.handle = (chan, data, bot) ->
+    channel = channels[chan]
+    if channel?
+        channel.handle data, bot
+    else
+        io.debug "No such channel: #{chan}"
 
 # Loads the channel list
 exports.load = (finished) ->

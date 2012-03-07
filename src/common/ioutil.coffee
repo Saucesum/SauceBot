@@ -36,9 +36,12 @@ exports.socket = (message) ->
 exports.error = (message) ->
     util.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse
 
+exports.irc = (chan, user, message) ->
+    util.log (('[' + chan.blue + ']').bold + ' ' + user.green + ': ' + message)
+
 
 # Noise characters
-chars = ['!', '>', '<', '?', '#', '%', '&', '+', '-', '_', '\'', '"', '|']
+chars = [',', '-', '_', '!', '>', '<', '#', '\'', '?', '~']
 start = ['{', '<', '[', '(']
 end   = ['}', '>', ']', ')']
 

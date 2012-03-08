@@ -1,0 +1,40 @@
+130c130
+<                     util.log("MODE:" + message.args[0] + " sets mode: " + message.args[1]);
+---
+>                     util.log("MODE:" + message.args[0] + " sets mode: " + message.args[1] + " " + message.args[2]);
+140c140
+<                     if ( mode in self.prefixForMode ) {
+---
+>                     if ( mode in self.prefixForMode) {
+142a143,145
+>                         if (!channel.users[user]) {
+>                             channel.users[user] = user
+>                         }
+146,147c149,150
+<
+<                             self.emit('+mode', message.args[0], message.nick, mode, user, message);
+---
+>
+>                             self.emit('modeadd', message.args[0], message.nick, mode, user, message);
+151c154
+<                             self.emit('-mode', message.args[0], message.nick, mode, user, message);
+---
+>                             self.emit('moderem', message.args[0], message.nick, mode, user, message);
+167c170
+<                             self.emit('+mode', message.args[0], message.nick, mode, modeArg, message);
+---
+>                             self.emit('modeadd', message.args[0], message.nick, mode, modeArg, message);
+171c174
+<                             self.emit('-mode', message.args[0], message.nick, mode, modeArg, message);
+---
+>                             self.emit('moderem', message.args[0], message.nick, mode, modeArg, message);
+213c216
+<                             if ( match[1] in self.modeForPrefix ) {
+---
+>                             if ( match[1] in self.modeForPrefix) {
+450,451c453,454
+< Client.prototype.prefixForMode = {};
+< Client.prototype.modeForPrefix = {};
+---
+> Client.prototype.prefixForMode = {'o': '@'};
+> Client.prototype.modeForPrefix = {'@': 'o'};

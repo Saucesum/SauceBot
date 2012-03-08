@@ -11,6 +11,8 @@ trig   = require './trigger'
 io    = require './ioutil'
 mod   = require './module'
 
+util  = require 'util'
+
 # Module names
 moduleNames = Object.keys mod.MODULES
 

@@ -68,7 +68,7 @@ randIdx = (arr) ->
 
 
 wordList = (list) ->
-    if wordListLoaded list
+    if wordlists[list]?
         wordlists[list]
     else
         wordlists[list] = []
@@ -81,6 +81,8 @@ wordListLoaded = (list) ->
 loadWordList = (listname) ->
     fs.readFile wordfiles[listname], 'utf8', (err, data) ->
         throw err if err?
+
+        return if wordlists[listname]?        
         
         list = wordList listname
         
@@ -88,7 +90,7 @@ loadWordList = (listname) ->
             list.push word if word.length > 5 and /^[a-zA-Z]+$/.test word
             
         io.module "[HM] Loaded #{listname} - #{list.length} words"
-
+        wordlists[listname] = list
 
 
 exports.New = (channel) ->

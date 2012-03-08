@@ -37,7 +37,7 @@ os         = require 'os'
 
 Sauce      = require './sauce'
 
-varRE = /\$\{(\w+)(?:\s+([^}]+))?\}/
+varRE = /\$\((\w+)(?:\s+([^)]+))?\)/
 
 pad = (num) ->
     if num < 10 then "0" + num else num
@@ -131,7 +131,7 @@ class Vars
             
 
     matchVars: (message, cb) ->
-        return unless '{' in message
+        return unless '$' in message
         
         while m = varRE.exec message
             cmd  = m[1]

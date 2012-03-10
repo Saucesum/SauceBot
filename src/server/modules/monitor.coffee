@@ -4,6 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 
 io    = require '../ioutil'
+log   = require '../logger'
 fs    = require 'fs'
 
 # Module description
@@ -18,23 +19,14 @@ io.module '[Monitor] Init'
 class Monitor
     constructor: (@channel) ->
         @loaded = false
-        @path = "/home/ravn/logs/#{@channel.name}.log"
+
+        @log = new log.Logger "#{@channel.name}.log"
         
         @users = {}
         
         
     writelog: (user, msg) ->
-        # TODO: Change the path to something more relative
-        @log.destroy() if @log?
-
-        @log = fs.createWriteStream @path,
-            flags: 'a'
-            encoding: 'utf8'
-        
-        @log.on 'error', (errmsg) =>
-            io.error "[Monitor] log error: #{errmsg}"
-
-        @log.write "#{Math.floor new Date()/1000}\t#{if user.op then '@' else ' '}#{user.name}\t#{msg}\n"
+        @log.timestamp "#{if user.op then '@' else ' '}#{user.name}", msg
 
     load:->
         return if @loaded

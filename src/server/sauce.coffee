@@ -7,6 +7,9 @@ exports.Name    = 'SauceBot'
 # Connection info
 exports.PORT = 8455
 
+# FS
+exports.Path = process.env.HOME + '/' + exports.Name + '/'
+
 
 # Moderator levels
 exports.Level =
@@ -20,4 +23,4 @@ exports.Level =
 exports.DB =
     username: 'sauce'
     password: 'vz6ns4ygd'
-    database: 'saucetest'
+    database: 'saucebot'

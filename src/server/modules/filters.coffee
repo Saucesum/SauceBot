@@ -30,6 +30,8 @@ tableFields =
     badwords : 'word'
     emotes   : 'emote'
 
+URL_RE = /(?:(?:https?:\/\/[a-zA-Z-\.]*)|(?:[a-zA-Z-]+\.))[a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,3})\b/
+
 io.module '[Filters] Init'
 
 # Filter module
@@ -219,8 +221,7 @@ class Filters
             bot.say "No single emotes, #{name}!" if @isSingleEmote lower
         if @states.get 'caps'
             bot.say "Ease on the caps, #{name}!" if @isMostlyCaps msg
-        if @states.get 'url'
-            bot.say "Bad URL, #{name}!"          if @containsBadURL lower
+        bot.say "Bad URL, #{name}!"          if @containsBadURL lower
     
     containsBadword: (msg) ->
         for word in @lists['badwords'].get()
@@ -233,11 +234,20 @@ class Filters
 
 
     isMostlyCaps: (msg) ->
-        return (0.55 <= getCapsRate msg)
+        return (msg.length >= 5) and (0.55 <= getCapsRate msg)
 
     
     containsBadURL: (msg) ->
-        # TODO
+        return false unless URL_RE.test msg
+        if @states.get 'url'
+            for url in @lists['whitelist'].get()
+                if msg.indexOf(url) isnt -1 then return false
+            return true
+        else
+            for url in @lists['blacklist'].get()
+                if msg.indexOf(url) isnt -1 then return true
+            return false
+        
     
     handle: (user, msg, bot) ->
         {name, op} = user

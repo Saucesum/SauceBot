@@ -99,10 +99,13 @@ class SauceBot
         
         throw new Error 'You are not logged in' unless userID?
         
+        channel = chans.getById(chan)
+        chanName = if channel? then channel.name else 'N/A'
+        
         user = users.getById userID
         
         io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
-        weblog.timestamp 'UPDATE', chan, type, userID, user.name
+        weblog.timestamp 'UPDATE', chan, chanName, type, userID, user.name
         
         switch type
             when 'Users'

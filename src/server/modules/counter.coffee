@@ -57,8 +57,11 @@ class Counter
         @counters.load =>
             for ctr of @counters.data
                 @addTrigger ctr
-#        io.module "[Counter] Loaded #{@counters.length()} counters"
 
+        @channel.vars.register 'counter', (user, args) =>
+            return 'N/A' unless args? and args[0] in @counters.get()
+            return @counters.get(args[0])
+        
 
     unload:->
         return unless @loaded
@@ -67,6 +70,7 @@ class Counter
         io.module "[Counter] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        @channel.vars.unregister 'counter'
         @triggers = {}
 
 

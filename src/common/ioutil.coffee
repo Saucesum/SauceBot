@@ -37,7 +37,24 @@ exports.error = (message) ->
     util.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse
 
 exports.irc = (chan, user, message) ->
-    util.log (('[' + chan.blue + ']').bold + ' ' + user.green + ': ' + message)
+    util.log (('[' + chan.blue + ']').bold + ' ' + user[hashRand user, cols] + ': ' + message)
+
+# HashCode
+String.prototype.hashCode = ->
+    hash = 0
+    if this.length is 0 then return hash
+    for i in [0..(this.length - 1)]
+        char = this.charCodeAt i
+        hash = ((hash<<5)-hash)+ char
+        hash = hash & hash
+    hash
+
+cols = [
+    'red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'magenta'
+]
+
+hashRand = (str, list) ->
+    list[Math.abs(str.hashCode() % list.length)]
 
 
 # Noise characters

@@ -26,7 +26,10 @@ class Channel
         @users = []
         
         @irc.on 'message' + @irc.channel, (from, message) =>
-            io.irc @irc.channel, from, message
+            if /ravn|sauce/i.test message
+                io.irc @irc.channel, from, message.green.inverse
+            else
+                io.irc @irc.channel, from, message
             
             sauce.emit 'msg',
                 chan: @server
@@ -63,7 +66,7 @@ class Channel
         if nick.indexOf(0) in [' ', '+', '@'] then nick = nick.substring 1
         @users[nick] = null
         
-        
+        f
     isOp: (nick) ->
         return @users[nick] is '@' if @users[nick]?
         

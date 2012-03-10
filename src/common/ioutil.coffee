@@ -50,7 +50,7 @@ String.prototype.hashCode = ->
     hash
 
 cols = [
-    'red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'magenta'
+    'red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'magenta', 'black'
 ]
 
 hashRand = (str, list) ->

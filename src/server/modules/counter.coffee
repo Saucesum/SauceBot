@@ -59,7 +59,7 @@ class Counter
                 @addTrigger ctr
 
         @channel.vars.register 'counter', (user, args) =>
-            return 'N/A' unless args? and args[0] in @counters.get()
+            return 'N/A' unless args? and @counters.get()[args[0]]?
             return @counters.get(args[0])
         
 

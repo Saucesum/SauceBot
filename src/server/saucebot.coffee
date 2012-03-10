@@ -11,6 +11,7 @@ Sauce = require './sauce'
 db    = require './saucedb'
 users = require './users'
 chans = require './channels'
+log   = require './logger' 
 
 # Common 
 auth  = require '../common/session'
@@ -33,6 +34,8 @@ loadChannels = ->
     chans.load (chanlist) ->
         io.debug "Loaded #{(Object.keys chanlist).length} channels."
 
+
+weblog = new log.Logger 'updates.log'
 
 
 # SauceBot connection handler class
@@ -99,7 +102,7 @@ class SauceBot
         user = users.getById userID
         
         io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
-        #
+        weblog.timestamp 'UPDATE', chan, type, userID, user.name
         
         switch type
             when 'Users'
@@ -109,7 +112,6 @@ class SauceBot
                 loadChannels()
                 
             else
-                io.debug "Updating module: #{type}"
                 channel = chans.getById chan
                 channel?.reloadModule type
                 

@@ -15,6 +15,7 @@ exports.locked      = true
 
 io.module '[Monitor] Init'
 
+mentions = new log.Logger "mentions.log"
 
 class Monitor
     constructor: (@channel) ->
@@ -27,6 +28,9 @@ class Monitor
         
     writelog: (user, msg) ->
         @log.timestamp "#{if user.op then '@' else ' '}#{user.name}", msg
+        
+        if /ravn|sauce/i.test msg
+            mentions.write new Date(), @channel.name, user.name, msg
 
     load:->
         return if @loaded

@@ -13,7 +13,7 @@ io         = require '../common/ioutil'
 HOST = '127.0.0.1'
 PORT = 8455
 
-debug = true
+debug = false
 
 # IRC channel
 class Channel

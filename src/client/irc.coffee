@@ -19,7 +19,7 @@ class SauceIRC
     
     connect: ->
         @bot = new irc.Client "#{@server}.jtvirc.com", @username,
-            debug          : true # XXX remember to change this
+            debug          : false
             channels       : [@channel]
             userName       : @username
             realName       : @username

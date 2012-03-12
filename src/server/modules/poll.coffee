@@ -102,7 +102,7 @@ class Poll
             
         else
             options = args.join ' '
-            @pollDTO.add pollName, options
+            @pollDTO.add pollName, options.toLowerCase()
             @updatePollList()
             bot.say "[Poll] '#{pollName}' created! Start with !poll #{pollName}"
             

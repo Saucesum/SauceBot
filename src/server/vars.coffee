@@ -105,6 +105,7 @@ class Vars
                 catch error
                     
                 formatTime now
+                now.setTimezone 'CET'
                     
                     
     register: (cmd, handler) ->

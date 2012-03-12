@@ -2,7 +2,9 @@
 
 Sauce = require './sauce'
 
-fs = require 'fs'
+fs   = require 'fs'
+time = require 'time'
+
 
 class Logger
     constructor: (@name) ->
@@ -26,7 +28,9 @@ class Logger
 
 
 getTime = ->
-    Math.floor new Date()/1000
+    date = new time.Date()
+    date.setTimezone 'CET'
+    Math.floor date/1000
     
 
 exports.Logger = Logger

@@ -1,22 +1,24 @@
 SauceBot! :D
 
+
 SauceBot server:
 
   Build:
-  $ coffee --compile --output server/bin/ server/src/
+  $ coffee --watch --compile --output bin/ src/
 
   Running:
-  $ cd server/bin
+  $ cd bin/server
   $ supervisor saucebot.js
 
   Dependencies:
     - CoffeeScript
     - Node.js
+    - MySQL
     + NPM
         - colors
-        - socket.io
         - supervisor
         - groan
+        - time
 
 SauceBot client:
 
@@ -24,21 +26,24 @@ SauceBot client:
   $ coffee --compile --output client/bin/ client/src/
 
   Running:
-  $ cd client/bin
-  $ supervisor saucebot.js <channels> <username> <password>
-    - <channels>: A list of JTV channels to join, separated by :
-    - <username>: The bot's Justin.tv username
-    - <password>: The bot's Justin.tv password
+  $ cd bin/client
+  $ supervisor saucejtv <username> <password> <channelfile>
+    - <username>   : The bot's Justin.tv username
+    - <password>   : The bot's Justin.tv password
+    - <channelfile>: Name of a file containing a channel list
     
   Example:
-  $ supervisor saucebot.js channel1:channel2:channel3 MyBot mahb0tpwd
+  $ cat chans.txt
+     person1
+     iliekstream
+     helloer
+  $ supervisor saucejtv  MyBot mahb0tpwd chans.txt
 
   Dependencies:
     - CoffeeScript
     - Node.js
     + NPM
         - colors
-        - socket.io
         - irc
         - supervisor
 

@@ -221,6 +221,7 @@ class Filters
             bot.say "No single emotes, #{name}!" if @isSingleEmote lower
         if @states.get 'caps'
             bot.say "Ease on the caps, #{name}!" if @isMostlyCaps msg
+            
         bot.say "Bad URL, #{name}!"          if @containsBadURL lower
     
     containsBadword: (msg) ->

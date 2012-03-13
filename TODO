@@ -3,8 +3,9 @@
   Modules:
     * JTV API
       - Stream title, viewers, followers, etc.
+    * Spam filter(?)
     
     
 [Client]
+   Better logging/monitoring system
 
-  Actually make one. :D

@@ -110,9 +110,9 @@ class Channel
     # If op is passed as an argument, it is used instead of
     # the user's moderator level for the channel.
     getUser: (username, op) ->
-        op or= null
+        op or= 0
         
-        chan = @name
+        chan = @id
         user = users.getByName username
         
         if (user?)

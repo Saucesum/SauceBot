@@ -104,8 +104,9 @@ class Vars
                     now.setTimezone args[0]
                 catch error
                     
-                formatTime now
+                str = formatTime now
                 now.setTimezone 'CET'
+                return str
                     
                     
     register: (cmd, handler) ->

@@ -54,6 +54,10 @@ class Hangman
     unload: ->
         @channel.vars.unregister 'hm'
         
+        io.module "[Hangman] Unloading from #{@channel.id}: #{@channel.name}"
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
+        
 
     handle: (user, msg, bot) ->
         

@@ -5,14 +5,34 @@ io    = require './ioutil'
 
 mysql = require 'mysql'
 
-client = mysql.createClient
-        user     : Sauce.DB.username
-        password : Sauce.DB.password
+timeOutLimit = 30 * 60 * 1000
+lastConnect = 0
 
-client.useDatabase Sauce.DB.database
+connect = ->
+    io.debug "MySQL - Connecting"
+    client?.destroy()
+    
+    client = mysql.createClient
+            user     : Sauce.DB.username
+            password : Sauce.DB.password
+    
+    client.useDatabase Sauce.DB.database
+
+
+timedOut = ->
+    previous    = lastConnect
+    lastConnect = Date.now()
+    
+    lastConnect - previous > timeOutLimit
+
+
+query = (args...) ->
+    connect() if timedOut()
+    client.query args...
+
 
 exports.getChanData = (channel, table, callback) ->
-    client.query(
+    query(
         "SELECT * FROM #{table} WHERE chanid = ?",
         [channel], (err, results) ->
             throw err if err
@@ -27,10 +47,10 @@ exports.getChanDataEach = (channel, table, callback, lastcb) ->
 
 
 exports.getData = (table, callback) ->
-    client.query(
+    query(
         "SELECT * FROM #{table}",
         (err, results) ->
-            throw err if err
+            throw err if err # TODO
             callback results
     )
 
@@ -42,15 +62,15 @@ exports.getDataEach = (table, callback, lastcb) ->
 
 
 exports.clearChanData = (channel, table, cb) ->
-    client.query "DELETE FROM #{table} WHERE chanid = ?", [channel], cb
+    query "DELETE FROM #{table} WHERE chanid = ?", [channel], cb
 
 
 exports.clearTable = (table) ->
-    client.query "DELETE FROM #{table}"
+    query "DELETE FROM #{table}"
 
 
 exports.removeChanData = (channel, table, field, value, cb) ->
-    client.query "DELETE FROM #{table} WHERE #{field} = ? AND chanid = ?", [value, channel], cb
+    query "DELETE FROM #{table} WHERE #{field} = ? AND chanid = ?", [value, channel], cb
 
 
 getWildcards = (num) ->
@@ -60,15 +80,18 @@ getWildcards = (num) ->
 exports.addChanData = (channel, table, fields, datalist) ->
     exports.addData(table, ['chanid'].concat(fields), [channel].concat(data) for data in datalist)
 
+
 exports.addData = (table, fields, datalist) ->
     wc = getWildcards fields.length
-    query = "REPLACE INTO #{table} (#{fields.join ', '}) VALUES (#{wc})"
+    queryStr = "REPLACE INTO #{table} (#{fields.join ', '}) VALUES (#{wc})"
     
-    client.query query, data for data in datalist
+    query queryStr, data for data in datalist
+
 
 exports.setChanData = (channel, table, fields, data) ->
     exports.clearChanData channel, table, ->
         exports.addChanData channel, table, fields, data
+
 
 exports.loadData = (channel, table, fields, callback) ->
     isObj = typeof fields is 'object'
@@ -77,10 +100,10 @@ exports.loadData = (channel, table, fields, callback) ->
     
     data = if key? then {} else []
 
-    client.query(
+    query(
         "SELECT * FROM #{table} WHERE chanid = ?",
         [channel], (err, results) =>
-            throw err if err
+            throw err if err # TODO
             
             for result in results
                 if (key?)

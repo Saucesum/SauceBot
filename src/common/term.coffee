@@ -17,7 +17,6 @@ class Term
 
         
     setPrompt: (@prompt) ->
-        console.log "setting prompt: #{@prompt}"
         @rl.setPrompt @prompt + '> '
         @rl.prompt()
 
@@ -51,7 +50,6 @@ class Term
         cmd = @commands[name]
         if cmd?
             args = @parseArgs cmd.def, args
-            console.log name.toUpperCase().bold.blue + ": " + args
             cmd.cb.apply null, args
             
         else if name

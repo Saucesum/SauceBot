@@ -33,7 +33,7 @@ sauce.on 'error', (data) ->
 
 class Bot
     constructor: (@name, @password) ->
-        @channels = []
+        @channels = {}
         
     get: (name) ->
         @channels[name.toLowerCase()]
@@ -51,12 +51,12 @@ class Bot
             prefix = if op then '@' else ' '
            
             if HIGHLIGHT.test message
-                io.irc prefix + name, from, message.green.inverse
+                io.irc name, prefix + from, message.green.inverse
             else
-                io.irc prefix + name, from, message
+                io.irc name, prefix + from, message
                
             sauce.emit 'msg',
-                chan: name
+                chan: name.toLowerCase()
                 user: from
                 msg : message
                 op  : op
@@ -66,13 +66,13 @@ class Bot
             io.error msg
            
         chan.on 'connected', =>
-            io.socket "Connected to #{name.bold}"
+            io.socket "Connected to #{@name}/#{name.bold}"
            
         chan.on 'disconnecting', =>
-            io.socket "Disconnecting from #{name.bold}"
+            io.socket "Disconnecting from #{@name}/#{name.bold}"
            
         chan.on 'connecting', =>
-            io.debug "Connecting to #{name.bold}..."
+            io.debug "Connecting to #{@name}/#{name.bold}..."
            
            
         chan.connect()
@@ -85,10 +85,14 @@ class Bot
             delete @channels[lc]
             
     list: ->
-        (channel.name for channel in channels)
+        #io.debug @name + ": " + @channels
+        (name for name, _ of @channels)
         
     say: (chan, msg) ->
         channel.say msg if (channel = @get chan)?
+        
+    sayRaw: (chan, msg) ->
+        channel.sayRaw msg if (channel = @get chan)?
         
 
 bots = {}
@@ -112,19 +116,19 @@ termJoin = (name, chan) ->
     
     
 termSay = (name, chan, msg) ->
-    bots[name.toLowerCase()].get(chan)?.say msg
+    bots[name.toLowerCase()].sayRaw chan, msg
     
 termUse = (bot) ->
     io.debug "Switched to #{bot.bold}"
     
 termList = ->
-    for name in bots
+    for name, bot of bots
         console.log " #{name.underline.bold.blue}"
         console.log "\t" + (chan.magenta for chan in bot.list()).join(', ')
         
 termClose = ->
     for _, {channels} of bots
-        chan.part() for chan in channels
+        chan.part() for __, chan of channels
             
     setTimeout ->
         process.exit()

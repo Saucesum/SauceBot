@@ -9,12 +9,15 @@ DELAY        = 3
 REPEAT_DELAY = 45
 
 class SauceIRC
+    
     constructor: (@server, @username, @password) ->
         @channel = '#' + @server.toLowerCase()
         
         # Cache
         @lastMessage = null
         @lastTime    = 0
+        
+        @handlers = {}
 
     
     connect: ->
@@ -27,14 +30,16 @@ class SauceIRC
             floodProtection: true
             stripColors    : true
 
+        @bot.on cmd, cb for cmd, cb of @handlers
 
     disconnect: ->
         @bot.disconnect 'Client disconnected'
         
         
     on: (cmd, handler) ->
-        @bot.on cmd, handler
-
+        if @bot?
+            @bot.on cmd, handler
+        @handlers[cmd] = handler
 
     say: (message) ->
         if @isCached message

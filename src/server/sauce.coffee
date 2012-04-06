@@ -1,14 +1,22 @@
 # SauceBot Configurations
 
+io = require '../common/ioutil'
+
+try
+    conf = require('../common/config').load 'server'
+catch error
+    io.error "Error in configuration file 'server'"
+    process.exit 1
+
 exports.Version = '3.0 BETA'
-exports.Name    = 'SauceBot'
+exports.Name    = conf.name
 
 
 # Connection info
-exports.PORT = 8455
+exports.PORT = conf.port
 
 # FS
-exports.Path = process.env.HOME + '/' + exports.Name + '/'
+exports.Path = conf.logging.root
 
 
 # Moderator levels
@@ -20,7 +28,4 @@ exports.Level =
 
 
 # Database configuration
-exports.DB =
-    username: 'sauce'
-    password: 'vz6ns4ygd'
-    database: 'saucebot'
+exports.DB = conf.mysql

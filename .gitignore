@@ -1,5 +1,7 @@
 bin/
 build
+publish
+config
 node_modules/
 -p/
 .project

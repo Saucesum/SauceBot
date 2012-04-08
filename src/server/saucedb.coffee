@@ -8,6 +8,8 @@ mysql = require 'mysql'
 timeOutLimit = 30 * 60 * 1000
 lastConnect = 0
 
+client = null
+
 connect = ->
     io.debug "MySQL - Connecting"
     client?.destroy()

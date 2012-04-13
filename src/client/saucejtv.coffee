@@ -22,16 +22,41 @@ HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 
 sauce = new Client HOST, PORT
 
+# SauceIO events
+
+# Say (channel, message)
 sauce.on 'say', (data) ->
     {chan, msg} = data
     bot.say chan, msg for _, bot of bots
+    
+# Unban (channel, user)
+sauce.on 'unban', (data) ->
+    {chan, user} = data
+    bot.sayRaw chan "/unban #{user}" for _, bot of bots
+    
+# Ban (channel, user)
+sauce.on 'ban', (data) ->
+    {chan, user} = data
+    bot.sayRaw chan "/ban #{user}" for _, bot of bots
+    
+# Timeout (channel, user)
+sauce.on 'timeout', (data) ->
+    {chan, user} = data
+    bot.sayRaw chan "/timeout #{user}" for _, bot of bots
+    
+# Clear (channel, user)
+sauce.on 'clear', (data) ->
+    {chan, user} = data
+    bot.sayRaw chan "/ban #{user} 5" for _, bot of bots
 
-
+# Commercial (channel)
 sauce.on 'commercial', (data) ->
     {chan} = data
     for _, bot of bots
         bot.say chan "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
         bot.sayRaw chan '/commercial'
+        
+
 
 
 sauce.on 'error', (data) ->

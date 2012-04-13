@@ -55,7 +55,7 @@ class Base
               bot.say "[Time] #{vars.formatTime(date)}"
 
         # Test
-        @channel.register this, "var", Sauce.Level.User,
+        @channel.register this, "var", Sauce.Level.Mod,
             (user, args, bot) =>
                 return unless args
                 bot.say "[Vars] " + @channel.vars.parse user, args.join ' '

@@ -23,6 +23,9 @@ net   = require 'net'
 url   = require 'url'
 color = require 'colors'
 
+io.setDebug false
+io.setVerbose false
+
 # Loads user data
 loadUsers = ->
     users.load (userlist) ->
@@ -80,6 +83,7 @@ class SauceBot
             unban  : (data) => @unban   chan, data
             clear  : (data) => @clear   chan, data
             timeout: (data) => @timeout chan, data
+            commercial:     => @commercial chan
             
             
     # Update (upd):
@@ -185,6 +189,16 @@ class SauceBot
     #
     unban: (channel, user) ->
         @send 'unban', channel, user
+        
+    
+    # Sends a 'commercial' message to the client
+    # - Plays a commercial for partner channels
+    #
+    # Commercial (commercial):
+    #  * chan: [REQ] Target channel
+    #
+    commercial: (channel) ->
+        @send 'commercial', channel, ''
 
 
     # Sends a message to the client

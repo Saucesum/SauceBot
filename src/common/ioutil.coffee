@@ -78,7 +78,7 @@ randIdx = (arr) ->
     Math.floor (Math.random() * arr.length)
 
 
-# Returns the current time in milliseconds
+# Returns the current time in seconds
 exports.now = ->
     new Date().getTime() / 1000
 

@@ -17,7 +17,7 @@ class Channel
                 op      : if @isOp from then 1 else null
                 
                 
-        @irc.on 'error', (message)=>
+        @irc.on 'error', (message) =>
             @emit 'error', message
             
         @irc.on 'motd' , (motd) =>

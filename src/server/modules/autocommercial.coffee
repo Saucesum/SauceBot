@@ -29,19 +29,24 @@ class AutoCommercial
         @comDTO.load()
         
     unload: ->
+        return unless @loaded
+        @loaded = false
+        
         io.module "[AutoCommercial] Unloading from #{@channel.id}: #{@channel.name}"
+        myTriggers = @channel.listTriggers { module:this }
+        @channel.unregister myTriggers...
 
 
     registerHandlers: ->
         # !commercial on - Enable auto-commercials
         @channel.register this, "commercial on"      , Sauce.Level.Admin,
             (user,args,bot) =>
-                @cmdEnableCommercial
+                @cmdEnableCommercial()
         
         # !commercial off - Disable auto-commercials
         @channel.register this, "commercial off"     , Sauce.Level.Admin,
             (user,args,bot) =>
-                @cmdDisableCommercial
+                @cmdDisableCommercial()
                 
                 
     cmdEnableCommercial: ->
@@ -70,8 +75,8 @@ class AutoCommercial
         
         @updateMessagesList now
         msgsLimit = @comDTO.get 'messages'
-        msgsLimit = 20 if msgsLimit < 20
-        return unless @messagesSinceLast >= msgsLimit
+        msgsLimit = 30 if msgsLimit < 30
+        return unless @messagesSinceLast() >= msgsLimit
         
         bot.commercial()
 

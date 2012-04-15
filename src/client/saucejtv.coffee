@@ -31,30 +31,31 @@ sauce.on 'say', (data) ->
     
 # Unban (channel, user)
 sauce.on 'unban', (data) ->
-    {chan, user} = data
-    bot.sayRaw chan "/unban #{user}" for _, bot of bots
+    {chan, msg} = data
+    bot.sayRaw chan, "/unban #{msg}" for _, bot of bots
     
 # Ban (channel, user)
 sauce.on 'ban', (data) ->
-    {chan, user} = data
-    bot.sayRaw chan "/ban #{user}" for _, bot of bots
+    {chan, msg} = data
+    bot.sayRaw chan, "/ban #{msg}" for _, bot of bots
     
 # Timeout (channel, user)
 sauce.on 'timeout', (data) ->
-    {chan, user} = data
-    bot.sayRaw chan "/timeout #{user}" for _, bot of bots
+    {chan, msg} = data
+    bot.sayRaw chan, "/timeout #{msg}" for _, bot of bots
     
 # Clear (channel, user)
 sauce.on 'clear', (data) ->
-    {chan, user} = data
-    bot.sayRaw chan "/ban #{user} 5" for _, bot of bots
+    {chan, msg} = data
+    # XXX not working. :(
+    bot.sayRaw chan, "/ban #{msg} 5" for _, bot of bots
 
 # Commercial (channel)
 sauce.on 'commercial', (data) ->
     {chan} = data
     for _, bot of bots
-        bot.say chan "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
-        bot.sayRaw chan '/commercial'
+        bot.say chan, "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
+        bot.sayRaw chan, '/commercial'
         
 
 

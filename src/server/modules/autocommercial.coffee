@@ -18,6 +18,7 @@ class AutoCommercial
         @comDTO = new ConfigDTO @channel, 'autocommercial', ['state', 'delay', 'messages']
         
         @messages = []
+        @lastTime = 0
         @loaded = false
         
         
@@ -42,11 +43,13 @@ class AutoCommercial
         @channel.register this, "commercial on"      , Sauce.Level.Admin,
             (user,args,bot) =>
                 @cmdEnableCommercial()
+                bot.say '[AutoCommercial] Enabled'
         
         # !commercial off - Disable auto-commercials
         @channel.register this, "commercial off"     , Sauce.Level.Admin,
             (user,args,bot) =>
                 @cmdDisableCommercial()
+                bot.say '[AutoCommercial] Disabled'
                 
                 
     cmdEnableCommercial: ->
@@ -60,7 +63,7 @@ class AutoCommercial
     updateMessagesList: (now) ->
         delay = @comDTO.get 'delay'
         delay = 30 if delay < 30
-        limit = now - (delay * 1000)
+        limit = now - (delay * 60 * 1000)
         
         @messages.push now
         @messages = (message for message in @messages when message > limit)
@@ -76,9 +79,15 @@ class AutoCommercial
         @updateMessagesList now
         msgsLimit = @comDTO.get 'messages'
         msgsLimit = 30 if msgsLimit < 30
-        return unless @messagesSinceLast() >= msgsLimit
+        
+        delay = @comDTO.get 'delay'
+        delay = 30 if delay < 30
+        
+        return unless @messagesSinceLast() >= msgsLimit and (now - @lastTime > (delay * 60 * 1000))
         
         bot.commercial()
+        @messages = []
+        @lastTime = now
 
         
 exports.New = (channel) -> new AutoCommercial channel

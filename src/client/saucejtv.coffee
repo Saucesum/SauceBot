@@ -130,7 +130,9 @@ class Bot
             
                     
     sayRaw: (chan, msg) ->
-        channel.sayRaw msg if (channel = @get chan)?
+        if (channel = @get chan)?
+            channel.sayRaw msg 
+            io.irc channel.name, @name, msg.red
         
 
 bots = {}
@@ -162,7 +164,6 @@ termJoin = (name, chan) ->
     
 termSay = (name, chan, msg) ->
     bots[name.toLowerCase()].sayRaw chan, msg
-    io.irc chan, name, msg
     
 termUse = (bot) ->
     io.debug "Switched to #{bot.bold}"

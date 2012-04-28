@@ -67,6 +67,9 @@ class Filters
         
         # Permits (filter immunity)
         @permits = {}
+        
+        # Warnings
+        @warnings = {}
 
     load:  ->
         io.module "[Filters] Loading for #{@channel.id}: #{@channel.name}"

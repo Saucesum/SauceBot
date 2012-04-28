@@ -14,8 +14,8 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Filters'
-exports.version     = '1.2'
-exports.description = '(WIP) Filters URLs, caps-lock, words and emotes'
+exports.version     = '1.3'
+exports.description = 'Filters URLs, caps-lock, words and emotes'
 
 # Filters
 filterNames = ['url', 'caps', 'words', 'emotes']
@@ -29,6 +29,9 @@ tableFields =
     blacklist: 'url'
     badwords : 'word'
     emotes   : 'emote'
+    
+# Strikes reset time (in ms)
+TIMEOUT = 3 * 60 * 60 * 1000
 
 URL_RE = /(?:(?:https?:\/\/[a-zA-Z-\.]*)|(?:[a-zA-Z-]+\.))[a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,3})\b/
 
@@ -66,9 +69,13 @@ class Filters
             emotes   : (new ArrayDTO @channel, 'emotes'   , 'emote')
         
         # Permits (filter immunity)
+        #  username: expiration time
         @permits = {}
         
         # Warnings
+        #   username:
+        #     strikes: number of strikes
+        #     time   : time of last warning 
         @warnings = {}
 
     load:  ->
@@ -200,6 +207,10 @@ class Filters
             bot.say "[Filter] #{target} permitted for #{permitLength} seconds."
         else
             bot.say "[Filter] No target specified. Usage: !permit <username>"
+            
+        setTimeout ->
+            bot.unban target
+        , 2000
         
 
        
@@ -216,16 +227,47 @@ class Filters
         msg = msg.trim()
         lower = msg.toLowerCase()
         
-        # TODO: These should ban/timeout/clear instead of just telling them off. 
-        
-        if @states.get 'words'
-            bot.say "Bad word, #{name}!"         if @containsBadword lower
-        if @states.get 'emotes'
-            bot.say "No single emotes, #{name}!" if @isSingleEmote lower
-        if @states.get 'caps'
-            bot.say "Ease on the caps, #{name}!" if @isMostlyCaps msg
+        # Badword filter
+        if @states.get('words')  and @containsBadword lower
+            return @handleStrikes name, 'Bad word',         bot, true
             
-        bot.say "Bad URL, #{name}!"          if @containsBadURL lower
+        # Single-emote filter
+        if @states.get('emotes') and @isSingleEmote lower
+            return @handleStrikes name, 'No single emotes', bot, false
+            
+        # Caps filter
+        if @states.get('caps')   and @isMostlyCaps msg
+            return @handleStrikes name, 'Watch the caps',   bot, false
+            
+        # URL filter
+        if                           @containsBadURL lower
+            return @handleStrikes name, 'Bad URL',          bot, true 
+            
+            
+        
+    handleStrikes: (name, response, bot, clear) ->
+        strikes = @updateStrikes(name)
+        
+        response = "#{response}, #{name}! Strike #{strikes}"
+        
+        if      strikes is 1
+            # First strike: verbal warning + optional clear
+            bot.clear name if clear
+            
+        else if strikes is 2
+            # Second strike: timeout
+            bot.timeout name
+        
+        else if strikes > 2
+            # Third+ strike: ban
+            bot.ban name
+            
+            
+        # Delay the response to avoid the JTV flood filter
+        setTimeout ->
+            bot.say response
+        , 2000
+    
     
     containsBadword: (msg) ->
         for word in @lists['badwords'].get()
@@ -264,7 +306,25 @@ class Filters
         
         @checkFilters name, msg, bot
         
+        
+    updateStrikes: (name) ->
+        name = name.toLowerCase()
+        now  = Date.now()
+        
+        if not @warnings[name]? or @isOutOfDate @warnings[name].time, now
+            @warnings[name] =
+                strikes: 0
+                time   : 0
 
+        @warnings[name].time = now
+        ++@warnings[name].strikes
+        
+        
+    isOutOfDate: (time, now) ->
+        return now - time > TIMEOUT
+        
+        
+        
 getCapsRate = (msg) ->
     # Yay for functional programming!
     (true for chr in msg when chr >= 'A' and chr <= 'Z').length / (msg.length * 1.0)

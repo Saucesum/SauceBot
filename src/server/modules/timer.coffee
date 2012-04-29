@@ -10,8 +10,7 @@ io    = require '../ioutil'
 # Module description
 exports.name        = 'Timer'
 exports.version     = '1.0'
-exports.description = 'Timer system (unfinished - do not use)'
-exports.locked      = true
+exports.description = 'Timer system'
 
 # Time utility methods
 
@@ -58,6 +57,29 @@ timeToStr = (time) ->
         seconds = Math.floor((time % MINUTE) / SECOND)
         return "#{word minutes, 'minute'} #{word seconds, 'second'}"
         
+        
+timeToFullStr = (time) ->
+    strs = []
+    if time >= DAY
+        days = Math.floor time / DAY
+        time %= DAY
+        strs.push(word days, 'day') unless days is 0
+    
+    if time >= HOUR
+        hours = Math.floor time / HOUR
+        time %= HOUR
+        strs.push(word hours, 'hour') unless  hours is 0
+        
+    if time >= MINUTE
+        minutes = Math.floor time / MINUTE
+        time %= MINUTE
+        strs.push(word minutes, 'minute') unless minutes is 0
+        
+    if time >= SECOND
+        seconds = Math.floor time / SECOND
+        strs.push (word seconds, 'second') unless seconds is 0
+        
+    return strs.join ' '
 
 class Timer
     constructor: (@channel) ->
@@ -85,6 +107,9 @@ class Timer
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
         
+        @channel.vars.unregister 'timer'
+        @channel.vars.unregister 'countdown'
+        
         
     registerHandlers: ->
         @channel.register this, "timer",          Sauce.Level.Mod,
@@ -104,29 +129,46 @@ class Timer
                 @cmdCountdownStop user, args, bot
                 
         @channel.vars.register 'countdown', (user, args) =>
-            return "N/A" unless args? and @countdowns.get()[args[0]]?
-            now = Date.now()
+            return "N/A" unless args? and (cdown = @countdowns.get args[0])?
+            return timeToStr (cdown - Date.now())
             
-            
-                
+        @channel.vars.register 'timer', (user, args) =>
+            return "N/A" unless args? and (timer = @timers.get args[0])?
+            return timeToFullStr (Date.now() - timer)
         
     
     cmdTimerStart: (user, args, bot) ->
-        # TODO !timer <name> 
+        unless args? and args[0]?
+            return bot.say "[Timer] Invalid name. Usage: !timer <timername>"
+            
+        name = args[0]
+        @timers.add name, Date.now()
+        bot.say "[Timer] Timer #{name} started. Stop with !timer stop #{name}"
         
         
     cmdTimerStop: (user, args, bot) ->
-        # TOOD !timer stop <name>
+        unless args? and (timer = @timers.get args[0])?
+            return bot.say "[Timer] Invalid timer. Usage: !timer stop <timername>"
+            
+        bot.say "[Timer] #{args[0]}: #{timeToFullStr (Date.now() - timer)}"
+        @timers.remove args[0]
         
         
     cmdCountdownStart: (user, args, bot) ->
-        # TODO !countdown <name> <strToTime()>
+        unless args? and args[0]? and args[1]?
+            return bot.say "[Countdown] Invalid name. Usage: !countdown <name> <target>"
         
+        name   = args.shift()
+        target = strToTime args.join('')
+        @countdowns.add name, Date.now() + target
+        bot.say "[Countdown] Countdown #{name} started! Cancel with !countdown stop #{name}"
         
     cmdCountdownStop: (user, args, bot) ->
-        # TODO !countdown stop <name>
+        unless args? and (timer = @countdowns.get args[0])?
+            return bot.say "[Countdown] Invalid countdown. Usage: !countdown stop <name>"
         
-        
+        bot.say "[Countdown] #{args[0]}: stopped at #{timeToFullStr (timer - Date.now())} remaining"
+        @countdowns.remove args[0]
             
         
     handle: (user, msg, bot) ->

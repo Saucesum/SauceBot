@@ -204,6 +204,7 @@ class Filters
         target = args[0] if args[0]?
         if target?
             @permits[target.toLowerCase()] = permitTime
+            delete @warnings[target.toLowerCase()] 
             bot.say "[Filter] #{target} permitted for #{permitLength} seconds."
         else
             bot.say "[Filter] No target specified. Usage: !permit <username>"

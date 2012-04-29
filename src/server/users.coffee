@@ -26,13 +26,16 @@ class User
         
     # Sets the user's mod-level in the specified channel
     setMod: (chan, level) ->
-        @mod[chan] = level
+        @mod[chan.id] = level
         
     # Returns whether the user is a mod in the specified channel
     isMod: (chan, level) ->
         level ?= Sauce.Level.Mod
         
-        @isGlobal() or @mod[chan] >= level
+        @isGlobal() or @mod[chan.id] >= level
+        
+    getMod: (chan) ->
+        if @isGlobal() then Sauce.Level.Owner + 1 else @mod[chan.id]
 
 
 # Returns a user by their username in lowercase

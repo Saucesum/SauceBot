@@ -31,6 +31,7 @@ exports.getByName = (name) ->
 exports.getById = (id) ->
     exports.getByName names[id]
 
+
 class Channel
     constructor: (data) ->
         @id   = data.chanid
@@ -115,14 +116,28 @@ class Channel
         chan = @id
         user = users.getByName username
         
+        # If the user is in the database, fetch their mod level
         if (user?)
             return {
                 name: user.name
-                op  : if (op or user.isMod chan) then 1 else 0
+                op  : Math.max(op, user.getMod chan)
+                db  : true
             }
+            
+        # If the user's name is the same as the channel's name,
+        # they're the broadcaster, i.e. the owner.
+        if username.toLowerCase() is @name.toLowerCase()
+            return {
+                name: @name
+                op  : Sauce.Level.Owner
+                db  : false
+            }
+            
+        # Otherwise just return their IRC op level
         return {
             name: username
             op  : if op then 1 else 0
+            db  : false
         }
 
 
@@ -192,6 +207,7 @@ exports.handle = (chan, data, bot) ->
         channel.handle data, bot
     else
         io.debug "No such channel: #{chan}"
+
 
 # Loads the channel list
 exports.load = (finished) ->

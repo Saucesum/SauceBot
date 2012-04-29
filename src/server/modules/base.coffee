@@ -47,7 +47,11 @@ class Base
 
         @channel.register  this, "test", Sauce.Level.Mod,
             (user,args,bot) ->
-              bot.say 'Test command!' if user.op?
+              bot.say "Test command! #{user.name} - #{Sauce.LevelStr user.op}"
+              
+        @channel.register this, "admtest", Sauce.Level.Admin,
+            (user,args,bot) ->
+              bot.say 'Admin test command!'
 
         @channel.register  this, "time", Sauce.Level.User,
             (user,args,bot) ->

@@ -26,6 +26,16 @@ exports.Level =
     Admin: 2
     Owner: 3
 
+exports.LevelStr = (level) ->
+    switch level
+        when exports.Level.User  then 'User'
+        when exports.Level.Mod   then 'Moderator'
+        when exports.Level.Admin then 'Administrator'
+        when exports.Level.Owner then 'Owner'
+        else
+            if level > exports.Level.Owner then 'Global' else 'None'
+
+
 
 # Database configuration
 exports.DB = conf.mysql

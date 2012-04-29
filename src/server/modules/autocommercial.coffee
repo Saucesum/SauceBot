@@ -10,9 +10,24 @@ io    = require '../ioutil'
 exports.name        = 'AutoCommercial'
 exports.version     = '1.0'
 exports.description = 'Automatic commercials for jtv partners'
+exports.locked      = true
 
 io.module '[AutoCommercial] Init'
 
+# ********************************************************************** #
+#                                NOTE                                    #
+# ---------------------------------------------------------------------- #
+#  This module needs to be competely rethinked due to the fact that      #
+#  only the broadcaster can use /commercial from the chat.               #
+#                                                                        #  
+#  Another way of starting a commercial is to use the JTV API            #
+#  /broadcast/dashboards/<channel>/commercial?length=30                  #
+#  However, that requires a JTV application key for the OAuth.           #
+#                                                                        #
+#  More information regarding the API:                                   #
+#  http://apiwiki.justin.tv/mediawiki/index.php/Channel/commercial       #
+#                                                                        #
+# ********************************************************************** #
 class AutoCommercial
     constructor: (@channel) ->
         @comDTO = new ConfigDTO @channel, 'autocommercial', ['state', 'delay', 'messages']
@@ -40,24 +55,24 @@ class AutoCommercial
 
     registerHandlers: ->
         # !commercial on - Enable auto-commercials
-        @channel.register this, "commercial on"      , Sauce.Level.Admin,
+        @channel.register this, "commercial on"      , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdEnableCommercial()
                 bot.say '[AutoCommercial] Enabled'
         
         # !commercial off - Disable auto-commercials
-        @channel.register this, "commercial off"     , Sauce.Level.Admin,
+        @channel.register this, "commercial off"     , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdDisableCommercial()
                 bot.say '[AutoCommercial] Disabled'
                 
                 
     cmdEnableCommercial: ->
-        @comDTO.set 'state', 1
+        @comDTO.add 'state', 1
     
     
     cmdDisableCommercial: ->
-        @comDTO.set 'state', 0
+        @comDTO.add 'state', 0
         
 
     updateMessagesList: (now) ->

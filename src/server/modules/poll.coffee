@@ -127,7 +127,7 @@ class Poll
         total = 0
         total += value for value, idx in @votes
         
-        percentage = Math.floor((score * 100.0 / total)*10)/10
+        percentage = ~~((score * 100.0 / total)*10)/10
         "#{score} (#{percentage}%)"
        
         
@@ -138,7 +138,7 @@ class Poll
         if args[0]? and (idx = @polls[@activePoll].indexOf(args[0].toLowerCase())) isnt -1
             @hasVoted.push user
             @votes[idx]++
-            bot.say "[Poll] #{user} voted!"
+            #bot.say "[Poll] #{user} voted!"
 
 
     handle: (user, msg, bot) ->

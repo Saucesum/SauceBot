@@ -43,40 +43,40 @@ word = (num, str) ->
     
 timeToStr = (time) ->
     if time >= DAY
-        days  = Math.floor( time / DAY)
-        hours = Math.floor((time % DAY) / HOUR)
+        days  = ~~( time / DAY)
+        hours = ~~((time % DAY) / HOUR)
         return "#{word days, 'day'} #{word hours, 'hour'}"
     
     if time >= HOUR
-        hours   = Math.floor( time / HOUR)
-        minutes = Math.floor((time % HOUR) / MINUTE)
+        hours   = ~~( time / HOUR)
+        minutes = ~~((time % HOUR) / MINUTE)
         return "#{word hours, 'hour'} #{word minutes, 'minute'}"
         
     else
-        minutes = Math.floor( time / MINUTE)
-        seconds = Math.floor((time % MINUTE) / SECOND)
+        minutes = ~~( time / MINUTE)
+        seconds = ~~((time % MINUTE) / SECOND)
         return "#{word minutes, 'minute'} #{word seconds, 'second'}"
         
         
 timeToFullStr = (time) ->
     strs = []
     if time >= DAY
-        days = Math.floor time / DAY
+        days = ~~ (time / DAY)
         time %= DAY
         strs.push(word days, 'day') unless days is 0
     
     if time >= HOUR
-        hours = Math.floor time / HOUR
+        hours = ~~ (time / HOUR)
         time %= HOUR
         strs.push(word hours, 'hour') unless  hours is 0
         
     if time >= MINUTE
-        minutes = Math.floor time / MINUTE
+        minutes = ~~ (time / MINUTE)
         time %= MINUTE
         strs.push(word minutes, 'minute') unless minutes is 0
         
     if time >= SECOND
-        seconds = Math.floor time / SECOND
+        seconds = ~~ (time / SECOND)
         strs.push (word seconds, 'second') unless seconds is 0
         
     return strs.join ' '

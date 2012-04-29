@@ -88,13 +88,13 @@ class Vars
                 switch args.length
                         when 1
                             a = parseInt(args[0], 10)
-                            Math.floor(Math.random() * a)
+                            ~~ (Math.random() * a)
                         when 2
                             a = parseInt(args[0], 10)
                             b = parseInt(args[1], 10)
-                            Math.floor(Math.random() * (b - a)) + a
+                            ~~ (Math.random() * (b - a)) + a
                         else
-                            idx = Math.floor(Math.random() * args.length)
+                            idx = ~~ (Math.random() * args.length)
                             args[idx]
                         
             

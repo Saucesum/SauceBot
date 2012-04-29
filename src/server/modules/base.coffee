@@ -43,7 +43,7 @@ class Base
 
         @channel.register  this, "saucebot", Sauce.Level.User,
             (user,args,bot) ->
-              bot.say "[SauceBot] SauceBot v#{Sauce.Version} by Ravn_TM - Node #{process.version}"
+              bot.say "[SauceBot] SauceBot v#{Sauce.Version} by Ravn_TM - Using CoffeeScript/Node.js"
 
         @channel.register  this, "test", Sauce.Level.Mod,
             (user,args,bot) ->

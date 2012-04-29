@@ -30,7 +30,7 @@ class Logger
 getTime = ->
     date = new time.Date()
     date.setTimezone 'CET'
-    Math.floor date/1000
+    ~~ (date/1000)
     
 
 exports.Logger = Logger

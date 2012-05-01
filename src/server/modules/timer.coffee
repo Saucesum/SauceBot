@@ -39,7 +39,25 @@ word = (num, str) ->
             num + ' ' + str
         else
             num + ' ' + str + 's'
-            
+ 
+ 
+
+timeToShortStr = (time) ->
+    if time >= DAY
+        days  = ~~( time / DAY)
+        hours = ~~((time % DAY) / HOUR)
+        return "#{days}d#{hours}h"
+    
+    if time >= HOUR
+        hours   = ~~( time / HOUR)
+        minutes = ~~((time % HOUR) / MINUTE)
+        return "#{hours}h#{minutes}m"
+        
+    else
+        minutes = ~~( time / MINUTE)
+        seconds = ~~((time % MINUTE) / SECOND)
+        return "#{minutes}m#{seconds}s"
+        
     
 timeToStr = (time) ->
     if time >= DAY
@@ -80,6 +98,7 @@ timeToFullStr = (time) ->
         strs.push (word seconds, 'second') unless seconds is 0
         
     return strs.join ' '
+
 
 class Timer
     constructor: (@channel) ->
@@ -130,11 +149,30 @@ class Timer
                 
         @channel.vars.register 'countdown', (user, args) =>
             return "N/A" unless args? and (cdown = @countdowns.get args[0])?
-            return timeToStr (cdown - Date.now())
+            time = cdown - Date.now()
+            fmt = args[1] ? 'short'
+            fmt = fmt.trim()
+            
+            if fmt is 'short'
+                return timeToShortStr time
+            if fmt in ['full', 'long']
+                return timeToFullStr time
+            else
+                return timeToStr time
+                
             
         @channel.vars.register 'timer', (user, args) =>
             return "N/A" unless args? and (timer = @timers.get args[0])?
-            return timeToFullStr (Date.now() - timer)
+            time = Date.now() - timer
+            fmt = args[1] ? 'short'
+            fmt = fmt.trim()
+            
+            if fmt is 'short'
+                return timeToShortStr time
+            if fmt in ['full', 'long']
+                return timeToFullStr time
+            else
+                return timeToStr time
         
     
     cmdTimerStart: (user, args, bot) ->

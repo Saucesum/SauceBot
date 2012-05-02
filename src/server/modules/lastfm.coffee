@@ -88,8 +88,11 @@ class LastFM
             data = JSON.parse json
             return 'N/A' unless data? and data.recenttracks?
             
-            artist = data.recenttracks.track.artist['#text']
-            track  = data.recenttracks.track.name
+            track = data.recenttracks.track
+            track = track[0] if track[0]?
+            
+            artist = track.artist['#text']
+            track  = track.name
             
             return "#{artist} - #{track}"
             

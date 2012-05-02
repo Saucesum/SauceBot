@@ -150,21 +150,17 @@ class Timer
         @channel.vars.register 'countdown', (user, args) =>
             return "N/A" unless args? and (cdown = @countdowns.get args[0])?
             time = cdown - Date.now()
-            fmt = args[1] ? 'short'
-            fmt = fmt.trim()
-            
-            if fmt is 'short'
-                return timeToShortStr time
-            if fmt in ['full', 'long']
-                return timeToFullStr time
-            else
-                return timeToStr time
+            return @formatTime time, args[1]
                 
             
         @channel.vars.register 'timer', (user, args) =>
             return "N/A" unless args? and (timer = @timers.get args[0])?
             time = Date.now() - timer
-            fmt = args[1] ? 'short'
+            return @formatTime time, args[1]
+            
+                
+    formatTime: (time, format) ->
+        fmt = format ? 'short'
             fmt = fmt.trim()
             
             if fmt is 'short'

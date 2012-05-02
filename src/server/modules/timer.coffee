@@ -161,14 +161,14 @@ class Timer
                 
     formatTime: (time, format) ->
         fmt = format ? 'short'
-            fmt = fmt.trim()
-            
-            if fmt is 'short'
-                return timeToShortStr time
-            if fmt in ['full', 'long']
-                return timeToFullStr time
-            else
-                return timeToStr time
+        fmt = fmt.trim()
+        
+        if fmt is 'short'
+            return timeToShortStr time
+        if fmt in ['full', 'long']
+            return timeToFullStr time
+        else
+            return timeToStr time
         
     
     cmdTimerStart: (user, args, bot) ->

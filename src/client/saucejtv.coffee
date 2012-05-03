@@ -31,27 +31,22 @@ sauce.on 'say', (data) ->
     
 # Unban (channel, user)
 sauce.on 'unban', (data) ->
-    {chan, msg} = data
-    console.log "/unban #{msg}"
-    #bot.sayRaw chan, "/unban #{msg}" for _, bot of bots
+    {chan, user} = data
+    console.log "/unban #{user}"
+    #bot.sayRaw chan, "/unban #{user}" for _, bot of bots
     
 # Ban (channel, user)
 sauce.on 'ban', (data) ->
-    {chan, msg} = data
-    console.log "/ban #{msg}"
-    #bot.sayRaw chan, "/ban #{msg}" for _, bot of bots
+    {chan, user} = data
+    console.log "/ban #{user}"
+    #bot.sayRaw chan, "/ban #{user}" for _, bot of bots
     
-# Timeout (channel, user)
+# Timeout (channel, user, time)
 sauce.on 'timeout', (data) ->
-    {chan, msg} = data
-    console.log "/timeout #{msg}"
-    #bot.sayRaw chan, "/timeout #{msg}" for _, bot of bots
-    
-# Clear (channel, user)
-sauce.on 'clear', (data) ->
-    {chan, msg} = data
-    console.log "/timeout #{msg} 2"
-    #bot.sayRaw chan, "/timeout #{msg} 2" for _, bot of bots
+    {chan, user, time} = data
+    time ?= 600
+    console.log "/timeout #{user} #{time}"
+    #bot.sayRaw chan, "/timeout #{user} #{time}" for _, bot of bots
 
 # Commercial (channel)
 sauce.on 'commercial', (data) ->
@@ -60,8 +55,6 @@ sauce.on 'commercial', (data) ->
         bot.say chan, "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
         bot.sayRaw chan, '/commercial'
         
-
-
 
 sauce.on 'error', (data) ->
     io.error data.msg

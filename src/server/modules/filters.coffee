@@ -256,12 +256,12 @@ class Filters
             bot.clear name if clear
             
         else if strikes is 2
-            # Second strike: timeout
-            bot.timeout name
+            # Second strike: 10 minute timeout
+            bot.timeout name, 60 * 10
         
         else if strikes > 2
-            # Third+ strike: ban
-            bot.ban name
+            # Third+ strike: 8 hour timeout
+            bot.timeout name, 8 * 60 * 60
             
             
         # Delay the response to avoid the JTV flood filter

@@ -78,12 +78,12 @@ class SauceBot
 
         # Handle the message
         chans.handle chan, json,
-            say    : (data) => @say     chan, data
-            ban    : (data) => @ban     chan, data
-            unban  : (data) => @unban   chan, data
-            clear  : (data) => @clear   chan, data
-            timeout: (data) => @timeout chan, data
-            commercial:     => @commercial chan
+            say       : (data)       => @say        chan, data
+            ban       : (data)       => @ban        chan, data
+            unban     : (data)       => @unban      chan, data
+            clear     : (data)       => @timeout    chan, data, 2
+            timeout   : (data, time) => @timeout    chan, data, time
+            commercial:              => @commercial chan
             
             
     # Update (upd):
@@ -144,7 +144,11 @@ class SauceBot
     #  * msg : [REQ] Message to send
     #
     say: (channel, message) ->
-        @send 'say', channel, message
+        io.say '>> '.magenta + "#{action} #{channel}: #{message}"
+        
+        server.broadcast 'say',
+            chan: channel
+            msg : message
 
   
     # Sends a 'timeout' message to the client
@@ -154,20 +158,12 @@ class SauceBot
     #  * chan: [REQ] Target channel
     #  * msg : [REQ] Target user to time out
     #
-    timeout: (channel, user) ->
-        @send 'timeout', channel, user
-        
-    
-    # Sends a 'clear' message to the client
-    # - Clears the targets messages
-    #
-    # Clear (clear):
-    #  * chan: [REQ] Target channel
-    #  * msg : [REQ] Target user to clear messages
-    #
-    clear: (channel, user) ->
-        @send 'clear', channel, user
-        
+    timeout: (channel, user, time) ->
+        server.broadcast 'timeout',
+            chan: channel
+            user: user
+            time: time
+            
         
     # Sends a 'ban' message to the client
     # - Bans the target user
@@ -177,7 +173,9 @@ class SauceBot
     #  * msg : [REQ] Target user to ban
     #
     ban: (channel, user) ->
-        @send 'ban', channel, user
+        server.broadcast 'ban',
+            chan: channel
+            user: user
 
 
     # Sends an 'unban' message to the client
@@ -188,7 +186,9 @@ class SauceBot
     #  * msg : [REQ] Target user to unban
     #
     unban: (channel, user) ->
-        @send 'unban', channel, user
+        server.broadcast 'unban',
+            chan: channel
+            user: user
         
     
     # Sends a 'commercial' message to the client
@@ -198,17 +198,8 @@ class SauceBot
     #  * chan: [REQ] Target channel
     #
     commercial: (channel) ->
-        @send 'commercial', channel, ''
-
-
-    # Sends a message to the client
-    send: (action, channel, message) ->
-        io.say '>> '.magenta + "#{action} #{channel}: #{message}"
-
-        server.broadcast action,
-                chan: channel
-                msg : message
-
+        server.broadcast 'commercial',
+            chan: channel
 
 # Load data
 io.debug 'Loading users...'

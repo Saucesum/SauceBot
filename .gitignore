@@ -1,4 +1,5 @@
 bin/
+src/test/
 build
 publish
 config

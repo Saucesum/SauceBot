@@ -50,6 +50,8 @@ class Hangman
                 
         @channel.vars.register 'hm', (user, args) =>
             @word
+            
+          
                 
     unload: ->
         @channel.vars.unregister 'hm'
@@ -68,7 +70,7 @@ randomWord = (listname) ->
 
 
 randIdx = (arr) ->
-    Math.floor (Math.random() * arr.length)
+    ~~ (Math.random() * arr.length)
 
 
 wordList = (list) ->

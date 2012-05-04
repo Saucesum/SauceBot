@@ -1,14 +1,12 @@
 # Logger utility
 
-Sauce = require './sauce'
-
 fs   = require 'fs'
 time = require 'time'
 
 
 class Logger
-    constructor: (@name) ->
-        @file = Sauce.Path + 'logs/' + @name
+    constructor: (@root, @name) ->
+        @file = @root + 'logs/' + @name
         
         
     write: (args...) ->

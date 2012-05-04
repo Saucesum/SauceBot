@@ -11,12 +11,12 @@ Sauce = require './sauce'
 db    = require './saucedb'
 users = require './users'
 chans = require './channels'
-log   = require './logger' 
 
 # Common 
 auth  = require '../common/session'
 io    = require '../common/ioutil'
 sio   = require '../common/socket'
+log   = require '../common/logger' 
 
 # Node.js
 net   = require 'net'
@@ -38,7 +38,7 @@ loadChannels = ->
         io.debug "Loaded #{(Object.keys chanlist).length} channels."
 
 
-weblog = new log.Logger 'updates.log'
+weblog = new log.Logger Sauce.Path, 'updates.log'
 
 
 # SauceBot connection handler class

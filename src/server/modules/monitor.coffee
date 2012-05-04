@@ -4,7 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 
 io    = require '../ioutil'
-log   = require '../logger'
+log   = require '../../common/logger'
 fs    = require 'fs'
 
 # Module description
@@ -15,13 +15,13 @@ exports.locked      = true
 
 io.module '[Monitor] Init'
 
-mentions = new log.Logger "mentions.log"
+mentions = new log.Logger Sauce.Path, "mentions.log"
 
 class Monitor
     constructor: (@channel) ->
         @loaded = false
 
-        @log = new log.Logger "#{@channel.name}.log"
+        @log = new log.Logger Sauce.Path, "#{@channel.name}.log"
         
         @users = {}
         
@@ -38,9 +38,9 @@ class Monitor
         
         io.module "[Monitor] Loading for #{@channel.id}: #{@channel.name}"
         
-        @channel.register this, "users", Sauce.Level.Mod,
-            (user, args, bot) =>
-                bot.say "[Users] Active users: #{Object.keys(@users).join ', '}"
+        # @channel.register this, "users", Sauce.Level.Mod,
+            # (user, args, bot) =>
+                # bot.say "[Users] Active users: #{Object.keys(@users).join ', '}"
         
         @channel.register this, "users clear", Sauce.Level.Mod,
             (user, args, bot) =>
@@ -48,8 +48,7 @@ class Monitor
                 bot.say "[Users] Active users cleared."
 
         @channel.vars.register 'users', (user, args) =>
-                if not args[0]? or args[0] is 'list'
-                    return Object.keys(@users).join ', '
+                if not args[0]? then return Object.keys(@users).length
                 
                 switch args[0]
                     when 'count' then Object.keys(@users).length
@@ -72,7 +71,7 @@ class Monitor
         list = Object.keys @users
         return "N/A" unless list.length
         
-        list[Math.floor(Math.random() * list.length)]
+        list[~~(Math.random() * list.length)]
         
         
 

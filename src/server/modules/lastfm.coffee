@@ -5,6 +5,7 @@ db    = require '../saucedb'
 io    = require '../ioutil'
 
 request = require 'request'
+util    = require 'util'
 
 {ConfigDTO, HashDTO} = require '../dto' 
 
@@ -19,7 +20,7 @@ CACHE_TIMEOUT = 45 * 1000
 api_key  = 'b25b959554ed76058ac220b7b2e0a026'
 
 getURL = (username) ->
-    "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=#{username}&api_key=#{api_key}&format=json&limit=1"
+    "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=#{username}&api_key=#{api_key}&format=json&limit=1&time=#{Date.now()}"
 
 
 class LastFM
@@ -74,11 +75,12 @@ class LastFM
         
     getCachedSong: (name) ->
         lc = name.toLowerCase()
-        return unless cache = @cache[lc]?
-
+        return unless (cache = @cache[lc])?
+        
         expire = cache.expire
-        if expire > Date.now()
+        if expire < Date.now()
             delete @cache[lc]
+            return null
         else
             return cache.value
 

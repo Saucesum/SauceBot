@@ -116,3 +116,13 @@ exports.loadData = (channel, table, fields, callback) ->
             callback data
     )
 
+exports.loadBucket = (channel, table, key, callback) ->
+    query(
+        "SELECT * FROM #{table} WHERE chanid = ?",
+        [channel], (err, results) =>
+            throw err if err # TODO
+            data = {}
+            data[result[key]] = result for result in results
+            callback data
+    )
+

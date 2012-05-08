@@ -11,12 +11,13 @@ io    = require '../ioutil'
     ArrayDTO,
     ConfigDTO,
     HashDTO,
+    BucketDTO,
     EnumDTO
 } = require '../dto'
 
 # Module description
 exports.name        = 'Commands'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Custom commands handler'
 
 io.module '[Commands] Init'
@@ -24,12 +25,13 @@ io.module '[Commands] Init'
 # Commands module
 # - Handles:
 #  !set <command> <message>
+#  !setmod <command> <message>
 #  !unset <command> <message>
 #  !<command>
 #
 class Commands
     constructor: (@channel) ->
-        @commands = new HashDTO @channel, 'commands', 'cmdtrigger', 'message'
+        @commands = new BucketDTO @channel, 'commands', 'cmdtrigger', ['message', 'level']
 
         @triggers = {}
         @loaded = false
@@ -41,10 +43,13 @@ class Commands
                 
         io.module "[Commands] Loading for #{@channel.id}: #{@channel.name}"
 
-        @channel.register  this, "set"  , Sauce.Level.Mod,
+        @channel.register  this, "set"     , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdSet user, args, bot
-        @channel.register  this, "unset", Sauce.Level.Mod,
+        @channel.register  this, "setmod"  , Sauce.Level.Mod,
+            (user,args,bot) =>
+                @cmdSetMod user, args, bot
+        @channel.register  this, "unset"   , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdUnset user, args, bot
 
@@ -67,11 +72,13 @@ class Commands
     addTrigger: (cmd) ->
         # Do nothing if the user is just editing an existing command.
         return if @triggers[cmd]?
+        
+        level = @commands.get(cmd).level ? Sauce.Level.User
 
         # Create a simple trigger that looks up a key in @commands
-        @triggers[cmd] = trig.buildTrigger  this, cmd, Sauce.Level.User,
+        @triggers[cmd] = trig.buildTrigger  this, cmd, level,
             (user, args, bot) =>
-                parsed = @channel.vars.parse user, @commands.get(cmd)
+                parsed = @channel.vars.parse user, @commands.get(cmd).message
                 bot.say parsed
 
         @channel.register @triggers[cmd]
@@ -109,13 +116,37 @@ class Commands
         if (args.length is 1)
             return @cmdUnset user, args, bot
 
-        cmd = (args.splice 0, 1)[0]
-        msg = args.join ' '
+        cmd  = (args.splice 0, 1)[0]
+        msg  = args.join ' '
+        data =
+            message: msg
+            level  : Sauce.Level.User
 
-        @commands.add cmd, msg
+        @commands.add cmd, data
         @addTrigger   cmd
 
         return bot.say "Command set: #{cmd}"
+
+    # !setmod <command> <message>  - Set moderator-only command
+    # !setmod <command>            - Unset command
+    cmdSetMod: (user, args, bot) ->
+        unless args[0]?
+            return bot.say "Usage: !setmod (name) (message).  !setmod (name) or !unset (name) to forget a command."
+
+        # !set <command>
+        if (args.length is 1)
+            return @cmdUnset user, args, bot
+
+        cmd  = (args.splice 0, 1)[0]
+        msg  = args.join ' '
+        data =
+            message: msg
+            level  : Sauce.Level.Mod
+
+        @commands.add cmd, data
+        @addTrigger   cmd
+
+        return bot.say "Mod-command set: #{cmd}"
 
 
     handle: (user, msg, bot) ->

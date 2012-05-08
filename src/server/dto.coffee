@@ -3,6 +3,7 @@
 DTOs = [
     'ArrayDTO',
     'HashDTO',
+    'BucketDTO',
     'ConfigDTO',
     'EnumDTO'
 ]

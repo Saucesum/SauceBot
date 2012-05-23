@@ -65,9 +65,9 @@ class Monument
         
         
     registerHandlers: ->
-        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,bot) =>
+        @channel.register this, "#{@command}",       Sauce.Level.User, (user,args,bot) =>
             @cmdMonument user, args, bot
-        @channel.register this, "#{@command} clear", Sauce.Level.Mod, (user,args,bot) =>
+        @channel.register this, "#{@command} clear", Sauce.Level.Mod,  (user,args,bot) =>
             @cmdMonumentClear user, args, bot
         @channel.register this, "#{@command} remove", Sauce.Level.Mod, (user,args,bot) =>
             @cmdMonumentRemove user, args, bot

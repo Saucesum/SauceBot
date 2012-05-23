@@ -32,7 +32,7 @@ class User
     isMod: (chanid, level) ->
         level ?= Sauce.Level.Mod
         
-        @isGlobal() or @mod[chan] >= level
+        @isGlobal() or @mod[chanid] >= level
         
     getMod: (chanid) ->
         if @isGlobal() then Sauce.Level.Owner + 1 else @mod[chanid]

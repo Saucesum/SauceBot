@@ -143,8 +143,8 @@ class Channel
 
     # Handles a message by passing it on to all loaded modules.
     handle: (data, bot) ->
-        user      = @getUser data.user, data.op
-
+        user = @getUser data.user, data.op
+        
         msg = data.msg
      
         for trigger in @triggers

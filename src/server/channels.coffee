@@ -118,9 +118,11 @@ class Channel
         
         # If the user is in the database, fetch their mod level
         if (user?)
+            cmod = (user.getMod chan) ? 0
+            
             return {
                 name: user.name
-                op  : Math.max(op, user.getMod chan)
+                op  : Math.max(op, cmod)
                 db  : true
             }
             
@@ -146,6 +148,8 @@ class Channel
         user = @getUser data.user, data.op
         
         msg = data.msg
+        
+        console.log "User[op: #{user.op} db: #{user.db} name: #{user.name} ]"
      
         for trigger in @triggers
             # check for first match that the user is authorized to use

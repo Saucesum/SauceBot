@@ -144,7 +144,7 @@ class SauceBot
     #  * msg : [REQ] Message to send
     #
     say: (channel, message) ->
-        io.say '>> '.magenta + "#{action} #{channel}: #{message}"
+        io.say '>> '.magenta + "say #{channel}: #{message}"
         
         server.broadcast 'say',
             chan: channel

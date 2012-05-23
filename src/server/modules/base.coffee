@@ -43,7 +43,7 @@ class Base
 
         @channel.register  this, "saucebot", Sauce.Level.User,
             (user,args,bot) ->
-              bot.say "[SauceBot] SauceBot v#{Sauce.Version} by Ravn_TM - Using CoffeeScript/Node.js"
+              bot.say "[SauceBot] SauceBot v#{Sauce.Version} by Ravn_TM(Twitter: @RavnTM) - CoffeeScript/Node.js"
 
         @channel.register  this, "test", Sauce.Level.Mod,
             (user,args,bot) ->
@@ -56,7 +56,8 @@ class Base
         @channel.register  this, "time", Sauce.Level.User,
             (user,args,bot) ->
               date = new Date()
-              bot.say "[Time] #{vars.formatTime(date)}"
+              tz = -date.getTimezoneOffset()/60
+              bot.say "[SauceTime] #{vars.formatTime(date)} GMT #{if tz > 0 then '+' + tz else tz}"
 
         # Test
         @channel.register this, "var", Sauce.Level.Mod,
@@ -70,7 +71,7 @@ class Base
                 txt = args.join ''
                 math = txt.replace(/[^()\d*\/+-=\w]/g, '')
                 try
-                    bot.say vm.runInContext math, @sandbox, "#{@channel.name}.vm"
+                    bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm")
                 catch error
                     bot.say "[Calc] Invalid expression: #{math}"
                 

@@ -300,9 +300,10 @@ class Filters
         {name, op} = user
         
         if op then return
+        lc = name.toLowerCase()
 
-        if (permitTime = @permits[name])?
-            if io.now() > permitTime then delete @permits[name] else return
+        if (permitTime = @permits[lc])?
+            if io.now() > permitTime then delete @permits[lc] else return
             
         
         @checkFilters name, msg, bot

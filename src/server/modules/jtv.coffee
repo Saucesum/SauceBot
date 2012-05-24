@@ -24,7 +24,7 @@ class JTV
         @cache  = {}
         @expire = 0
         
-        @url    = "http://api.justin.tv/api/stream/search/#{@channel.name}.json"
+        @url    = "http://api.justin.tv/api/stream/list.json?channel=#{@channel.name}"
         
                 
     load: ->

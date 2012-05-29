@@ -149,8 +149,6 @@ class Channel
         
         msg = data.msg
         
-        console.log "User[op: #{user.op} db: #{user.db} name: #{user.name} ]"
-     
         for trigger in @triggers
             # check for first match that the user is authorized to use
             if trigger.test(msg) and (user.op >= trigger.oplevel)

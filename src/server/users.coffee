@@ -35,7 +35,7 @@ class User
         @isGlobal() or @mod[chanid] >= level
         
     getMod: (chanid) ->
-        if @isGlobal() then Sauce.Level.Owner + 1 else @mod[chanid]
+        if @isGlobal() then Sauce.Level.Owner + 1 else (@mod[chanid] or 0)
 
 
 # Returns a user by their username in lowercase

@@ -117,9 +117,9 @@ class Vars
         delete @handlers[cmd]
     
                     
-    parse: (user, message) ->
+    parse: (user, message, raw) ->
         @matchVars message, (m, cmd, args) =>
-            result = @handle user, cmd, args
+            result = @handle user, cmd, args, raw
             
             idx = m.index
             len = m[0].length
@@ -141,7 +141,10 @@ class Vars
             message = cb m, cmd, args
             
 
-    handle: (user, cmd, args) ->
+    handle: (user, cmd, args, raw) ->
+        if /^\d+$/.test cmd
+            return (raw.split ' ')[cmd - 1] ? ''
+            
         return cmd unless handler = @handlers[cmd]
         handler user, args
 

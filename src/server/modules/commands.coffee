@@ -78,7 +78,7 @@ class Commands
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, level,
             (user, args, bot) =>
-                parsed = @channel.vars.parse user, @commands.get(cmd).message
+                parsed = @channel.vars.parse user, @commands.get(cmd).message, (args.join ' ')
                 bot.say parsed
 
         @channel.register @triggers[cmd]

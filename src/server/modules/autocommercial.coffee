@@ -9,7 +9,7 @@ io    = require '../ioutil'
 # Module description
 exports.name        = 'AutoCommercial'
 exports.version     = '1.0'
-exports.description = 'Automatic commercials for jtv partners'
+exports.description = 'Automatic commercials for jtv partners (Broken - do not use)'
 exports.locked      = true
 
 io.module '[AutoCommercial] Init'

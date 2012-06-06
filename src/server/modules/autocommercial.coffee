@@ -11,6 +11,7 @@ exports.name        = 'AutoCommercial'
 exports.version     = '1.0'
 exports.description = 'Automatic commercials for jtv partners (Broken - do not use)'
 exports.locked      = true
+exports.ignore      = true
 
 io.module '[AutoCommercial] Init'
 

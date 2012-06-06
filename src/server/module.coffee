@@ -17,9 +17,10 @@ loadModule = (name) ->
         exports.MODULES[module.name] = module
         
         {name, description, version} = module
-        if module.locked then locked = 1 else locked = 0
+        locked       = (if module.locked then 1 else 0)
+        defaultstate = (if module.ignore then 0 else 1)
         
-        db.addData INFO_TABLE, ['name', 'description', 'version', 'locked'], [[name, description, version, locked]]
+        db.addData INFO_TABLE, ['name', 'description', 'version', 'defaultstate'], [[name, description, version, defaultstate]]
 
     catch error
       io.error "Could not load module #{name}: #{error}"

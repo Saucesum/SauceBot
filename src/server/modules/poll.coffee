@@ -40,6 +40,7 @@ class Poll
             switch args[0]
                 when 'options' then @polls[@activePoll]
                 when 'votes'   then @hasVoted.length
+                when 'results' then (if @activePoll? then @getResults() else 'N/A')
                 else 'undefined' 
 
         

@@ -156,7 +156,7 @@ class Filters
     cmdFilterAdd: (name, dto, args, bot) ->
         value = args[0] if args[0]?
         if value?
-            dto.add value
+            dto.add value.toLowerCase()
             bot.say "[Filter] #{name} - Added."
         else
             bot.say "[Filter] No value specified. Usage: !#{name} add <value>"
@@ -165,7 +165,7 @@ class Filters
     cmdFilterRemove: (name, dto, args, bot) ->
         value = args[0] if args[0]?
         if value?
-            dto.remove value
+            dto.remove value.toLowerCase()
             bot.say "[Filter] #{name} - Removed."
         else
             bot.say "[Filter] No value specified. Usage: !#{name} remove <value>"
@@ -217,7 +217,9 @@ class Filters
        
     loadTable: (table) ->
         list = @lists[table]
-        list.load()
+        list.load ->
+            lcdata = (data.toLowerCase() for data in list.get())
+            list.data = lcdata
 
 
     loadStates: ->

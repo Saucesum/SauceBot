@@ -7,6 +7,8 @@ vars  = require '../vars'
 
 io    = require '../ioutil'
 
+util = require 'util'
+
 { # Import DTO classes
     ArrayDTO,
     ConfigDTO,
@@ -55,7 +57,7 @@ class Commands
 
         # Load custom commands
         @commands.load =>
-            for cmd of @commands.data
+            for cmd, d of @commands.data
                 @addTrigger cmd
 
 
@@ -73,7 +75,7 @@ class Commands
         # Do nothing if the user is just editing an existing command.
         return if @triggers[cmd]?
         
-        level = @commands.get(cmd).level ? Sauce.Level.User
+        level = @commands.get(cmd).level
 
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, level,
@@ -115,15 +117,12 @@ class Commands
         # !set <command>
         if (args.length is 1)
             return @cmdUnset user, args, bot
+        else
+            @cmdUnset user, args, { say: -> 0 }
 
         cmd  = (args.splice 0, 1)[0]
         msg  = args.join ' '
-        data =
-            message: msg
-            level  : Sauce.Level.User
-
-        @commands.add cmd, data
-        @addTrigger   cmd
+        @setCommand cmd, msg, Sauce.Level.User
 
         return bot.say "Command set: #{cmd}"
 
@@ -133,20 +132,27 @@ class Commands
         unless args[0]?
             return bot.say "Usage: !setmod (name) (message).  !setmod (name) or !unset (name) to forget a command."
 
-        # !set <command>
+        # !setmod <command>
         if (args.length is 1)
             return @cmdUnset user, args, bot
+        else
+            @cmdUnset user, args, { say: -> 0 }
+        
 
         cmd  = (args.splice 0, 1)[0]
         msg  = args.join ' '
+        @setCommand cmd, msg, Sauce.Level.Mod
+
+        return bot.say "Mod-command set: #{cmd}"
+        
+        
+    setCommand: (cmd, msg, level) ->
         data =
             message: msg
-            level  : Sauce.Level.Mod
+            level  : level
 
         @commands.add cmd, data
         @addTrigger   cmd
-
-        return bot.say "Mod-command set: #{cmd}"
 
 
     handle: (user, msg, bot) ->

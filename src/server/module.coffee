@@ -20,7 +20,7 @@ loadModule = (name) ->
         locked       = (if module.locked then 1 else 0)
         defaultstate = (if module.ignore then 0 else 1)
         
-        db.addData INFO_TABLE, ['name', 'description', 'version', 'defaultstate'], [[name, description, version, defaultstate]]
+        db.addData INFO_TABLE, ['name', 'description', 'version', 'defaultstate', 'locked'], [[name, description, version, defaultstate, locked]]
 
     catch error
       io.error "Could not load module #{name}: #{error}"

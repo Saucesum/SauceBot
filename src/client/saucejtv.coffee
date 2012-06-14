@@ -8,12 +8,13 @@ fs         = require 'fs'
 # SauceBot
 io         = require '../common/ioutil'
 config     = require '../common/config'
+log        = require '../common/logger'
 {Client}   = require '../common/socket'
 {Term}     = require '../common/term'
 {Channel}  = require './saucechan'
 
 # CONFIG
-{server, highlight, accounts} = config.load 'jtv'
+{server, highlight, accounts, logging} = config.load 'jtv'
 
 HOST = server.host
 PORT = server.port
@@ -21,6 +22,8 @@ PORT = server.port
 HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 
 sauce = new Client HOST, PORT
+
+logger = new log.Logger logging.root, "jtv.log"
 
 # SauceIO events
 
@@ -121,12 +124,14 @@ class Bot
         
     say: (chan, msg) ->
         if (channel = @get chan)?
+            logger.timestamp 'SAY', chan.toLowerCase(), msg 
             channel.say msg
             io.irc channel.name, @name, msg.cyan
             
                     
     sayRaw: (chan, msg) ->
         if (channel = @get chan)?
+            logger.timestamp 'RAW', chan.toLowerCase(), msg
             channel.sayRaw msg 
             io.irc channel.name, @name, msg.red
         

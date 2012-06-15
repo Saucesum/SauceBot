@@ -23,7 +23,7 @@ exports.buildTrigger = (module, name, oplevel, callback) ->
     words = name.split /\s+/
     words = (escapeRegex(word) for word in words)
  
-    regex = new RegExp "^!" + words.join("\\s+") + "(?:\\s+(.+))?$"
+    regex = new RegExp "^!" + words.join("\\s+") + "(?:\\s+(.+))?$", 'i'
 
     priority = PRI_MID + WORD_BONUS*(words.length-1) + OP_BONUS*oplevel
     

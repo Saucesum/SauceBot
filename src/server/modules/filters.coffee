@@ -283,7 +283,7 @@ class Filters
 
 
     isMostlyCaps: (msg) ->
-        return (msg.length >= 5) and (0.55 <= getCapsRate msg)
+        return (msg.length > 5) and (0.55 <= getCapsRate msg)
 
     
     containsBadURL: (msg) ->

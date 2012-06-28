@@ -37,7 +37,8 @@ os         = require 'os'
 
 Sauce      = require './sauce'
 
-varRE = /\$\((\w+)(?:\s+([^)]+))?\)/
+varRE  = /\$\(([!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/
+varREg = /\$\(([!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/g
 
 pad = (num) ->
     if num < 10 then "0" + num else num
@@ -147,6 +148,9 @@ class Vars
             
         return cmd unless handler = @handlers[cmd]
         handler user, args
+        
+    strip: (msg) ->
+        msg.replace varREg, ''
 
 
 

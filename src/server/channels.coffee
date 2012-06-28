@@ -6,6 +6,7 @@ db     = require './saucedb'
 users  = require './users'
 trig   = require './trigger'
 {Vars} = require './vars'
+{ConfigDTO} = require './dto/ConfigDTO'
 
 
 io    = require './ioutil'
@@ -43,6 +44,9 @@ class Channel
         @loadChannelModules()
         
         @vars = new Vars @
+        
+        @modes = new ConfigDTO @, 'channelconfig', ['modonly', 'quiet']
+        @modes.load()
     
     
     # Returns whether a module with the specified name
@@ -147,11 +151,14 @@ class Channel
     handle: (data, bot) ->
         user = @getUser data.user, data.op
         
+        if @modes.get 'quiet'
+            bot.say = -> 0
+        
         msg = data.msg
         
         for trigger in @triggers
             # check for first match that the user is authorized to use
-            if trigger.test(msg) and (user.op >= trigger.oplevel)
+            if trigger.test(msg) and (user.op >= trigger.oplevel and (!(@modes.get 'modonly') or user.op >= Sauce.Level.Mod)) 
                 args = trigger.getArgs msg
                 trigger.execute user, args, bot
                 break

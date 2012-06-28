@@ -84,6 +84,13 @@ class Commands
                 bot.say parsed
 
         @channel.register @triggers[cmd]
+        
+        varcmd = "!" + cmd.toLowerCase()
+        
+        @channel.vars.unregister varcmd
+        @channel.vars.register varcmd, (user, args) =>
+            @channel.vars.strip @commands.get(cmd).message
+            
 
 
     delTrigger: (cmd) ->
@@ -91,6 +98,7 @@ class Commands
         return unless @triggers[cmd]?
 
         @channel.unregister @triggers[cmd]
+        @channel.vars.unregister "!#{cmd.toLowerCase()}"
 
         delete @triggers[cmd]
 

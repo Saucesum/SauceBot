@@ -54,12 +54,16 @@ io.module '[Filters] Init'
 #  !permit <user> [minutes]
 #  !filter <url/caps/words/emotes> <on/off>
 #  !filter <url/caps/words/emotes>
+#  !regulars add <name>
+#  !regulars remove <name>
+#
 #
 class Filters
     constructor: (@channel) ->
         
         # Filter states
-        @states = new ConfigDTO @channel, 'filterstate', filterNames
+        @states   = new ConfigDTO @channel, 'filterstate', filterNames
+        @regulars = new ArrayDTO  @channel, 'regulars' , 'username'
         
         # Filter lists
         @lists =
@@ -77,6 +81,7 @@ class Filters
         #     strikes: number of strikes
         #     time   : time of last warning 
         @warnings = {}
+        
 
     load:  ->
         io.module "[Filters] Loading for #{@channel.id}: #{@channel.name}"
@@ -86,11 +91,13 @@ class Filters
 
         @channel = chan if chan?
         
+        
         # Load lists
         @loadTable table for table in tableNames
             
         # Load states
         @loadStates()
+        @regulars.load()
         
 
     unload: ->
@@ -122,6 +129,14 @@ class Filters
             @channel.register this, "#{filterName} clear" , Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterClear  filterName, filterList, args, bot
+                    
+        @channel.register this, "regulars add", Sauce.Level.Admin,
+            (user, args, bot) =>
+                @cmdAddRegular args, bot
+                    
+        @channel.register this, "regulars remove", Sauce.Level.Admin,
+            (user, args, bot) =>
+                @cmdRemoveRegular args, bot
 
 
         # Register filter state commands
@@ -193,6 +208,27 @@ class Filters
             bot.say "[Filter] #{filter} filter is enabled. Disable with !filter #{filter} off"
         else
             bot.say "[Filter] #{filter} filter is disabled. Enable with !filter #{filter} on"
+            
+    
+    # Regulars commands
+    
+    cmdRemoveRegular: (args, bot) ->
+        unless args[0]
+            return bot.say "Error. Usage: !regulars remove <username>"
+            
+        user = args[0].toLowerCase()
+        @regulars.remove user
+        bot.say "User #{user} removed from regulars list."
+            
+        
+    cmdAddRegular: (args, bot) ->
+        unless args[0]
+            return bot.say "Error. Usage: !regulars add <username>"
+            
+        user = args[0].toLowerCase()
+        @regulars.add user
+        delete @warnings[user] 
+        bot.say "User #{user} added to regulars list."
        
        
     # Misc command handlers       
@@ -301,7 +337,7 @@ class Filters
     handle: (user, msg, bot) ->
         {name, op} = user
         
-        if op then return
+        if op or @isRegular(name) then return
         lc = name.toLowerCase()
 
         if (permitTime = @permits[lc])?
@@ -309,6 +345,10 @@ class Filters
             
         
         @checkFilters name, msg, bot
+        
+
+    isRegular: (name) ->
+        return name in @regulars.get()
         
         
     updateStrikes: (name) ->

@@ -130,11 +130,11 @@ class Filters
                 (user, args, bot) =>
                     @cmdFilterClear  filterName, filterList, args, bot
                     
-        @channel.register this, "regulars add", Sauce.Level.Admin,
+        @channel.register this, "regulars add", Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdAddRegular args, bot
                     
-        @channel.register this, "regulars remove", Sauce.Level.Admin,
+        @channel.register this, "regulars remove", Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdRemoveRegular args, bot
 
@@ -348,7 +348,7 @@ class Filters
         
 
     isRegular: (name) ->
-        return name in @regulars.get()
+        return name.toLowerCase() in @regulars.get()
         
         
     updateStrikes: (name) ->

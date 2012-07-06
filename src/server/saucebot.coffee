@@ -118,6 +118,11 @@ class SauceBot
             when 'Channels'
                 loadChannels()
                 
+            when 'Help'
+                channel = chans.getById chan
+                if channel? and user.isGlobal()
+                    @say channel.name, "[Help] SauceBot admin #{user.name} incoming"
+                
             else
                 channel = chans.getById chan
                 channel?.reloadModule type

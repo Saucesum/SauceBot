@@ -41,11 +41,11 @@ class Base
         
         io.module "[Base] Loading for #{@channel.id}: #{@channel.name}"
 
-        @channel.register  this, "saucebot", Sauce.Level.User,
+        @channel.register this, "saucebot", Sauce.Level.User,
             (user,args,bot) ->
               bot.say "[SauceBot] SauceBot v#{Sauce.Version} by @RavnTM - CoffeeScript/Node.js"
 
-        @channel.register  this, "test", Sauce.Level.Mod,
+        @channel.register this, "test", Sauce.Level.Mod,
             (user,args,bot) ->
               bot.say "Test command! #{user.name} - #{Sauce.LevelStr user.op}"
               
@@ -53,11 +53,21 @@ class Base
             (user,args,bot) ->
               bot.say 'Admin test command!'
 
-        @channel.register  this, "time", Sauce.Level.User,
+        @channel.register this, "saucetime", Sauce.Level.User,
             (user,args,bot) ->
               date = new Date()
               tz = -date.getTimezoneOffset()/60
               bot.say "[SauceTime] #{vars.formatTime(date)} GMT #{if tz > 0 then '+' + tz else tz}"
+              
+        @channel.register this, "help", Sauce.Level.Mod,
+            (user,args,bot) =>
+                db.addData 'helprequests', ['chanid', 'time', 'user', 'reason'], [[
+                    @channel.id,
+                    ~~(Date.now()/1000),
+                    user.name.toLowerCase(),
+                    args.join ' '
+                ]]
+                bot.say "[Help] SauceBot admins have been alerted and should arrive soon."
 
         # Test
         @channel.register this, "var", Sauce.Level.Mod,

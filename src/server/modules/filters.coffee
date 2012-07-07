@@ -302,6 +302,8 @@ class Filters
             bot.timeout name, 8 * 60 * 60
             
             
+        return if @channel.isQuiet()
+            
         # Delay the response to avoid the JTV flood filter
         setTimeout ->
             bot.say response

@@ -151,14 +151,11 @@ class Channel
     handle: (data, bot) ->
         user = @getUser data.user, data.op
         
-        if @modes.get 'quiet'
-            bot.say = -> 0
-        
         msg = data.msg
         
         for trigger in @triggers
             # check for first match that the user is authorized to use
-            if trigger.test(msg) and (user.op >= trigger.oplevel and (!(@modes.get 'modonly') or user.op >= Sauce.Level.Mod)) 
+            if trigger.test(msg) and (user.op >= trigger.oplevel and (!@isModOnly() or user.op >= Sauce.Level.Mod)) 
                 args = trigger.getArgs msg
                 trigger.execute user, args, bot
                 break
@@ -207,6 +204,16 @@ class Channel
             results = (elem for elem in results when (elem[attr] is value))
 
         results
+        
+        
+    # Returns whether quiet mode is enabled
+    isQuiet: ->
+        @modes.get 'quiet'
+    
+    # Returns whether mod-only mode is enabled
+    isModOnly: ->    
+        @modes.get('modonly') or @isQuiet()
+
 
 
 # Handles a message in the appropriate channel instance

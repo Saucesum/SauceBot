@@ -4,6 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 
 io    = require '../ioutil'
+log   = require '../../common/logger'
 
 { # Import DTO classes
     ArrayDTO,
@@ -34,6 +35,8 @@ tableFields =
 TIMEOUT = 3 * 60 * 60 * 1000
 
 URL_RE = /(?:(?:https?:\/\/[a-zA-Z-\.]*)|(?:[a-zA-Z-]+\.))[a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,3})\b/
+
+reasons = new log.Logger Sauce.Path, 'reasons.log'
 
 io.module '[Filters] Init'
 
@@ -268,23 +271,23 @@ class Filters
         
         # Badword filter
         if @states.get('words')  and @containsBadword lower
-            return @handleStrikes name, 'Bad word',         bot, true
+            return @handleStrikes name, 'Bad word',         bot, true, msg
             
         # Single-emote filter
         if @states.get('emotes') and @isSingleEmote lower
-            return @handleStrikes name, 'No single emotes', bot, false
+            return @handleStrikes name, 'No single emotes', bot, false, msg
             
         # Caps filter
         if @states.get('caps')   and @isMostlyCaps msg
-            return @handleStrikes name, 'Watch the caps',   bot, false
+            return @handleStrikes name, 'Watch the caps',   bot, false, msg
             
         # URL filter
         if                           @containsBadURL lower
-            return @handleStrikes name, 'Bad URL',          bot, true 
+            return @handleStrikes name, 'Bad URL',          bot, true, msg
             
             
         
-    handleStrikes: (name, response, bot, clear) ->
+    handleStrikes: (name, response, bot, clear, msg) ->
         strikes = @updateStrikes(name)
         
         response = "#{response}, #{name}! Strike #{strikes}"
@@ -301,6 +304,8 @@ class Filters
             # Third+ strike: 8 hour timeout
             bot.timeout name, 8 * 60 * 60
             
+            
+        reasons.timestamp @channel.name, name, response, msg
             
         return if @channel.isQuiet()
             

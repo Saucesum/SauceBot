@@ -93,6 +93,11 @@ class Bot
                 user: from
                 msg : message
                 op  : op
+                
+        chan.on 'pm', (args) =>
+            {from, message} = args
+            io.irc 'PM', from, message
+            pmlog.timestamp from, message
 
         chan.on 'error', (msg) =>
             io.error "Error in channel #{@name}/#{cname}:"

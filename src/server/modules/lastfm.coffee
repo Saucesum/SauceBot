@@ -60,7 +60,7 @@ class LastFM
         name = args[0].replace /[^-a-zA-Z_0-9]/g, ''
             
         @getSong name, (song) ->
-            bot.say "[last.fm] #{name}: #{song}"
+            bot.say "[last.fm] Now playing - #{name}: #{song}"
             
             
     getSong: (name, cb) ->

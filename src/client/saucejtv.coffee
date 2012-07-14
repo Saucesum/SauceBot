@@ -24,6 +24,7 @@ HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 sauce = new Client HOST, PORT
 
 logger = new log.Logger logging.root, "jtv.log"
+pmlog  = new log.Logger logging.root, "pm.log"
 
 # SauceIO events
 
@@ -92,8 +93,7 @@ class Bot
                 user: from
                 msg : message
                 op  : op
-               
-           
+
         chan.on 'error', (msg) =>
             io.error "Error in channel #{@name}/#{cname}:"
             for key, val of msg
@@ -124,7 +124,7 @@ class Bot
         
     say: (chan, msg) ->
         if (channel = @get chan)?
-            logger.timestamp 'SAY', chan.toLowerCase(), msg 
+            logger.timestamp 'SAY', chan.toLowerCase(), msg
             channel.say msg
             io.irc channel.name, @name, msg.cyan
             

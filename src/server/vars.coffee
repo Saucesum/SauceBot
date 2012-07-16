@@ -116,6 +116,40 @@ class Vars
         
     unregister: (cmd, handler) ->
         delete @handlers[cmd]
+        
+    
+    #-----------------------------
+    # // Experimental var system
+        
+    parseMessage: (user, message, raw, cb) ->
+        if m = @checkVars message
+            @replaceVar m, message, user, raw, (replaced) =>
+                @parseMessage user, replaced, raw, cb
+        else
+            cb message
+            
+            
+    checkVars: (message) ->
+        return unless '$' in message
+        varRE.exec message
+        
+        
+    replaceVar: (m, msg, user, raw, cb) ->
+        cmd  = m[1]
+        args = if m[2] then m[2].split ',' else []
+        
+        @handle user, cmd, args, raw, (result) ->
+            idx = m.index
+            len = m[0].length
+            
+            pre  = msg.substring 0, idx
+            post = msg.substring idx + len
+            
+            cb pre + result + post
+        
+        
+    # // Exp end
+    #-----------------------------
     
                     
     parse: (user, message, raw) ->

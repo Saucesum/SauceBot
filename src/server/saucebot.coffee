@@ -62,6 +62,13 @@ class SauceBot
             catch error
                 @sendError "#{error}"
                 io.error error
+                
+        @socket.on 'get', (data) =>
+            try
+                @handleGet data
+            catch error
+                @sendError "#{error}"
+                io.error error
             
 
     # Message (msg):
@@ -95,8 +102,68 @@ class SauceBot
     #  + Module name: reloads module
     #  + Users      : reloads user data
     #  + Channels   : reloads channel data
+    #  + Help       : notifies channel that help is coming
     #
     handleUpdate: (json) ->
+        {channel, user, type} = @getWebData json
+        
+        io.debug "Update from #{user.id}-#{user.name}: #{channel.name}##{type}"
+        weblog.timestamp 'UPDATE', channel.id, channel.name, type, user.id, user.name
+        
+        switch type
+            when 'Users'
+                loadUsers()
+                
+            when 'Channels'
+                loadChannels()
+                
+            when 'Help'
+                if channel? and user.isGlobal()
+                    @say channel.name, "[Help] SauceBot admin #{user.name} incoming"
+                    
+            when 'Timeout'
+                {username} = json 
+                if username? and channel? and user.isMod channel.id
+                    username = @fixUsername username
+                    console.log "Timing out #{username} (#{channel.name})"
+                    #@timeout channel.name, username, 10 * 60
+                    
+            when 'Ban'
+                {username} = json
+                if username? and channel? and user.isMod channel.id
+                    username = @fixUsername username
+                    console.log "Banning #{username} (#{channel.name})"
+                    #@ban channel.name, username
+                    
+                
+            else
+                channel?.reloadModule type
+                
+    fixUsername: (name) ->
+        name = name.replace /[^a-zA-Z0-9_]+/g, ''
+        name = name.substring 0, 39 if name.length > 40
+        return name
+                
+        
+    # Requests (get):
+    # * cookie: [REQ] Session cookie for authentication
+    # ? chan  : [OPT] Target channel
+    # * type  : [REQ] Request type
+    #
+    # Types:
+    #  + Users : Returns a list of usernames
+    handleGet: (json) ->
+        {channel, user, type} = @getWebData json
+                
+        io.debug "Request from #{user.id}-#{user.name}: #{channel.name}##{type}"
+        #weblog.timestamp 'REQUEST', channel.id, channel.name, type, user.id, user.name
+        
+        @socket.emit 'users', (name for name, _ of channel.usernames)
+        @socket.close()
+        
+        
+        
+    getWebData: (json) ->
         {cookie, chan, type} = json
         
         userID = auth.getUserID cookie
@@ -107,27 +174,12 @@ class SauceBot
         chanName = if channel? then channel.name else 'N/A'
         
         user = users.getById userID
-        
-        io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
-        weblog.timestamp 'UPDATE', chan, chanName, type, userID, user.name
-        
-        switch type
-            when 'Users'
-                loadUsers()
-                
-            when 'Channels'
-                loadChannels()
-                
-            when 'Help'
-                channel = chans.getById chan
-                if channel? and user.isGlobal()
-                    @say channel.name, "[Help] SauceBot admin #{user.name} incoming"
-                
-            else
-                channel = chans.getById chan
-                channel?.reloadModule type
-                
-                
+
+        {
+            'channel': channel
+            'user'   : user
+            'type'   : type
+        }
             
 
     # Sends an error to the client

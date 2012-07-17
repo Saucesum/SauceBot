@@ -39,6 +39,8 @@ class Channel
         @name = data.name
         @desc = data.description
     
+        @usernames = {}
+    
         @modules = []
         @triggers = []
         @loadChannelModules()
@@ -150,6 +152,7 @@ class Channel
     # Handles a message by passing it on to all loaded modules.
     handle: (data, bot) ->
         user = @getUser data.user, data.op
+        @usernames[user.name.toLowerCase()] = user.op
         
         msg = data.msg
         

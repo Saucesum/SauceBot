@@ -85,7 +85,7 @@ exports.addChanData = (channel, table, fields, datalist) ->
 
 exports.addData = (table, fields, datalist) ->
     wc = getWildcards fields.length
-    queryStr = "REPLACE INTO #{table} (#{fields.join ', '}) VALUES (#{wc})"
+    queryStr = "REPLACE INTO #{table} (`#{fields.join '`, `'}`) VALUES (#{wc})"
     
     query queryStr, data for data in datalist
 

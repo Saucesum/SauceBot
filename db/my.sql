@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.62, for debian-linux-gnu (i686)
+-- MySQL dump 10.13  Distrib 5.1.63, for debian-linux-gnu (i686)
 --
 -- Host: localhost    Database: saucebot
 -- ------------------------------------------------------
--- Server version	5.1.62-0ubuntu0.11.10.1
+-- Server version	5.1.63-0ubuntu0.11.10.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,6 +14,29 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `application`
+--
+
+DROP TABLE IF EXISTS `application`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `application` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `time` int(20) DEFAULT NULL,
+  `userid` int(11) DEFAULT NULL,
+  `channel` varchar(50) DEFAULT NULL,
+  `why` text,
+  `seen` text,
+  `feature` text,
+  `viewers` text,
+  `put` text,
+  `handled` int(1) DEFAULT '0',
+  `handledby` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=77 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Table structure for table `autocommercial`
@@ -73,7 +96,22 @@ CREATE TABLE `channel` (
   `root` tinyint(2) DEFAULT NULL,
   PRIMARY KEY (`chanid`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=MyISAM AUTO_INCREMENT=26 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=46 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `channelconfig`
+--
+
+DROP TABLE IF EXISTS `channelconfig`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `channelconfig` (
+  `chanid` int(11) NOT NULL,
+  `modonly` tinyint(1) DEFAULT '0',
+  `quiet` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`chanid`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -170,6 +208,23 @@ CREATE TABLE `filterstate` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `helprequests`
+--
+
+DROP TABLE IF EXISTS `helprequests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `helprequests` (
+  `chanid` int(11) NOT NULL DEFAULT '0',
+  `time` int(11) NOT NULL DEFAULT '0',
+  `user` varchar(25) DEFAULT 'Anonymous',
+  `reason` varchar(300) DEFAULT '',
+  `handled` int(11) DEFAULT '0',
+  PRIMARY KEY (`chanid`,`time`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `jm`
 --
 
@@ -226,6 +281,7 @@ CREATE TABLE `moduleinfo` (
   `name` varchar(30) NOT NULL,
   `description` varchar(300) DEFAULT NULL,
   `version` varchar(5) DEFAULT NULL,
+  `defaultstate` tinyint(1) DEFAULT '1',
   `locked` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -278,6 +334,36 @@ CREATE TABLE `poll` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `quotes`
+--
+
+DROP TABLE IF EXISTS `quotes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `quotes` (
+  `chanid` int(11) NOT NULL DEFAULT '0',
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `list` varchar(20) DEFAULT NULL,
+  `quote` text,
+  PRIMARY KEY (`chanid`,`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `regulars`
+--
+
+DROP TABLE IF EXISTS `regulars`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `regulars` (
+  `chanid` int(11) NOT NULL DEFAULT '0',
+  `username` varchar(25) NOT NULL DEFAULT '',
+  PRIMARY KEY (`chanid`,`username`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `session`
 --
 
@@ -289,6 +375,38 @@ CREATE TABLE `session` (
   `time` bigint(20) DEFAULT NULL,
   `ip` varchar(15) DEFAULT NULL,
   PRIMARY KEY (`userid`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `sitenews`
+--
+
+DROP TABLE IF EXISTS `sitenews`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sitenews` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `time` int(20) NOT NULL,
+  `userid` int(11) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `body` text NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=38 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `strings`
+--
+
+DROP TABLE IF EXISTS `strings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `strings` (
+  `chanid` int(11) NOT NULL DEFAULT '0',
+  `key` varchar(50) NOT NULL,
+  `value` varchar(100) NOT NULL,
+  PRIMARY KEY (`chanid`,`key`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -308,6 +426,20 @@ CREATE TABLE `timers` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `userkeys`
+--
+
+DROP TABLE IF EXISTS `userkeys`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `userkeys` (
+  `userid` int(11) NOT NULL DEFAULT '0',
+  `code` varchar(32) NOT NULL DEFAULT '',
+  PRIMARY KEY (`userid`,`code`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `users`
 --
 
@@ -322,7 +454,7 @@ CREATE TABLE `users` (
   `email` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`userid`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=MyISAM AUTO_INCREMENT=70 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=257 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -364,4 +496,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-05-08 12:41:51
+-- Dump completed on 2012-07-29 19:34:56

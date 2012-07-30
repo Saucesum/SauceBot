@@ -159,7 +159,7 @@ class SauceBot
         #weblog.timestamp 'REQUEST', channel.id, channel.name, type, user.id, user.name
         
         @socket.emit 'users', (name for name, _ of channel.usernames)
-        @socket.close()
+        @socket.close() # TODO fix this haha
         
         
         
@@ -201,7 +201,7 @@ class SauceBot
     #  * msg : [REQ] Message to send
     #
     say: (channel, message) ->
-        io.say '>> '.magenta + "say #{channel}: #{message}"
+        io.say channel, message
         
         server.broadcast 'say',
             chan: channel

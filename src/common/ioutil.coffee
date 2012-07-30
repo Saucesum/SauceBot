@@ -17,8 +17,8 @@ getPrevStack = ->
     line.substring(line.indexOf('bin/') + 4).replace(')', '')
 
 # Logs a message
-exports.say = (message) ->
-    console.log message.bold
+exports.say = (chan, message) ->
+    util.log ( '[SAY@'.magenta + chan.blue + '] '.magenta).bold + message
 
 # Logs a debug message
 exports.debug = (message) ->

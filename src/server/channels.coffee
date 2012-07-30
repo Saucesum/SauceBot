@@ -228,22 +228,7 @@ class Channel
     
     hasSeen: (name) ->
         name.toLowerCase() in Object.keys @usernames
-        
-    str: (msg) ->
-        lang = if @name.toLowerCase() is 'meielivehd' then 'fr' else 'en'
-        switch msg
-            when 'filter-strike-badword'
-                if lang is 'fr' then 'Mot Interdit' else 'Bad word'
-            when 'filter-strike-emote'
-                if lang is 'fr' then 'Pas d\'émotes' else 'No single emotes'
-            when 'filter-strike-caps'
-                if lang is 'fr' then 'Pas de Full Maj' else 'Watch the caps'
-            when 'filter-strike-url'
-                if lang is 'fr' then 'Pas de lien' else 'Bad URL'
-            when 'filter-strike'
-                if lang is 'fr' then 'Rappel' else 'Strike'
-            else
-                msg
+
 
     getString: (module, key, args...) ->
         key   = module.name.toLowerCase() + "-" + key

@@ -6,7 +6,10 @@ db     = require './saucedb'
 users  = require './users'
 trig   = require './trigger'
 {Vars} = require './vars'
-{ConfigDTO} = require './dto/ConfigDTO'
+{
+    ConfigDTO,
+    HashDTO
+} = require './dto'
 
 
 io    = require './ioutil'
@@ -47,9 +50,14 @@ class Channel
         
         @vars = new Vars @
         
+        # Channel modes configuration
         @modes = new ConfigDTO @, 'channelconfig', ['modonly', 'quiet']
         @modes.load()
-    
+
+        # Channel strings configuration
+        @strings = new HashDTO @, 'strings', 'key', 'value'
+        @strings.load()
+
     
     # Returns whether a module with the specified name
     # has been loaded for this channel.
@@ -214,10 +222,46 @@ class Channel
         @modes.get 'quiet'
     
     # Returns whether mod-only mode is enabled
-    isModOnly: ->    
+    isModOnly: ->
         @modes.get('modonly') or @isQuiet()
+        
+    
+    hasSeen: (name) ->
+        name.toLowerCase() in Object.keys @usernames
+        
+    str: (msg) ->
+        lang = if @name.toLowerCase() is 'meielivehd' then 'fr' else 'en'
+        switch msg
+            when 'filter-strike-badword'
+                if lang is 'fr' then 'Mot Interdit' else 'Bad word'
+            when 'filter-strike-emote'
+                if lang is 'fr' then 'Pas d\'émotes' else 'No single emotes'
+            when 'filter-strike-caps'
+                if lang is 'fr' then 'Pas de Full Maj' else 'Watch the caps'
+            when 'filter-strike-url'
+                if lang is 'fr' then 'Pas de lien' else 'Bad URL'
+            when 'filter-strike'
+                if lang is 'fr' then 'Rappel' else 'Strike'
+            else
+                msg
 
+    getString: (module, key, args...) ->
+        key   = module.name.toLowerCase() + "-" + key
+        value = @strings.get(key) ? mod.getDefaultString(key)
+        
+        for arg, argnum in args
+            elem = "@#{argnum + 1}@"
+            len  = elem.length
 
+            idx  = 0
+            until ((idx = value.indexOf elem, idx) is -1)
+                prefix = value.substring(0, idx)
+                suffix = value.substring(idx + len)
+                msg = prefix + arg + suffix
+                idx = prefix.length + arg.length
+                value = msg
+
+        return value
 
 # Handles a message in the appropriate channel instance
 exports.handle = (chan, data, bot) ->

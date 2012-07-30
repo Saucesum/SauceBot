@@ -56,6 +56,9 @@ fs.readdirSync(PATH).forEach (file) ->
 
 # Update the default string values in case they've been modified.
 strDTO.set strings
+
+exports.getDefaultString = (key) ->
+    strDTO.get key
  
 exports.instance = (name, chan) ->
     if (!exports.MODULES[name]?)
@@ -71,4 +74,8 @@ exports.instance = (name, chan) ->
     obj.name        = module.name
     obj.description = module.description
     obj.version     = module.version
+    
+    obj.str = (key, args...) ->
+        chan.getString obj, key, args...
+
     return obj

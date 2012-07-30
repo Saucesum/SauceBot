@@ -18,6 +18,60 @@ exports.name        = 'Filters'
 exports.version     = '1.3'
 exports.description = 'Filters URLs, caps-lock, words and emotes'
 
+# Module strings
+exports.strings = {
+    
+    # Warnings
+    'warning-1': 'Strike 1'
+    'warning-2': 'Strike 2'
+    'warning-3': 'Strike 3'
+    
+    # Filter messages
+    'on-url'  : 'Bad URL'
+    'on-caps' : 'Watch the caps'
+    'on-emote': 'No single emotes'
+    'on-word' : 'Bad word'
+    
+    # Filter names
+    'list-whitelist': 'Whitelist'
+    'list-blacklist': 'Blacklist'
+    'list-emotes'   : 'Emotes'
+    'list-badwords' : 'Badwords'
+    'list-regulars' : 'Regulars'
+    
+    'filter-url'     : 'URL'
+    'filter-caps'    : 'Caps'
+    'filter-emotes'  : 'Single-emote'
+    'filter-words': 'Bad word'
+    
+    # Permits
+    'permit-permitted': '@1@ permitted for @2@ seconds.'
+    'permit-unknown'  : '@1@? Who\'s that? Either way, they\'re permitted for @2@ seconds.'
+    
+    # Regulars
+    'regulars-added'  : 'User @1@ added to regulars list.'
+    'regulars-removed': 'User @1@ removed from regulars list.'
+    
+    # General actions
+    'action-added'    : 'Added.'
+    'action-removed'  : 'Removed.'
+    'action-cleared'  : 'Cleared.'
+    
+    # Error messages
+    'err-error'     : 'Error.'
+    'err-no-target' : 'No target specified.'
+    'err-no-value'  : 'No value specified.'
+    'err-usage'     : 'Usage: @1@'
+    
+    # Status
+    'filter-enabled' : '@1@ filter is now enabled.'
+    'filter-disabled': '@1@ filter is now disabled.'
+    
+    'filter-is-enabled' : '@1@ filter is enabled. Disable with @2@'
+    'filter-is-disabled': '@1@ filter is disabled. Enable with @2@'
+    
+}
+
 # Filters
 filterNames = ['url', 'caps', 'words', 'emotes']
 
@@ -175,63 +229,63 @@ class Filters
         value = args[0] if args[0]?
         if value?
             dto.add value.toLowerCase()
-            bot.say "[Filter] #{name} - Added."
+            bot.say "[Filter] #{@str 'list-' +  name} - #{@str 'action-added'}"
         else
-            bot.say "[Filter] No value specified. Usage: !#{name} add <value>"
+            bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " add <value>")
     
     
     cmdFilterRemove: (name, dto, args, bot) ->
         value = args[0] if args[0]?
         if value?
             dto.remove value.toLowerCase()
-            bot.say "[Filter] #{name} - Removed."
+            bot.say "[Filter] #{@str 'list-' +  name} - #{@str 'action-removed'}"
         else
-            bot.say "[Filter] No value specified. Usage: !#{name} remove <value>"
+            bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " remove <value>")
             
             
     cmdFilterClear: (name, dto, args, bot) ->
         dto.clear()
-        bot.say "[Filter] #{name} - Cleared."
+        bot.say "[Filter] #{@str 'list-' +  name} - #{@str 'action-cleared'}"
 
 
     # Filter state command handlers
 
     cmdFilterEnable: (filter, bot) ->
         @states.add filter, 1
-        bot.say "[Filter] #{filter} filter is now enabled."
+        bot.say "[Filter] " + @str('filter-enabled', @str('filter-' + filter))
 
     
     cmdFilterDisable: (filter, bot) ->
         @states.add filter, 0
-        bot.say "[Filter] #{filter} filter is now disabled."
+        bot.say "[Filter] " + @str('filter-disabled', @str('filter-' + filter))
 
 
     cmdFilterShow: (filter, bot) ->
         if @states.get filter
-            bot.say "[Filter] #{filter} filter is enabled. Disable with !filter #{filter} off"
+            bot.say "[Filter] " + @str('filter-is-enabled', @str('filter-' + filter), '!filter ' + filter + ' off')
         else
-            bot.say "[Filter] #{filter} filter is disabled. Enable with !filter #{filter} on"
+            bot.say "[Filter] " + @str('filter-is-disabled', @str('filter-' + filter), '!filter ' + filter + ' on')
             
     
     # Regulars commands
     
     cmdRemoveRegular: (args, bot) ->
         unless args[0]
-            return bot.say "Error. Usage: !regulars remove <username>"
+            return bot.say "[Filter] " + @str('err-error') + ' ' + @str('err-usage', '!regulars remove <username>')
             
         user = args[0].toLowerCase()
         @regulars.remove user
-        bot.say "User #{user} removed from regulars list."
+        bot.say @str('regulars-removed', user)
             
         
     cmdAddRegular: (args, bot) ->
         unless args[0]
-            return bot.say "Error. Usage: !regulars add <username>"
+            return bot.say @str('err-error') + ' ' + @str('err-usage', '!regulars add <username>')
             
         user = args[0].toLowerCase()
         @regulars.add user
         delete @warnings[user] 
-        bot.say "User #{user} added to regulars list."
+        bot.say @str('regulars-added', user)
        
        
     # Misc command handlers       
@@ -242,11 +296,16 @@ class Filters
         
         target = args[0] if args[0]?
         if target?
+            
+            msg = "[Filter] " + @str('permit-permitted', target, permitLength)
+            unless @channel.hasSeen target
+                msg = "[Filter] " + @str('permit-unknown', target, permitLength)
+            
             @permits[target.toLowerCase()] = permitTime
             delete @warnings[target.toLowerCase()] 
-            bot.say "[Filter] #{target} permitted for #{permitLength} seconds."
+            bot.say msg
         else
-            bot.say "[Filter] No target specified. Usage: !permit <username>"
+            bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')
             
         setTimeout ->
             bot.unban target
@@ -271,26 +330,28 @@ class Filters
         
         # Badword filter
         if @states.get('words')  and @containsBadword lower
-            return @handleStrikes name, 'Bad word',         bot, true, msg
+            return @handleStrikes name, @str('on-word'), bot, true, msg
             
         # Single-emote filter
         if @states.get('emotes') and @isSingleEmote lower
-            return @handleStrikes name, 'No single emotes', bot, false, msg
+            return @handleStrikes name, @str('on-emote'), bot, false, msg
             
         # Caps filter
         if @states.get('caps')   and @isMostlyCaps msg
-            return @handleStrikes name, 'Watch the caps',   bot, false, msg
+            return @handleStrikes name, @str('on-caps'), bot, false, msg
             
         # URL filter
         if                           @containsBadURL lower
-            return @handleStrikes name, 'Bad URL',          bot, true, msg
+            return @handleStrikes name, @str('on-url'),    bot, true, msg
             
             
         
     handleStrikes: (name, response, bot, clear, msg) ->
         strikes = @updateStrikes(name)
         
-        response = "#{response}, #{name}! Strike #{strikes}"
+        strikemsg = @channel.str 'filter-strike'
+        
+        response = "#{response}, #{name}! #{strikemsg} #{strikes}"
         
         if      strikes is 1
             # First strike: verbal warning + optional clear

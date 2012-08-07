@@ -19,6 +19,19 @@ exports.name        = 'News'
 exports.version     = '1.1'
 exports.description = 'Automatic news broadcasting'
 
+exports.strings = {
+    'status-enabled' : 'Auto-news is now enabled.'
+    'status-disabled': 'Auto-news is now disabled.'
+
+    'config-secs'     : 'Auto-news minimum delay set to @1@ seconds.'
+    'config-messages' : 'Auto-news minimum delay set to @1@ messages.'
+
+    'action-added'  : 'Auto-news added.'
+    'action-cleared': 'Auto-news cleared.'
+
+    'err-no-news': 'No auto-news found. Add with @1@'
+}
+
 io.module '[News] Init'
 
 # News module
@@ -103,38 +116,36 @@ class News
 
     cmdNewsEnable: (user, args, bot) ->
         @config.add 'state', 1
-        bot.say '<News> Auto-news is now enabled.'
+        bot.say '[News] ' + @str('status-enabled')
 
 
     cmdNewsDisable: (user, args, bot) ->
         @config.add 'state', 0
-        bot.say '<News> Auto-news is now disabled.'
+        bot.say '[News] ' + @str('status-disabled')
 
 
     cmdNewsSeconds: (user, args, bot) ->
         @config.add 'seconds', parseInt(args[0], 10) if args[0]?
-        bot.say "<News> Auto-news minimum delay set to " +
-                "#{@config.get 'seconds'} seconds."
+        bot.say '[News] ' + @str('config-secs', @config.get 'seconds')
 
 
     cmdNewsMessages: (user, args, bot) ->
         @config.add 'messages', parseInt(args[0], 10) if args[0]?
-        bot.say "<News> Auto-news minimum delay set to " +
-                "#{@config.get 'messages'} messages."
+        bot.say '[News] ' + @str('config-messages', @config.get 'seconds')
 
 
     cmdNewsClear: (user, args, bot) ->
         @news.clear()
-        bot.say '<News> Auto-news cleared.'
+        bot.say '[News] ' + @str('action-cleared')
 
 
     cmdNewsAdd: (user, args, bot) ->
         @news.add args.join ' '
-        bot.say '<News> Auto-news added.'
+        bot.say '[News] ' + @str('action-added')
 
 
     cmdNewsNext: (user, args, bot) ->
-        bot.say @getNext(user) ? '<News> No auto-news found. Add with !news add <message>'
+        bot.say @getNext(user) ? ('[News] ' + @str('err-no-news', '!news add <message>'))
         
 
     save: ->

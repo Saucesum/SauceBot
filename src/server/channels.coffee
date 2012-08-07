@@ -232,7 +232,7 @@ class Channel
 
     getString: (module, key, args...) ->
         key   = module.name.toLowerCase() + "-" + key
-        value = @strings.get(key) ? mod.getDefaultString(key)
+        value = @strings.get(key) ? mod.getDefaultString(key) ? '[#' + key + ']'
         
         for arg, argnum in args
             elem = "@#{argnum + 1}@"
@@ -273,7 +273,7 @@ exports.load = (finished) ->
 
             # Update channel name, description and modules.
             channel.desc = desc
-            channel.name = name
+            channel.name = chan.name
             channel.loadChannelModules()
             
         # Otherwise, set up a new channel.

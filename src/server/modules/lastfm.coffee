@@ -15,6 +15,11 @@ exports.name        = 'LastFM'
 exports.version     = '1.0'
 exports.description = 'Last.FM API'
 
+exports.strings = {
+    'err-usage'  : 'Usage: @1@'
+    'playing-now': 'Now playing - @1@: @2@'
+}
+
 CACHE_TIMEOUT = 45 * 1000
 
 api_key  = 'b25b959554ed76058ac220b7b2e0a026'
@@ -54,13 +59,13 @@ class LastFM
         
     cmdLastFM: (user, args, bot) ->
         unless args[0]?
-            return bot.say '[last.fm] Usage: !lastfm <username>'
+            return bot.say @str('err-usage', '!lastfm <username>')
             
         # Filter out bad characters
         name = args[0].replace /[^-a-zA-Z_0-9]/g, ''
             
-        @getSong name, (song) ->
-            bot.say "[last.fm] Now playing - #{name}: #{song}"
+        @getSong name, (song) =>
+            bot.say "[last.fm] " + @str('playing-now', name, song)
             
             
     getSong: (name, cb) ->

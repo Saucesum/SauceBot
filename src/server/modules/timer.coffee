@@ -12,6 +12,20 @@ exports.name        = 'Timer'
 exports.version     = '1.0'
 exports.description = 'Timer system'
 
+exports.strings = {
+    'err-usage'       : 'Usage: @1@'
+    'err-invalid-name': 'Invalid name'
+    'err-countdown'   : 'Invalid countdown'
+    'err-timer'       : 'Invalid timer'
+
+    'action-countdown-started': 'Countdown @1@ started. Cancel with: @2@'
+    'action-countdown-stopped': '@1@: stopped at @2@ remaining'
+
+    'action-timer-started': 'Timer @1@ started. Stop with @2@'
+
+    # TODO: Add something for time units here... maybe.
+}
+
 # Time utility methods
 
 timeRE = /(?:(\d+)\s*[dD]\w*?)?\s*(?:(\d+)\s*[hHtT]\w*?)?\s*(?:(\d+)\s*[mM]\w*?)?\s*(?:(\d+)\s*[sS]\w*?)?\s*/
@@ -173,16 +187,16 @@ class Timer
     
     cmdTimerStart: (user, args, bot) ->
         unless args? and args[0]?
-            return bot.say "[Timer] Invalid name. Usage: !timer <timername>"
+            return bot.say "[Timer] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!timer <timer name>')
             
         name = args[0]
         @timers.add name, Date.now()
-        bot.say "[Timer] Timer #{name} started. Stop with !timer stop #{name}"
+        bot.say "[Timer] " + @str('action-timer-started', name, '!timer stop ' + name)
         
         
     cmdTimerStop: (user, args, bot) ->
         unless args? and (timer = @timers.get args[0])?
-            return bot.say "[Timer] Invalid timer. Usage: !timer stop <timername>"
+            return bot.say "[Timer] " + @str('err-timer') + '. ' + @str('err-usage', '!timer stop <timer name>')
             
         bot.say "[Timer] #{args[0]}: #{timeToFullStr (Date.now() - timer)}"
         @timers.remove args[0]
@@ -190,18 +204,18 @@ class Timer
         
     cmdCountdownStart: (user, args, bot) ->
         unless args? and args[0]? and args[1]?
-            return bot.say "[Countdown] Invalid name. Usage: !countdown <name> <target>"
+            return bot.say "[Countdown] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!countdown <name> <target>')
         
         name   = args.shift()
         target = strToTime args.join('')
         @countdowns.add name, Date.now() + target
-        bot.say "[Countdown] Countdown #{name} started! Cancel with !countdown stop #{name}"
+        bot.say "[Countdown] " + @str('action-countdown-started', name, '!countdown stop ' + name)
         
     cmdCountdownStop: (user, args, bot) ->
         unless args? and (timer = @countdowns.get args[0])?
-            return bot.say "[Countdown] Invalid countdown. Usage: !countdown stop <name>"
+            return bot.say "[Countdown] " + @str('err-countdown') + '. ' + @str('err-usage', '!countdown stop <name>')
         
-        bot.say "[Countdown] #{args[0]}: stopped at #{timeToFullStr (timer - Date.now())} remaining"
+        bot.say "[Countdown] " + @str('action-countdown-stopped', args[0], timeToFullStr (timer - Date.now()))
         @countdowns.remove args[0]
             
         

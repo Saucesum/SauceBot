@@ -15,6 +15,13 @@ exports.name        = 'JTV'
 exports.version     = '1.0'
 exports.description = 'JTV API'
 
+exports.strings = {
+    'show-game'   : '@1@ is playing @2@'
+    'show-viewers': 'There are currently @1@ viewers!'
+    'show-views'  : 'This channel has been viewed @1@ timed!'
+    'show-title'  : '@1@'
+}
+
 CACHE_TIMEOUT = 2 * 60 * 1000
 
 class JTV
@@ -44,41 +51,41 @@ class JTV
 
         
     registerHandlers: ->
-        @channel.register this, "game", Sauce.Level.User,
+        @channel.register this, "game", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdGame user, args, bot
 
-        @channel.register this, "viewers", Sauce.Level.User,
+        @channel.register this, "viewers", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdViewers user, args, bot
         
-        @channel.register this, "views", Sauce.Level.User,
+        @channel.register this, "views", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdViews user, args, bot
         
-        @channel.register this, "title", Sauce.Level.User,
+        @channel.register this, "title", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdTitle user, args, bot
         
         
     cmdGame: (user, args, bot) ->
         @getGame (game) =>
-            bot.say "[Game] #{@channel.name} is playing #{game}"
+            bot.say '[Game] ' + @str('show-game', @channel.name, game)
             
            
     cmdViewers: (user, args, bot) ->
         @getViewers (viewers) =>
-            bot.say "[Viewers] There are currently #{viewers} viewers!"
+            bot.say "[Viewers] " + @str('show-viewers', viewers)
             
             
     cmdViews: (user, args, bot) ->
         @getViews (views) =>
-            bot.say "[Views] This channel has been viewed #{views} times!"
+            bot.say "[Views] " + @str('show-views', views)
          
          
     cmdTitle: (user, args, bot) ->
         @getTitle (title) =>
-            bot.say "[Title] #{title}"
+            bot.say "[Title] " + @str('show-title', title)
             
          
     getGame: (cb) ->

@@ -12,6 +12,11 @@ exports.name        = 'Hangman'
 exports.version     = '1.0'
 exports.description = 'Who doesn\'t like hangman?!'
 
+# Module strings
+exports.strings = {
+    "test-random-word": "Random word: @1@"
+}
+
 io.module '[HM] Init'
 
 # Language dictionaries
@@ -46,13 +51,11 @@ class Hangman
         @channel.register  this, "hm", Sauce.Level.User,
             (user,args,bot) =>
                 @word = randomWord @language
-                bot.say "Random word: " + @word
+                bot.say @str('test-random-word', @word)
                 
         @channel.vars.register 'hm', (user, args) =>
             @word
             
-          
-                
     unload: ->
         @channel.vars.unregister 'hm'
         
@@ -60,6 +63,7 @@ class Hangman
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
         
+
 
     handle: (user, msg, bot) ->
         

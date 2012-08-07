@@ -119,7 +119,7 @@ class SauceBot
                 
             when 'Help'
                 if channel? and user.isGlobal()
-                    @say channel.name, "[Help] SauceBot admin #{user.name} incoming"
+                    @say channel.name, "[Help] SauceBot helper #{user.name} incoming"
                     
             when 'Timeout'
                 {username} = json 

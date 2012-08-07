@@ -12,6 +12,7 @@ io       = require '../ioutil'
 exports.name        = 'VM'
 exports.version     = '1.2'
 exports.description = 'Victory Monument live tracker'
+exports.strings     = Monument.strings ? {}
 
 blocks = [
       'White', 'Orange', 'Magenta',

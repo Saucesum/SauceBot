@@ -11,6 +11,17 @@ exports.name        = 'Poll'
 exports.version     = '1.0'
 exports.description = 'Channel voting system'
 
+exports.strings = {
+    'err-usage'            : 'Usage: @1@'
+    'err-no-poll-specified': 'No poll specified'
+    'err-no-active-poll'   : 'No active poll. Start with @1@'
+    'err-unknown-poll'     : 'Unknown poll. Create it with @1@'
+    
+    'action-started': '"@1@" started! Vote with @2@. Options: @3@'
+    'action-created': '"@1@" created! Start with @2@'
+    'action-results': '@1@ results: @2@'
+}
+
 io.module '[Poll] Init'
 
 class Poll
@@ -86,35 +97,34 @@ class Poll
 
     cmdPollStart: (args, bot) ->
         unless args[0]?
-            return bot.say '[Poll] No poll specified. Usage: !poll <name> <opt1> <opt2> ...'
+            return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll <name> <opt1> <opt2> ...')
             
         pollName = args.shift().toLowerCase()
         
         unless args.length
             unless @polls[pollName]?
-                return bot.say "[Poll] Unknown poll. Create it with !poll #{pollName} <opt1> <opt2> ..."
+                return bot.say '[Poll] ' + @str('err-unknown-poll', "!poll #{pollName} <opt1> <opt2> ...")
                 
             @reset()
             poll = @polls[pollName]
             @activePoll = pollName
             @votes = (0 for opt in poll)
             
-            bot.say "[Poll] '#{pollName}' started! Vote with !vote <option>. Options: #{poll.join ', '}"
+            bot.say '[Poll] ' + @str('action-started', pollName, '!vote <option>', poll.join ', ')
             
         else
             options = args.join ' '
             @pollDTO.add pollName, options.toLowerCase()
             @updatePollList()
-            bot.say "[Poll] '#{pollName}' created! Start with !poll #{pollName}"
+            bot.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
             
         
     cmdPollEnd: (args, bot) ->
         unless @activePoll?
-            bot.say '[Poll] No active poll. Start with !poll <name>'
-            return
+            return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll <name>')
             
         results = @getResults()
-        bot.say "[Poll] #{@activePoll} results: #{results}"
+        bot.say '[Poll] ' + @str('action-results', @activePoll, results)
         @reset()
         
         
@@ -139,7 +149,6 @@ class Poll
         if args[0]? and (idx = @polls[@activePoll].indexOf(args[0].toLowerCase())) isnt -1
             @hasVoted.push user
             @votes[idx]++
-            #bot.say "[Poll] #{user} voted!"
 
 
     handle: (user, msg, bot) ->

@@ -12,6 +12,7 @@ io       = require '../ioutil'
 exports.name        = 'JM'
 exports.version     = '1.0'
 exports.description = 'Jukebox Monument live tracker'
+exports.strings     = Monument.strings ? {}
 
 blocks = [
         # Records:

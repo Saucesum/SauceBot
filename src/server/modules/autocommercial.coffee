@@ -13,6 +13,11 @@ exports.description = 'Automatic commercials for jtv partners (Broken - do not u
 exports.locked      = true
 exports.ignore      = true
 
+exports.strings = {
+    'config-enable' : 'Enabled'
+    'config-disable': 'Disabled'
+}
+
 io.module '[AutoCommercial] Init'
 
 # ********************************************************************** #
@@ -59,13 +64,13 @@ class AutoCommercial
         @channel.register this, "commercial on"      , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdEnableCommercial()
-                bot.say '[AutoCommercial] Enabled'
+                bot.say '[AutoCommercial] ' + @str('config-enable')
         
         # !commercial off - Disable auto-commercials
         @channel.register this, "commercial off"     , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdDisableCommercial()
-                bot.say '[AutoCommercial] Disabled'
+                bot.say '[AutoCommercial] ' + @str('config-disable')
                 
                 
     cmdEnableCommercial: ->

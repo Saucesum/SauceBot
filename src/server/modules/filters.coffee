@@ -42,7 +42,7 @@ exports.strings = {
     'filter-url'     : 'URL'
     'filter-caps'    : 'Caps'
     'filter-emotes'  : 'Single-emote'
-    'filter-words': 'Bad word'
+    'filter-words'   : 'Bad word'
     
     # Permits
     'permit-permitted': '@1@ permitted for @2@ seconds.'
@@ -229,7 +229,7 @@ class Filters
         value = args[0] if args[0]?
         if value?
             dto.add value.toLowerCase()
-            bot.say "[Filter] #{@str 'list-' +  name} - #{@str 'action-added'}"
+            bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-added')
         else
             bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " add <value>")
     
@@ -238,14 +238,14 @@ class Filters
         value = args[0] if args[0]?
         if value?
             dto.remove value.toLowerCase()
-            bot.say "[Filter] #{@str 'list-' +  name} - #{@str 'action-removed'}"
+            bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-removed')
         else
             bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " remove <value>")
             
             
     cmdFilterClear: (name, dto, args, bot) ->
         dto.clear()
-        bot.say "[Filter] #{@str 'list-' +  name} - #{@str 'action-cleared'}"
+        bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-cleared')
 
 
     # Filter state command handlers
@@ -349,9 +349,9 @@ class Filters
     handleStrikes: (name, response, bot, clear, msg) ->
         strikes = @updateStrikes(name)
         
-        strikemsg = @channel.str 'filter-strike'
+        strikemsg = @str ('warning-' + (if strikes < 0 then 0 else if strikes > 3 then 3 else strikes))
         
-        response = "#{response}, #{name}! #{strikemsg} #{strikes}"
+        response = "#{response}, #{name}! #{strikemsg}"
         
         if      strikes is 1
             # First strike: verbal warning + optional clear

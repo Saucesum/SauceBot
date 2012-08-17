@@ -17,7 +17,11 @@ exports.description = 'Global base commands'
 exports.locked      = true
 
 exports.strings = {
+    # Help messages
     'help-requested': 'SauceBot helpers have been alerted and should arrive soon.'
+    'help-incoming' : 'SauceBot helper @1@ incoming'
+    
+    # Misc messages
     'math-invalid'  : 'Invalid expression: @1@'
 }
 

@@ -16,13 +16,15 @@ chans = require './channels'
 auth  = require '../common/session'
 io    = require '../common/ioutil'
 sio   = require '../common/socket'
-log   = require '../common/logger' 
+log   = require '../common/logger'
 
 # Node.js
 net   = require 'net'
 url   = require 'url'
 color = require 'colors'
 
+# Disable extra output
+# (Possibly make it go somewhere else instead for logging?)
 io.setDebug false
 io.setVerbose false
 
@@ -40,6 +42,8 @@ loadChannels = ->
 
 weblog = new log.Logger Sauce.Path, 'updates.log'
 
+# Special user map for twitch admins and staff
+specialUsers = { }
 
 # SauceBot connection handler class
 class SauceBot
@@ -53,7 +57,15 @@ class SauceBot
             catch error
                 @sendError "Syntax error: #{error}"
                 io.error error + "\n" + error.stack
-            
+        
+        # Private message handler
+        @socket.on 'pm', (data) =>
+            try
+                @handlePM data
+            catch error
+                @sendError "Error parsing PM: #{error}"
+                io.error error
+
                 
         # Update handler
         @socket.on 'upd', (data) =>
@@ -62,7 +74,8 @@ class SauceBot
             catch error
                 @sendError "#{error}"
                 io.error error
-                
+        
+        # Request handler
         @socket.on 'get', (data) =>
             try
                 @handleGet data
@@ -92,7 +105,28 @@ class SauceBot
             timeout   : (data, time) => @timeout    chan, data, time
             commercial:              => @commercial chan
             
-            
+
+    # Private Message (pm):
+    # * user: [REQ] Source user
+    # * msg : [REQ] Message
+    #
+    handlePM: (json) ->
+        {user, msg} = json
+
+        if user is 'jtv'
+            # Handle jtv messages:
+            # - "you are not a moderator in this channel"
+            # - "the user you are trying to ban is a moderator"
+            # - ...
+            if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.test msg
+                [_, name, role] = m
+                console.log name.blue.inverse + ": " + role
+                specialUsers[name.toLowerCase()] = role.toLowerCase()
+
+        else
+            # Handle messages by normal people using IRC clients
+            #  ... maybe
+
     # Update (upd):
     #  * cookie: [REQ] Session cookie for authentication
     #  ? chan  : [OPT] Source channel
@@ -119,10 +153,10 @@ class SauceBot
                 
             when 'Help'
                 if channel? and user.isGlobal()
-                    @say channel.name, "[Help] SauceBot helper #{user.name} incoming"
+                    @say channel.name, '[Help] ' + channel.getString('Base', 'help-incoming', user.name)
                     
             when 'Timeout'
-                {username} = json 
+                {username} = json
                 if username? and channel? and user.isMod channel.id
                     username = @fixUsername username
                     console.log "Timing out #{username} (#{channel.name})"
@@ -159,8 +193,6 @@ class SauceBot
         #weblog.timestamp 'REQUEST', channel.id, channel.name, type, user.id, user.name
         
         @socket.emit 'users', (name for name, _ of channel.usernames)
-        @socket.close() # TODO fix this haha
-        
         
         
     getWebData: (json) ->

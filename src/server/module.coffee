@@ -76,6 +76,6 @@ exports.instance = (name, chan) ->
     obj.version     = module.version
     
     obj.str = (key, args...) ->
-        chan.getString obj, key, args...
+        chan.getString obj.name, key, args...
 
     return obj

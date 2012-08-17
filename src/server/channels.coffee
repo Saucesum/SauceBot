@@ -230,8 +230,33 @@ class Channel
         name.toLowerCase() in Object.keys @usernames
 
 
-    getString: (module, key, args...) ->
-        key   = module.name.toLowerCase() + "-" + key
+    # Returns a localized string for this channel.
+    #   Strings are on the form 'module-group-key'
+    #   where 'module' is the source module name,
+    #   and 'group-key' is the key used to fetch it.
+    #
+    #   Strings containing templates(e.g. @1@, @2@, ...)
+    #   get them replaced by their corresponding args[N-1]
+    #   value. For example, @1@ gets turned into the
+    #   value of the optional args' list first element (args[0]).
+    #   Templates with no corresponding args value are ignored.
+    #
+    #   If this channel doesn't have a localized
+    #   version of the specified string, the default
+    #   one is used instead, from the module's exported
+    #   'strings' list.
+    #
+    #   For invalid keys with no localized or default
+    #   values, the returned value is on the form:
+    #   '[#key]' where key is 'moduleName-key'.
+    #
+    # Parameters:
+    # * [STR] moduleName : The name of the source module defining this string
+    # * [STR] key        : The string key
+    # * [STR...] args    : An optional list of arguments for the string (for templates)
+    #
+    getString: (moduleName, key, args...) ->
+        key   = moduleName.toLowerCase() + "-" + key
         value = @strings.get(key) ? mod.getDefaultString(key) ? '[#' + key + ']'
         
         for arg, argnum in args

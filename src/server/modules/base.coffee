@@ -18,6 +18,7 @@ exports.locked      = true
 
 exports.strings = {
     # Help messages
+    'help-basic'    : 'For urgent help, use @1@. Otherwise, tweet @RavnTM'
     'help-requested': 'SauceBot helpers have been alerted and should arrive soon.'
     'help-incoming' : 'SauceBot helper @1@ incoming'
     
@@ -76,7 +77,10 @@ class Base
                     user.name.toLowerCase(),
                     args.join ' '
                 ]]
-                bot.say "[Help] " + @str('help-requested')
+                if args.length > 0
+                    bot.say "[Help] " + @str('help-requested')
+                else
+                    bot.say "[Help] " + @str('help-basic', '!help <message>')
 
         # Test
         @channel.register this, "var", Sauce.Level.Mod,

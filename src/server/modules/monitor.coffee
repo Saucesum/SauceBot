@@ -25,7 +25,7 @@ class Monitor
     constructor: (@channel) ->
         @loaded = false
 
-        @log = new log.Logger Sauce.Path, "#{@channel.name}.log"
+        @log = new log.Logger Sauce.Path, "channels/#{@channel.name}.log"
         
         @users = {}
         

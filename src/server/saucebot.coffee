@@ -202,9 +202,11 @@ class SauceBot
         
         throw new Error 'You are not logged in' unless userID?
         
-        channel = chans.getById(chan)
-        chanName = if channel? then channel.name else 'N/A'
-        
+        channel = chans.getById(chan) ? {
+            name: 'N/A'
+            id  : -1
+        }
+
         user = users.getById userID
 
         {

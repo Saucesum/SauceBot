@@ -25,8 +25,8 @@ color = require 'colors'
 
 # Disable extra output
 # (Possibly make it go somewhere else instead for logging?)
-io.setDebug false
-io.setVerbose false
+#io.setDebug false
+#io.setVerbose false
 
 # Loads user data
 loadUsers = ->
@@ -38,6 +38,23 @@ loadUsers = ->
 loadChannels = ->
     chans.load (chanlist) ->
         io.debug "Loaded #{(Object.keys chanlist).length} channels."
+        updateClientChannels()
+        
+        
+# Sends a channel list to all registered clients
+updateClientChannels = (socket) ->
+    data = []
+    for _, e of chans.getAll()
+        data.push {
+            id    : e.id
+            name  : e.name
+            status: e.status
+        }
+    
+    if socket?
+        socket.emit 'channels', data
+    else
+        socket.emit 'channels', data for socket in server.sockets when socket.isClient?
 
 
 weblog = new log.Logger Sauce.Path, 'updates.log'
@@ -139,7 +156,7 @@ class SauceBot
     #  + Help       : notifies channel that help is coming
     #
     handleUpdate: (json) ->
-        {channel, user, type} = @getWebData json
+        {channel, user, type} = @getWebData json, true
         
         io.debug "Update from #{user.id}-#{user.name}: #{channel.name}##{type}"
         weblog.timestamp 'UPDATE', channel.id, channel.name, type, user.id, user.name
@@ -185,29 +202,42 @@ class SauceBot
     # * type  : [REQ] Request type
     #
     # Types:
-    #  + Users : Returns a list of usernames
+    #  + Users   : Returns a list of usernames
+    #  + Channels: Returns a list of channels
     handleGet: (json) ->
-        {channel, user, type} = @getWebData json
+        {channel, user, type} = @getWebData json, false
                 
         io.debug "Request from #{user.id}-#{user.name}: #{channel.name}##{type}"
         #weblog.timestamp 'REQUEST', channel.id, channel.name, type, user.id, user.name
         
-        @socket.emit 'users', (name for name, _ of channel.usernames)
+        switch type
+            when 'Users'
+                @socket.emit 'users', (name for name, _ of (channel.usernames ? {}))
+            
+            when 'Channels'
+                updateClientChannels @socket
+                
+                # Make sure the client gets channel updates
+                @socket.isClient = true
+
         
-        
-    getWebData: (json) ->
+    getWebData: (json, requireLogin) ->
         {cookie, chan, type} = json
         
         userID = auth.getUserID cookie
         
-        throw new Error 'You are not logged in' unless userID?
+        if requireLogin
+            throw new Error 'You are not logged in' unless userID?
         
         channel = chans.getById(chan) ? {
             name: 'N/A'
             id  : -1
         }
 
-        user = users.getById userID
+        user = users.getById(userID) ? {
+            name: 'N/A'
+            id  : -1
+        }
 
         {
             'channel': channel

@@ -35,12 +35,13 @@ exports.getByName = (name) ->
 exports.getById = (id) ->
     exports.getByName names[id]
 
+exports.getAll = -> channels
 
 class Channel
     constructor: (data) ->
-        @id   = data.chanid
-        @name = data.name
-        @desc = data.description
+        @id     = data.chanid
+        @name   = data.name
+        @status = data.status
     
         @usernames = {}
     
@@ -288,16 +289,16 @@ exports.load = (finished) ->
     newNames    = {}
     
     db.getDataEach 'channel', (chan) ->
-        id   = chan.chanid
-        name = chan.name.toLowerCase()
-        desc = chan.description
+        id     = chan.chanid
+        name   = chan.name.toLowerCase()
+        status = chan.status
         
         # If a channel with that ID is loaded, update it.
         if oldName = names[id]
             channel = channels[oldName]
 
-            # Update channel name, description and modules.
-            channel.desc = desc
+            # Update channel name, status and modules.
+            channel.status = status
             channel.name = chan.name
             channel.loadChannelModules()
             

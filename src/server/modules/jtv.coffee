@@ -18,7 +18,7 @@ exports.description = 'JTV API'
 exports.strings = {
     'show-game'   : '@1@ is playing @2@'
     'show-viewers': 'There are currently @1@ viewers!'
-    'show-views'  : 'This channel has been viewed @1@ timed!'
+    'show-views'  : 'This channel has been viewed @1@ times!'
     'show-title'  : '@1@'
 }
 

@@ -42,6 +42,7 @@ class Channel
         @id     = data.chanid
         @name   = data.name
         @status = data.status
+        @bot    = data.bot
     
         @usernames = {}
     
@@ -297,9 +298,10 @@ exports.load = (finished) ->
         if oldName = names[id]
             channel = channels[oldName]
 
-            # Update channel name, status and modules.
+            # Update channel name, status, botname and modules.
             channel.status = status
-            channel.name = chan.name
+            channel.name   = chan.name
+            channel.bot    = chan.bot
             channel.loadChannelModules()
             
         # Otherwise, set up a new channel.

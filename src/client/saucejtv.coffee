@@ -63,6 +63,16 @@ sauce.on 'commercial', (data) ->
 sauce.on 'error', (data) ->
     io.error data.msg
     
+    
+# Channel listing [{name, id, status}, {name, id, status}, ...]
+sauce.on 'channels', (data) ->
+    for c in data
+        # c = {id, status, name, bot}
+        if c.status
+            break
+            # todo
+    
+    
 
 class Bot
     constructor: (@name, @password) ->

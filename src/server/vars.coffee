@@ -150,7 +150,7 @@ class Vars
             
             if cmd < 0
                 cmd = (-cmd) - 1
-                # Negative index mean from N to the end
+                # Negative index means from N to the end
                 return ((raw.split ' ')[cmd...] ? []).join ' '
             else
                 # Positive index means only the Nth word

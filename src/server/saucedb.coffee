@@ -10,6 +10,7 @@ lastConnect = 0
 
 client = null
 
+#Connects to the MySQL database, disconnecting any previously connected database
 connect = ->
     io.debug "MySQL - Connecting"
     client?.destroy()
@@ -21,11 +22,9 @@ connect = ->
     client.useDatabase Sauce.DB.database
 
 
+#Returns whether the time between the last call to this method and the current one is greater than the timeout limit
 timedOut = ->
-    previous    = lastConnect
-    lastConnect = Date.now()
-    
-    lastConnect - previous > timeOutLimit
+    -lastConnect + (lastConnect = Date.now()) > timeOutLimit
 
 
 query = (args...) ->

@@ -5,7 +5,8 @@ db = require '../saucedb'
 io = require '../ioutil'
 
 # Data Transfer Object abstract base class
-# All methods of a DTO should immediately reflect any changes made to their dataset to the database
+# All methods of a DTO should immediately reflect any changes made to their
+# dataset to the database.
 class DTO
     constructor: (@channel, @table) ->
         # Constructs the DTO

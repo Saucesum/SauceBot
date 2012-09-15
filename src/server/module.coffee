@@ -18,6 +18,7 @@ defaultChannel = {
     name : 'Default'
 }
 
+# Loads a module with the given file name so that it can be instantiated by the channels.
 loadModule = (name) ->
     try
         module = require "#{PATH}#{name.toLowerCase()}" 
@@ -44,12 +45,14 @@ db.clearTable INFO_TABLE
 strDTO  = new HashDTO defaultChannel, STRS_TABLE, 'key', 'value'
 strings = {}
 
+# Watch the module file path for any new .js files that can be loaded as modules, and add them to our list of modules.
 fs.readdirSync(PATH).forEach (file) ->
     return unless match = /(\w+)\.js$/i.exec file
     return unless (module = loadModule(match[1]))?
     
     stringBase = module.name.toLowerCase()
 
+    # Also update any strings that are loaded by this module
     for k, v of (module.strings ? {})
         key = "#{stringBase}-#{k}"
         strings[key] = v
@@ -60,6 +63,9 @@ strDTO.set strings
 exports.getDefaultString = (key) ->
     strDTO.get key
  
+# Attempts to instantiate a module of a given name for a channel by first checking if the file definition part exists, then calling the New function of the module definition on the channel, and finally populating some additional variables.
+# * name: the name of the module
+# * chan: the channel object that the module is being instantiated for
 exports.instance = (name, chan) ->
     if (!exports.MODULES[name]?)
         throw new Error "No such module '#{name}'" unless loadModule name

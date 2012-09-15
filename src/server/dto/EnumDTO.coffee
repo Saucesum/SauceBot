@@ -10,7 +10,7 @@ class EnumDTO extends HashDTO
         getNewID: ->
             id = 0
             for key of @data
-                if key == id then id++
+                id++ if parseInt(key,10) is id
             id
      
      

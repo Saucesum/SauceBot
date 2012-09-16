@@ -13,6 +13,10 @@ exports.version     = '1.1'
 exports.description = 'Chat monitoring and user listing'
 exports.locked      = true
 
+exports.strings = {
+    'users-cleared': 'Active users cleared.'
+}
+
 io.module '[Monitor] Init'
 
 mentions = new log.Logger Sauce.Path, "mentions.log"
@@ -21,7 +25,7 @@ class Monitor
     constructor: (@channel) ->
         @loaded = false
 
-        @log = new log.Logger Sauce.Path, "#{@channel.name}.log"
+        @log = new log.Logger Sauce.Path, "channels/#{@channel.name}.log"
         
         @users = {}
         
@@ -29,7 +33,7 @@ class Monitor
     writelog: (user, msg) ->
         @log.timestamp "#{if user.op then '@' else ' '}#{user.name}", msg
         
-        if /ravn|sauce|sause|rav\b|drunkbot|cloudbro/i.test msg
+        if /ravn|sauce|sause|\brav\b|drunkbot|cloudbro/i.test msg
             mentions.write new Date(), @channel.name, user.name, msg
 
     load:->
@@ -37,15 +41,11 @@ class Monitor
         @loaded = true
         
         io.module "[Monitor] Loading for #{@channel.id}: #{@channel.name}"
-        
-        # @channel.register this, "users", Sauce.Level.Mod,
-            # (user, args, bot) =>
-                # bot.say "[Users] Active users: #{Object.keys(@users).join ', '}"
-        
+
         @channel.register this, "users clear", Sauce.Level.Mod,
             (user, args, bot) =>
                 @users = {}
-                bot.say "[Users] Active users cleared."
+                bot.say "[Users] " + @str('users-cleared')
 
         @channel.vars.register 'users', (user, args) =>
                 if not args[0]? then return Object.keys(@users).length

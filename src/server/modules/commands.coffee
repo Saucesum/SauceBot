@@ -22,6 +22,18 @@ exports.name        = 'Commands'
 exports.version     = '1.2'
 exports.description = 'Custom commands handler'
 
+exports.strings = {
+    # Errors
+    'err-usage'          : 'Usage: @1@'
+    'err-only-forget-set': 'Only forgets commands made with @1@.'
+    'err-to-forget'      : '@1@ or @2@ to forget a command.'
+
+    # Actions
+    'action-mod-set': 'Mod-command set: @1@'
+    'action-set'    : 'Command set: @1@'
+    'action-unset'  : 'Command unset: @1@'
+}
+
 io.module '[Commands] Init'
 
 # Commands module
@@ -106,21 +118,21 @@ class Commands
     # !(un)?set <command>  - Unset command
     cmdUnset: (user, args, bot) ->
         unless args[0]?
-            return bot.say "Usage: !unset (name).  Only forgets commands made with !set."
+            return bot.say @str('err-usage', '!unset <name>') + '. ' + @str('err-only-forget-set', '!set')
 
         cmd = args[0]
 
         if @commands.data[cmd]? or @triggers[cmd]?
             @commands.remove cmd
             @delTrigger      cmd
-            return bot.say "Command unset: #{cmd}"
+            return bot.say @str('action-unset', cmd)
         
 
     # !set <command> <message>  - Set command
     # !set <command>            - Unset command
     cmdSet: (user, args, bot) ->
         unless args[0]?
-            return bot.say "Usage: !set (name) (message).  !set (name) or !unset (name) to forget a command."
+            return bot.say @str('err-usage', '!set <name> <message>') + '. ' + @str('err-to-forget', '!set <name>', '!unset <name>')
 
         # !set <command>
         if (args.length is 1)
@@ -132,13 +144,13 @@ class Commands
         msg  = args.join ' '
         @setCommand cmd, msg, Sauce.Level.User
 
-        return bot.say "Command set: #{cmd}"
+        return bot.say @str('action-set', cmd)
 
     # !setmod <command> <message>  - Set moderator-only command
     # !setmod <command>            - Unset command
     cmdSetMod: (user, args, bot) ->
         unless args[0]?
-            return bot.say "Usage: !setmod (name) (message).  !setmod (name) or !unset (name) to forget a command."
+            return bot.say @str('err-usage', '!setmod <name> <message>') + '. ' + @str('err-to-forget', '!setmod <name>', '!unset <name>')
 
         # !setmod <command>
         if (args.length is 1)
@@ -151,7 +163,7 @@ class Commands
         msg  = args.join ' '
         @setCommand cmd, msg, Sauce.Level.Mod
 
-        return bot.say "Mod-command set: #{cmd}"
+        return bot.say @str('action-mod-set', cmd)
         
         
     setCommand: (cmd, msg, level) ->

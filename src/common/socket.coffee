@@ -42,6 +42,7 @@ class Socket
                 
             catch error
                 return
+
             handler = @handlers[cmd]
             handler(data) if handler?
     

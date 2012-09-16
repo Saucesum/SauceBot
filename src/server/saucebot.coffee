@@ -16,15 +16,17 @@ chans = require './channels'
 auth  = require '../common/session'
 io    = require '../common/ioutil'
 sio   = require '../common/socket'
-log   = require '../common/logger' 
+log   = require '../common/logger'
 
 # Node.js
 net   = require 'net'
 url   = require 'url'
 color = require 'colors'
 
-io.setDebug false
-io.setVerbose false
+# Disable extra output
+# (Possibly make it go somewhere else instead for logging?)
+#io.setDebug false
+#io.setVerbose false
 
 # Loads user data
 loadUsers = ->
@@ -36,10 +38,29 @@ loadUsers = ->
 loadChannels = ->
     chans.load (chanlist) ->
         io.debug "Loaded #{(Object.keys chanlist).length} channels."
+        updateClientChannels()
+        
+        
+# Sends a channel list to all registered clients
+updateClientChannels = (socket) ->
+    data = []
+    for _, e of chans.getAll()
+        data.push {
+            id    : e.id
+            name  : e.name
+            status: e.status
+        }
+    
+    if socket?
+        socket.emit 'channels', data
+    else
+        socket.emit 'channels', data for socket in server.sockets when socket.isClient?
 
 
 weblog = new log.Logger Sauce.Path, 'updates.log'
 
+# Special user map for twitch admins and staff
+specialUsers = { }
 
 # SauceBot connection handler class
 class SauceBot
@@ -53,12 +74,28 @@ class SauceBot
             catch error
                 @sendError "Syntax error: #{error}"
                 io.error error + "\n" + error.stack
-            
+        
+        # Private message handler
+        @socket.on 'pm', (data) =>
+            try
+                @handlePM data
+            catch error
+                @sendError "Error parsing PM: #{error}"
+                io.error error
+
                 
         # Update handler
         @socket.on 'upd', (data) =>
             try
                 @handleUpdate data
+            catch error
+                @sendError "#{error}"
+                io.error error
+        
+        # Request handler
+        @socket.on 'get', (data) =>
+            try
+                @handleGet data
             catch error
                 @sendError "#{error}"
                 io.error error
@@ -85,7 +122,28 @@ class SauceBot
             timeout   : (data, time) => @timeout    chan, data, time
             commercial:              => @commercial chan
             
-            
+
+    # Private Message (pm):
+    # * user: [REQ] Source user
+    # * msg : [REQ] Message
+    #
+    handlePM: (json) ->
+        {user, msg} = json
+
+        if user is 'jtv'
+            # Handle jtv messages:
+            # - "you are not a moderator in this channel"
+            # - "the user you are trying to ban is a moderator"
+            # - ...
+            if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.test msg
+                [_, name, role] = m
+                console.log name.blue.inverse + ": " + role
+                specialUsers[name.toLowerCase()] = role.toLowerCase()
+
+        else
+            # Handle messages by normal people using IRC clients
+            #  ... maybe
+
     # Update (upd):
     #  * cookie: [REQ] Session cookie for authentication
     #  ? chan  : [OPT] Source channel
@@ -95,21 +153,13 @@ class SauceBot
     #  + Module name: reloads module
     #  + Users      : reloads user data
     #  + Channels   : reloads channel data
+    #  + Help       : notifies channel that help is coming
     #
     handleUpdate: (json) ->
-        {cookie, chan, type} = json
+        {channel, user, type} = @getWebData json, true
         
-        userID = auth.getUserID cookie
-        
-        throw new Error 'You are not logged in' unless userID?
-        
-        channel = chans.getById(chan)
-        chanName = if channel? then channel.name else 'N/A'
-        
-        user = users.getById userID
-        
-        io.debug "Update from #{userID}-#{user.name}: #{chan}##{type}"
-        weblog.timestamp 'UPDATE', chan, chanName, type, userID, user.name
+        io.debug "Update from #{user.id}-#{user.name}: #{channel.name}##{type}"
+        weblog.timestamp 'UPDATE', channel.id, channel.name, type, user.id, user.name
         
         switch type
             when 'Users'
@@ -119,15 +169,81 @@ class SauceBot
                 loadChannels()
                 
             when 'Help'
-                channel = chans.getById chan
                 if channel? and user.isGlobal()
-                    @say channel.name, "[Help] SauceBot admin #{user.name} incoming"
+                    @say channel.name, '[Help] ' + channel.getString('Base', 'help-incoming', user.name)
+                    
+            when 'Timeout'
+                {username} = json
+                if username? and channel? and user.isMod channel.id
+                    username = @fixUsername username
+                    console.log "Timing out #{username} (#{channel.name})"
+                    #@timeout channel.name, username, 10 * 60
+                    
+            when 'Ban'
+                {username} = json
+                if username? and channel? and user.isMod channel.id
+                    username = @fixUsername username
+                    console.log "Banning #{username} (#{channel.name})"
+                    #@ban channel.name, username
+                    
                 
             else
-                channel = chans.getById chan
                 channel?.reloadModule type
                 
+    fixUsername: (name) ->
+        name = name.replace /[^a-zA-Z0-9_]+/g, ''
+        name = name.substring 0, 39 if name.length > 40
+        return name
                 
+        
+    # Requests (get):
+    # * cookie: [REQ] Session cookie for authentication
+    # ? chan  : [OPT] Target channel
+    # * type  : [REQ] Request type
+    #
+    # Types:
+    #  + Users   : Returns a list of usernames
+    #  + Channels: Returns a list of channels
+    handleGet: (json) ->
+        {channel, user, type} = @getWebData json, false
+                
+        io.debug "Request from #{user.id}-#{user.name}: #{channel.name}##{type}"
+        #weblog.timestamp 'REQUEST', channel.id, channel.name, type, user.id, user.name
+        
+        switch type
+            when 'Users'
+                @socket.emit 'users', (name for name, _ of (channel.usernames ? {}))
+            
+            when 'Channels'
+                updateClientChannels @socket
+                
+                # Make sure the client gets channel updates
+                @socket.isClient = true
+
+        
+    getWebData: (json, requireLogin) ->
+        {cookie, chan, type} = json
+        
+        userID = auth.getUserID cookie
+        
+        if requireLogin
+            throw new Error 'You are not logged in' unless userID?
+        
+        channel = chans.getById(chan) ? {
+            name: 'N/A'
+            id  : -1
+        }
+
+        user = users.getById(userID) ? {
+            name: 'N/A'
+            id  : -1
+        }
+
+        {
+            'channel': channel
+            'user'   : user
+            'type'   : type
+        }
             
 
     # Sends an error to the client
@@ -149,7 +265,7 @@ class SauceBot
     #  * msg : [REQ] Message to send
     #
     say: (channel, message) ->
-        io.say '>> '.magenta + "say #{channel}: #{message}"
+        io.say channel, message
         
         server.broadcast 'say',
             chan: channel

@@ -6,6 +6,9 @@ io = require '../ioutil'
 {DTO} = require './DTO'
      
 # Data Transfer Object for hashes
+# Hashes are effectively mappings of one column in the table to another, e.g.,
+# table (chanid, x, y) with rows (1, 1, "a") and (1, 2, "b") would be
+# converted to an object {1 : "a", 2 : "b"}.
 class HashDTO extends DTO
     constructor: (channel, table, @keyField, @valueField) ->
         super channel, table
@@ -25,6 +28,7 @@ class HashDTO extends DTO
     
     # Saves the data to the database
     save: ->
+        # Make the data an array, then all can be stored
         dataList = ([key, value] for key, value of @data)
         db.setChanData @channel.id, @table, [@keyField, @valueField], dataList
 
@@ -32,6 +36,7 @@ class HashDTO extends DTO
     # Adds a (key, value)-pair to the database
     add: (key, value) ->
         @data[key] = value
+        # Add a row (chanid, key, value) to the dataset
         db.addChanData @channel.id, @table, [@keyField, @valueField], [[key, value]]
         
     

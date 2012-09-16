@@ -16,6 +16,16 @@ exports.version     = '1.2'
 exports.description = 'Global base commands'
 exports.locked      = true
 
+exports.strings = {
+    # Help messages
+    'help-basic'    : 'For urgent help, use @1@. Otherwise, tweet @RavnTM'
+    'help-requested': 'SauceBot helpers have been alerted and should arrive soon.'
+    'help-incoming' : 'SauceBot helper @1@ incoming'
+    
+    # Misc messages
+    'math-invalid'  : 'Invalid expression: @1@'
+}
+
 io.module '[Base] Init'
 
 # Base module
@@ -67,7 +77,10 @@ class Base
                     user.name.toLowerCase(),
                     args.join ' '
                 ]]
-                bot.say "[Help] SauceBot admins have been alerted and should arrive soon."
+                if args.length > 0
+                    bot.say "[Help] " + @str('help-requested')
+                else
+                    bot.say "[Help] " + @str('help-basic', '!help <message>')
 
         # Test
         @channel.register this, "var", Sauce.Level.Mod,
@@ -83,7 +96,7 @@ class Base
                 try
                     bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm")
                 catch error
-                    bot.say "[Calc] Invalid expression: #{math}"
+                    bot.say "[Calc] " + @str('math-invalid', math)
                 
               
 

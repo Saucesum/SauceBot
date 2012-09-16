@@ -13,6 +13,20 @@ io    = require './ioutil'
 } = require './dto'
 
 
+# Preset strings
+exports.strings = {
+    'err-usage'             : 'Usage: @1@'
+    'err-unknown-block'     : 'Unknown block "@1@"'
+    'err-no-block-specified': 'No block specified'
+
+    'action-added'  : 'Added @1@.'
+    'action-removed': 'Removed @1@.'
+    'action-cleared': 'Cleared.'
+
+    'list-none'  : 'None'
+    'list-blocks': 'Blocks: @1@'
+}
+
 
 class Monument
     constructor: (@channel, @name, @blocks, @usage) ->
@@ -74,12 +88,12 @@ class Monument
         
 
     getMonumentState: ->
-        "Blocks: " + @getBlockString()
+        @str('list-blocks', @getBlockString())
         
 
     getBlockString: ->
         obtained = (block for block in @blocks when block.toLowerCase() in @obtained.get())
-        obtained.join(', ') or 'None'
+        obtained.join(', ') or @str('list-none')
 
 
     # !<name> - Print monument
@@ -92,31 +106,35 @@ class Monument
         idx   = @blocksLC.indexOf block
         
         unless (idx >= 0)
-            return bot.say "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
+            return @say bot, @str('err-unknown-block', block) + '. ' + @str('err-usage', @usage)
         
         @obtained.add block unless block in @obtained.get()
-        bot.say "[#{@name}] Added #{@blocks[idx]}."
+        @say bot, @str('action-added', @blocks[idx])
 
 
     # !<name> clear - Clear the monument
     cmdMonumentClear: (user, args, bot) ->
         @obtained.clear()
-        bot.say "[#{@name}] Cleared"
+        @say bot, @str('action-cleared')
 
 
     # !<name> remove <block> - Removes the block from the obtained-list
     cmdMonumentRemove: (user, args, bot) ->
         unless args[0]?
-            return bot.say "[#{@name}] No block specified. Usage: !#{@command} remove <block>"
+            return @say bot, @str('err-no-block-specified') + '. ' + @str('err-usage', '!' + @command + ' remove <block>')
         
         block = args[0].toLowerCase()
         idx   = @blocksLC.indexOf block
         
         unless (idx >= 0)
-            return bot.say "[#{@name}] Unknown block '#{block}'. Usage: #{@usage}"
+            return @say bot, @str('err-unknown-block', block)
         
         @obtained.remove block
-        bot.say "[#{@name}] Removed #{@blocks[idx]}."
+        @say bot, @str('action-removed', @blocks[idx])
+
+
+    say: (bot, msg) ->
+        bot.say '[' + @name + '] ' + msg
 
 
     handle: (user, msg, bot) ->

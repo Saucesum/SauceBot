@@ -37,8 +37,8 @@ os         = require 'os'
 
 Sauce      = require './sauce'
 
-varRE  = /\$\(([!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/
-varREg = /\$\(([!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/g
+varRE  = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/
+varREg = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/g
 
 pad = (num) ->
     if num < 10 then "0" + num else num
@@ -177,9 +177,21 @@ class Vars
             
 
     handle: (user, cmd, args, raw) ->
-        if /^\d+$/.test cmd
-            return (raw.split ' ')[cmd - 1] ? ''
+        
+        # Check for positional variables
+        if /^-?\d+?$/.test cmd
+            cmd = parseInt cmd, 10
             
+            if cmd < 0
+                cmd = (-cmd) - 1
+                # Negative index means from N to the end
+                return ((raw.split ' ')[cmd...] ? []).join ' '
+            else
+                # Positive index means only the Nth word
+                return (raw.split ' ')[cmd - 1] ? ''
+            
+        # Otherwise, either return the command,
+        # or handle it with the configured handler.
         return cmd unless handler = @handlers[cmd]
         handler user, args
         

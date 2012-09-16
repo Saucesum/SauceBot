@@ -63,6 +63,16 @@ sauce.on 'commercial', (data) ->
 sauce.on 'error', (data) ->
     io.error data.msg
     
+    
+# Channel listing [{name, id, status}, {name, id, status}, ...]
+sauce.on 'channels', (data) ->
+    for c in data
+        # c = {id, status, name, bot}
+        if c.status
+            break
+            # todo
+    
+    
 
 class Bot
     constructor: (@name, @password) ->
@@ -78,6 +88,7 @@ class Bot
         chan = new Channel cname, @name, @password
         @channels[lc] = chan
        
+        # Message handler - on normal channel messages
         chan.on 'message', (args) =>
             {from, message, op} = args
             
@@ -93,23 +104,33 @@ class Bot
                 user: from
                 msg : message
                 op  : op
-                
+        
+        # Private Message handler
         chan.on 'pm', (args) =>
             {from, message} = args
             io.irc 'PM', from, message
             pmlog.timestamp from, message
+            
+            sauce.emit 'pm',
+                user: from
+                msg : message
 
+        # Error message handler
         chan.on 'error', (msg) =>
             io.error "Error in channel #{@name}/#{cname}:"
             for key, val of msg
                 io.error "#{key.bold} = #{val}"
            
+
+        # Handler for connection established
         chan.on 'connected', =>
             io.socket "Connected to #{@name}/#{cname.bold}"
            
+        # Handler for connection closed
         chan.on 'disconnecting', =>
             io.socket "Disconnecting from #{@name}/#{cname.bold}"
            
+        # Handler for connection attempts
         chan.on 'connecting', =>
             io.debug "Connecting to #{@name}/#{cname.bold}..."
            

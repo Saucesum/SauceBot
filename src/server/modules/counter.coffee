@@ -18,6 +18,14 @@ exports.name        = 'Counter'
 exports.version     = '1.2'
 exports.description = 'Provides counters that can be set like commands.'
 
+exports.strings = {
+    'err-unknown-counter': 'Unknown counter "@1@". Create it with: @2@'
+    'err-not-changed'    : 'not changed'
+
+    'action-unset'  : '@1@ removed.'
+    'action-created': '@1@ created and set to @2@.'
+}
+
 io.module '[Counter] Init'
 
 # Counter module
@@ -140,7 +148,7 @@ class Counter
     cmdBadCounter: (user, commandString, bot) ->
         ctr = commandString[0]
 
-        bot.say "[Counter] Invalid counter '#{ctr}'. Create it with '!#{ctr} =0'"
+        bot.say "[Counter] " + @str('err-unknown-counter', ctr, '!' + ctr + ' =0')
         
 
     counterCheck: (ctr) ->
@@ -154,7 +162,7 @@ class Counter
                 @counters.add ctr, value
                 @addTrigger ctr
 
-                return "#{ctr} created and set to #{value}."
+                return @str('action-created', ctr, value)
 
             @counters.add ctr, value
             @counterCheck ctr
@@ -164,13 +172,13 @@ class Counter
         counter = @counters.get ctr
         
         @counters.add ctr, counter + value
-        @counterCheck(ctr) + (if (value is 0) then ' (not changed)' else '')
+        @counterCheck(ctr) + (if (value is 0) then ' (' + @str('err-not-changed') + ')' else '')
 
 
     counterUnset: (ctr) ->
         if @counters.get(ctr)?
             @counters.remove(ctr)
-            return "#{ctr} removed."
+            return @str('action-unset', ctr)
         
         
     handle: (user, msg, bot) ->

@@ -4,7 +4,7 @@ SauceBot is designed as a flexible chat bot, capable of interfacing with many di
 
 Client-Server Communication
 ---------------------------
-There is always one instance of the SauceBot server. This server communicates with SauceBot clients, which in turn communicate with various chat services. Client-server data communication is encoded with JSON. Each client represents one instance, or channel, of a chat service.
+There is always one instance of the SauceBot server. This server communicates with SauceBot clients, which in turn communicate with various chat services. Client-server data communication is encoded with JSON. Each client represents one instance of a chat service.
 
 ###Client Messages
 A client can send various messages to the server; in JSON, each of these messages takes the form
@@ -57,14 +57,66 @@ where `command` specifies the type of message being sent, and `data` is the payl
 }
 ```
 
-###Response Methods
-As mentioned above, the server provides a number of functions to the channel along with the message that it is handing off, listed as follows:
-* say - 
-* 
+###Server Responses
+As mentioned above, the server provides a number of functions to the `Channel` object in addition to the data received, so that the `Channel` can then respond appropriately to the client. These functions, listed with their arguments and the form of the data payload passed to the client, are as follows:
+* `say(channel, message)` is used to instruct the client to send a message to the underlying chat service, on behalf of the bot.
 
-Initialization
---------------
-Before all of this can happen though, everything must be initialized from the database. From `saucebot`, [`users`](src/server/users.coffee) and `channels` are called to load their data - respectively, the list of registered users and their associated permissions in each channel, and the channel data for each channel. The channel data is more complex - it not only includes information such as name, status, id, but each `Channel` object can also have modules associated with it.
+```json
+{
+    "chan": channel,
+    "msg": message
+}
+```
+`channel` is the channel to send the message to, and `message` is the actual message to be sent.
+* `ban(channel, user)` is used to have the client ban a given user from the channel.
+
+```json
+{
+    "chan": channel,
+    "user": user
+}
+```
+As usual, `channel` is the channel being operated on, and `user` is the user to ban from the channel.
+* `unban(channel, user)` is a complement to `ban`, used to remove a ban on a user in a given channel.
+
+```json
+{
+    "chan": channel,
+    "user": user
+}
+```
+Like `ban`, `channel` is the channel that the ban is to be lifted in, and `user` is the user being unbanned.
+* `timeout(channel, user, time)` asks the client to kick a user from a channel for a specified time.
+
+```json
+{
+    "chan": channel,
+    "user": user,
+    "time": time
+}
+```
+`channel` is of course the channel that the timeout is to take effect, `user` is the user being temporarily removed from the channel, and `time` is the time, in seconds, that the user cannot join the channel.
+* `clear(channel, user)` is simply a convenience method for `timeout(channel, user, 2)`.
+* `commercial(channel)` sends a message to the client that a commercial message should be displayed in the chat service.
+
+```json
+{
+    "chan": channel
+}
+```
+Here, `channel` is the channel that the commercial is to be displayed in.
+
+There is one other message that the server can send to the client - `error`. The function for sending error messages is not passed to the `Channel` objects, but a client must still be prepared to handle this message from the server. Typically, this message will only be emitted when an internal error occurs within the server. The data for `error` messages is formatted as follows:
+
+```json
+{
+    "msg": err
+}
+```
+`err` is just a string indicating the nature of the error to the client.
+
+###Client Implementation
+####TODO
 
 Modules
 -------

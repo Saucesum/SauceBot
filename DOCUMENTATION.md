@@ -5,12 +5,12 @@ SauceBot is designed as a flexible chat bot, capable of interfacing with many di
 Client-Server Communication
 ---------------------------
 There is always one instance of the SauceBot server. This server communicates with SauceBot clients, which in turn communicate with various chat services. Client-server data communication is encoded with JSON. Each client represents one instance, or channel, of a chat service. A client can send various messages to the server:
-* "msg" for messages
-* "pm" for private messages
-* "upd" for updates
-* "get" for requests from the client
+* `msg` for messages
+* `pm` for private messages
+* `upg` for update notifications
+* `get` for requests from the client
 
-"upd" and "get" are used in the web interface, and are covered elsewhere. "pm" is only handled in the case of a private message from staff at the moment and is simply logged by the server. This leaves "msg" - the main form of communication between the client and server. When a message is received from a client representing a specific channel, the SauceBot instance, defined in [saucebot](SauceBot/tree/development/src/server/saucebot.coffee), passes this message to [channels](SauceBot/tree/development/src/server/channels.coffee), along with the set of functions that can be used to respond to the client.
+`upd` and `get` are used in the web interface, and are covered elsewhere. `pm` handles private messages sent to the bot. This leaves `msg` - the main form of communication between the client and server. When a message is received from a client representing a specific channel, the SauceBot instance, defined in [saucebot](SauceBot/tree/development/src/server/saucebot.coffee), passes this message to [channels](SauceBot/tree/development/src/server/channels.coffee), along with the set of functions that can be used to respond to the client.
 
 Initialization
 --------------
@@ -24,18 +24,22 @@ Although `module` facilitates the creation of module instances, it does not actu
 
 In summary, the skeleton of a module should be as follows:
 ```coffeescript
-    class MyModule
-        constructor: (...) ->
-            # This will typically store the channel instance,
-            # but this is not a requirement
-        load: ->
-            ...
-        unload: ->
-            ...
-        handle: (user, message, bot) ->
-            ...
-    exports.New = (channel) ->
-        new MyModule ...
+exports.name        = 'MyModule'
+exports.description = 'Basic module skeleton'
+exports.version     = '1.0'
+
+class MyModule
+    constructor: (...) ->
+        # This will typically store the channel instance,
+        # but this is not a requirement
+    load: ->
+        ...
+    unload: ->
+        ...
+    handle: (user, message, bot) ->
+        ...
+exports.New = (channel) ->
+    new MyModule ...
 ```
 Message Handling
 ================

@@ -7,7 +7,7 @@ Client-Server Communication
 There is always one instance of the SauceBot server. This server communicates with SauceBot clients, which in turn communicate with various chat services. Client-server data communication is encoded with JSON. Each client represents one instance, or channel, of a chat service. A client can send various messages to the server:
 * `msg` for messages
 * `pm` for private messages
-* `upg` for update notifications
+* `upd` for update notifications
 * `get` for requests from the client
 
 `upd` and `get` are used in the web interface, and are covered elsewhere. `pm` handles private messages sent to the bot. This leaves `msg` - the main form of communication between the client and server. When a message is received from a client representing a specific channel, the SauceBot instance, defined in [`saucebot`](src/server/saucebot.coffee), passes this message to [`channels`](src/server/channels.coffee), along with the set of functions that can be used to respond to the client.
@@ -47,9 +47,9 @@ In order to implement its functionality, a module will typically require the coo
 
 Triggers
 --------
-A trigger is used for matching chat messages that take the form of `!<command> [options]*`. They are constructed via `trigger.buildTrigger(module, command, opLevel, execute)`, with `module` being the module creating the trigger; `command`, the base of the command for matching purposes; `opLevel`, a level from [`sauce.Level`](src/server/sauce.coffee), indicating the minimum permission level of the user who sent the message in order for any further processing to occur; and `execute(user, arguments, bot)`, a function that runs if the trigger conditions match, taking as parameters the user who sent the command, the arguments to the command, and the bot responsible for the message.
+A trigger is used for matching chat messages that take the form of `!<command> [options]*`. They are constructed via `trigger.buildTrigger(module, command, opLevel, execute)`, with `module` being the module creating the trigger; `command`, the base of the command for matching purposes; `opLevel`, a level from [`sauce.Level`](src/server/sauce.coffee), indicating the minimum permission level of the user who sent the message in order for any further processing to occur; and `execute(user, args, bot)`, a function that runs if the trigger conditions match, taking as parameters the user who sent the command, the arguments to the command, and the bot responsible for the message.
 
-Triggers are designed such that in the case of commands with multiple forms, for example, `!timer` and `!timer start`, only the trigger for `!timer start` will execute when someone sends the message "!timer start 123". The rule for trigger matching is that, if multiple triggers match a given message, the trigger with the most "parts" to it and a higher required permission level will execute over the others.
+Triggers are designed such that in the case of commands with multiple forms, for example, `!timer` and `!timer start`, only the trigger for `!timer start` will execute when someone sends the message `"!timer start 123"`. The rule for trigger matching is that, if multiple triggers match a given message, the trigger with the most "parts" to it and a higher required permission level will execute over the others.
 
 As an example, consider a command that enables users to set a timer to end after a given time, to stop a timer that has already been set, to check the status of a given timer, and to see all running timers. Suppose also that only moderator level users (`sauce.Level.Mod`) can start and stop timers. The following triggers would capture these messages:
 * `!timer` and `!timer <name>` would be captured via
@@ -77,6 +77,6 @@ In many case, it may be useful to store variables, which may even be dynamically
 
 Consider a variable `$(time)`. A module could register this variable via the command
 ```coffeescript
-Vars.register 'time', (user, args) -> # Return current time
+Vars.register 'time', (user, args) -> ... # Return current time
 ```
 Any message being processed by this `Vars` instance would have every occurrence of `$(time)` replaced with the time, as calculated by our handler function. This could allow custom messages (see [`Commands`](src/server/modules/commands.coffee)) to have embedded variables in them, and opens many new possibilities for interactivity.

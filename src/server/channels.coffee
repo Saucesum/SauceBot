@@ -196,6 +196,8 @@ class Channel
 
     # Handles a message by passing it on to all loaded modules and tirggers.
     # 
+    # * data: the contents of the message
+    # * bot: the bot delivering the message
     handle: (data, bot) ->
         user = @getUser data.user, data.op
         # Cache the op level of the user from the data we get

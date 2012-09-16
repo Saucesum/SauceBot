@@ -17,26 +17,41 @@ mod   = require './module'
 
 util  = require 'util'
 
-# Module names
+# The names of all of the available modules
 moduleNames = Object.keys mod.MODULES
 
-# Channel list - indexed by channel name
+# All of the channels currently loaded, indexed by their name in lowercase
 channels = {}
 
-# Name list for quick chanid -> channel name lookup
+# A convenience map of channel IDs to their respective channel name, again in
+# lowercase
 names = {}
 
-# Returns a channel by its name in lowercase
+# Returns the channel with the given lowercase name, i.e., the argument to this
+# function must be lowercase to find anything.
+#
+# * name: the name of the channel to look up
+# = the located channel, or undefined if it doesn't exist
 exports.getByName = (name) ->
     channels[name]
     
 
-# Returns a channel by its ChanID
+# Returns the channel with the given channel ID.
+#
+# * id: the id of the channel to look up
+# = the located channel, or undefined if it doesn't exist
 exports.getById = (id) ->
     exports.getByName names[id]
 
+# Returns all of the loaded channels, indexed by their lowercase name.
+#
+# = the map of all channel names to channel objects
 exports.getAll = -> channels
 
+# A Channel represents one channel (as in Twitch) or server (as in Minecraft)
+# for the bot to monitor. Each channel can have independent modules and
+# commands, and even the bot can appear with a different name in each channel.
+# Localization can also be done on a per-channel basis. 
 class Channel
     constructor: (data) ->
         @id     = data.chanid
@@ -44,12 +59,14 @@ class Channel
         @status = data.status
         @bot    = data.bot
     
+        # 
         @usernames = {}
     
         @modules = []
         @triggers = []
         @loadChannelModules()
         
+        # Channel specific vars
         @vars = new Vars @
         
         # Channel modes configuration
@@ -68,18 +85,20 @@ class Channel
             return module if module.name is moduleName
     
     
-    # Loads a module by its name and returns the module instance.
+    # Loads a module by its name and returns the module instance. If the module
+    # has already been loaded, it is just reloaded.
     #
-    # Note: This *only* loads unloaded modules.
-    #       Already loaded modules get returned as-is.
+    # * moduleName: the name of the module to load
+    # = the module that was either loaded or reloaded
     loadModule: (moduleName) ->
         module = @getLoadedModule moduleName
         
         if module?
+            # The module instance already exists, so just reload it 
             module.load()
         else
             try
-                # Initialize and load the module
+                # Create a new instance of the module and then load it
                 module = mod.instance moduleName, this
                 module.load()
             catch error
@@ -87,19 +106,21 @@ class Channel
         
         return module
         
-    
+    # Reloads a module with a given name. This function is pretty much
+    # identical to @loadModule.
+    #
+    # * moduleName: the module to reload
     reloadModule: (moduleName) ->
         io.debug "Attempting to reload module #{moduleName}..."
         @loadModule moduleName
         
     
-    # Attempts to load all modules associated with this channel.
-    #
-    # Calling this multiple times only loads each modules once,
-    # unless they were unloaded first.
-    #
-    # To unload a module, remove its entry from the database
-    # and call this again.
+    # Attempts to load all modules associated with this channel. Modules that
+    # have already been loaded will not be reloaded, but those that were not
+    # found in this load from the database will be unloaded, i.e., after a call
+    # to this function, only those modules specified for this channel in the
+    # database will be available. Therefore, to unload a module, remove its
+    # entry from the database and then call this function.
     loadChannelModules: ->
         oldNames = ( module.name for module in @modules )
         newNames = []
@@ -117,16 +138,29 @@ class Channel
             io.debug "Done loading #{@modules.length} modules for #{@name}"
             
             
+    # Unloads a module with a given name by calling the module's unload()
+    # function and then removing it from the list of loaded modules.
+    #
+    # * module: the module to unload
     unloadModule: (module) ->
         module.unload()
         @modules.splice @modules.indexOf(module), 1
             
-            
-    # Returns a {name, op}-object for the specified user.
+    # Fetches any available data about a user given a {username, oplevel} pair.
+    # The database is first checked to see if the user is registered, in which
+    # case that data is returned (except that the maximum of the provided and
+    # the database op levels is used). If the username matches the owner of the
+    # channel, then the op level is set to the Owner level. If neither of these
+    # cases are true, then a generic user object with an op level reflecting
+    # the provided level is returned.
     #
-    # If op is passed as an argument, it is used instead of
-    # the user's moderator level for the channel.
+    # * username: the username of the user to look up
+    # * op: the assumed op level of the user being requested
+    # = an object of the form {name, op, db}, corresponding to the name of the
+    #   user, the op level of the user, and whether the data on the user was
+    #   found in the database
     getUser: (username, op) ->
+        # Set the op level to 0 if it's not a number
         op or= 0
         
         chan = @id
@@ -154,25 +188,33 @@ class Channel
         # Otherwise just return their IRC op level
         return {
             name: username
+            # Just in case op is special, we make sure it's 1 or 0
             op  : if op then 1 else 0
             db  : false
         }
 
 
-    # Handles a message by passing it on to all loaded modules.
+    # Handles a message by passing it on to all loaded modules and tirggers.
+    # 
+    # * data: the contents of the message
+    # * bot: the bot delivering the message
     handle: (data, bot) ->
         user = @getUser data.user, data.op
+        # Cache the op level of the user from the data we get
         @usernames[user.name.toLowerCase()] = user.op
         
         msg = data.msg
         
         for trigger in @triggers
-            # check for first match that the user is authorized to use
+            # Check for first match that the user is authorized to use, also
+            # taking into account whether the channel is in mod-only mode
             if trigger.test(msg) and (user.op >= trigger.oplevel and (!@isModOnly() or user.op >= Sauce.Level.Mod)) 
                 args = trigger.getArgs msg
                 trigger.execute user, args, bot
+                # We only want to run one trigger, so break here
                 break
-                
+        
+        # Now pass the message on the our modules        
         for module in @modules
             module.handle user, msg, bot
 
@@ -202,7 +244,9 @@ class Channel
 
         return true
 
-
+    # Removes the given triggers from this channel.
+    #
+    # * triggersToRemove: surprisingly, the triggers to remove
     unregister: (triggersToRemove...) ->
         @triggers = (elem for elem in @triggers when not (elem in triggersToRemove))
 
@@ -219,15 +263,25 @@ class Channel
         results
         
         
-    # Returns whether quiet mode is enabled
+    # Returns whether quiet mode is enabled.
+    #
+    # = whether quiet mode is active
     isQuiet: ->
         @modes.get 'quiet'
     
-    # Returns whether mod-only mode is enabled
+    # Returns whether mod-only mode is enabled. Because mod-only mode is a
+    # subset of quiet mode, this will also return true if quiet mode is active.
+    #
+    # = whether mod-only mode or quiet mode is active
     isModOnly: ->
         @modes.get('modonly') or @isQuiet()
         
     
+    # Returns whether a user with a given name has been "seen", i.e., they have
+    # sent a message, or are registered, in this channel.
+    #
+    # * name: the name to look up
+    # = whether the user with that name is known by this channel
     hasSeen: (name) ->
         name.toLowerCase() in Object.keys @usernames
 
@@ -275,7 +329,11 @@ class Channel
 
         return value
 
-# Handles a message in the appropriate channel instance
+# Handles a message in the appropriate channel instance.
+#
+# * chan: the name of the channel receiving the message
+# * data: the data of the message
+# * bot: the bot instance responsible for delivering the message
 exports.handle = (chan, data, bot) ->
     channel = channels[chan]
     if channel?
@@ -284,7 +342,10 @@ exports.handle = (chan, data, bot) ->
         io.debug "No such channel: #{chan}"
 
 
-# Loads the channel list
+# Loads the channel list from the database, running a callback on completion.
+#
+# * finished: a callback taking the map of channel names to channels as its
+#             only argument 
 exports.load = (finished) ->
     newChannels = {}
     newNames    = {}
@@ -294,17 +355,17 @@ exports.load = (finished) ->
         name   = chan.name.toLowerCase()
         status = chan.status
         
-        # If a channel with that ID is loaded, update it.
+        # If a channel with that ID is loaded, update it
         if oldName = names[id]
             channel = channels[oldName]
 
-            # Update channel name, status, botname and modules.
+            # Update channel name, status, botname and modules
             channel.status = status
             channel.name   = chan.name
             channel.bot    = chan.bot
             channel.loadChannelModules()
             
-        # Otherwise, set up a new channel.
+        # Otherwise, set up a new channel
         else
             channel = new Channel chan
             

@@ -6,7 +6,9 @@ io = require '../ioutil'
 {DTO} = require './DTO'
      
 # Data Transfer Object for hashes
-# Hashes are effectively mappings of one column in the table to another, e.g., table (chanid, x, y) with rows (1, 1, "a") and (1, 2, "b") would be converted to an object {1 : "a", 2 : "b"}.
+# Hashes are effectively mappings of one column in the table to another, e.g.,
+# table (chanid, x, y) with rows (1, 1, "a") and (1, 2, "b") would be
+# converted to an object {1 : "a", 2 : "b"}.
 class HashDTO extends DTO
     constructor: (channel, table, @keyField, @valueField) ->
         super channel, table

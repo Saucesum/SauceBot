@@ -60,7 +60,8 @@ class Poll
         for pollName, pollOptions of @pollDTO.get()
             @polls[pollName] = pollOptions.split /\s+/
             
-       
+    # Clears all votes and stops any active polls in this module. This is also
+    # used for initialization of the module.   
     reset: ->
         @activePoll = null
         @hasVoted   = []
@@ -129,6 +130,10 @@ class Poll
         
         
     getResults: ->
+        # Take each key (option) in @votes, then sort these keys on their
+        # values in @votes, then for each of these sorted keys, get the name of
+        # the key and the corresponding vote count, and finally join it with
+        # commas. That was easy.
         ("#{@polls[@activePoll][key]}: #{@getScore key}" for key in ((key for val, key in @votes).sort (a, b) =>
             @votes[b] - @votes[a])).join ', '
        

@@ -41,13 +41,18 @@ class MyModule
 exports.New = (channel) ->
     new MyModule ...
 ```
+
+Localization
+------------
+Each module also has the option to export its own custom string values which can be localized on a per-channel basis, not only for language reasons, but also to make each channel fun and unique and sparkles. A module that exports a `strings` map for string key-names to default values will have these values inserted into the string table, under a default entry. Each channel can then provide these strings to modules via the `getString(module, key, args...)` function, or a module can access its own localized strings with its `str(key, args...)` function. In both cases, the `key` is the string used to identify the string being localized, and args are optional values that can be substituted in sequentially for values of the form `"@<number>@"`. Channel administrators can modify these strings from the default values, and `getString` will return these custom strings when available.
+
 Message Handling
 ================
 In order to implement its functionality, a module will typically require the cooperation of its channel. Modules have two ways of receiving data from the channel - they can wait for data on the `handle(user, message, bot)` function, or they can register a listener with the channel via the `Channel.register(trigger)` function. If the direct option of listening for data is taken, the module will handle all pattern matching, parsing, etc., on its own. In the case of registering a listener, however, a [`Trigger`](src/server/trigger.coffee) object is used.
 
 Triggers
 --------
-A trigger is used for matching chat messages that take the form of `!<command> [options]*`. They are constructed via `trigger.buildTrigger(module, command, opLevel, execute)`, with `module` being the module creating the trigger; `command`, the base of the command for matching purposes; `opLevel`, a level from [`sauce.Level`](src/server/sauce.coffee), indicating the minimum permission level of the user who sent the message in order for any further processing to occur; and `execute(user, args, bot)`, a function that runs if the trigger conditions match, taking as parameters the user who sent the command, the arguments to the command, and the bot responsible for the message.
+A trigger is used for matching chat messages that take the form of `!<command> [options]*`. They are constructed via a call by the module to the channel's `register(args...)` function, which uses those arguments to call `trigger.buildTrigger(module, command, opLevel, execute)`, with `module` being the module creating the trigger; `command`, the base of the command for matching purposes; `opLevel`, a level from [`sauce.Level`](src/server/sauce.coffee), indicating the minimum permission level of the user who sent the message in order for any further processing to occur; and `execute(user, args, bot)`, a function that runs if the trigger conditions match, taking as parameters the user who sent the command, the arguments to the command, and the bot responsible for the message.
 
 Triggers are designed such that in the case of commands with multiple forms, for example, `!timer` and `!timer start`, only the trigger for `!timer start` will execute when someone sends the message `"!timer start 123"`. The rule for trigger matching is that, if multiple triggers match a given message, the trigger with the most "parts" to it and a higher required permission level will execute over the others.
 

@@ -2,6 +2,20 @@ SauceBot Structure
 ==================
 SauceBot is designed as a flexible chat bot, capable of interfacing with many different chat services, while still providing a uniform interface to them all.
 
+Table of Contents
+----------------
+* **[Client-Server Communication](#client-server-communication)**
+   * [Client Messages](#client-messages)
+   * [Server Responses](#server-responses)
+* **[Configuration](#configuration)**
+* **[Modules](#modules)**
+    * [Requirements](#requirements)
+    * [Localization](#localization)
+    * [Other Options](#other-options)
+* **[Message Handling](#message-handling)**
+    * [Triggers](#triggers)
+    * [Message Variables](#message-variables)
+
 Client-Server Communication
 ---------------------------
 There is always one instance of the SauceBot server. This server communicates with SauceBot clients, which in turn communicate with various chat services. Client-server data communication is encoded with JSON. Each client represents one instance of a chat service.

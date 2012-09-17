@@ -24,10 +24,10 @@
 #
 # Examples:
 #
-# !greetme : Hello, there, ${name}! Welcome to ${channel}!
-# !now     : The current time for ${channel} is ${time US/Eastern}
-# !dir     : You should go... ${rand Left, Right, Up, Down}!
-# !bot     : [Bot] Running ${botname} version ${botversion}
+# !greetme : Hello, there, $(name)! Welcome to $(channel)!
+# !now     : The current time for $(channel) is $(time US/Eastern)
+# !dir     : You should go... $(rand Left, Right, Up, Down)!
+# !bot     : [Bot] Running $(botname) version $(botversion)
 #
 
 
@@ -75,39 +75,40 @@ class Vars
     constructor: (@channel) ->
         
         @handlers =
-            botname   : (user, args) -> Sauce.Name
-            botversion: (user, args) -> Sauce.Version
+            botname   : (user, args, cb) -> cb Sauce.Name
+            botversion: (user, args, cb) -> cb Sauce.Version
             
-            name      : (user, args) -> user.name
-            channel   : (user, args) => @channel.name
+            name      : (user, args, cb) -> cb user.name
+            channel   : (user, args, cb) => cb @channel.name
             
-            col       : (user, args) -> if args? and args[0]? then colors[args[0].toUpperCase()] else colors['WHITE']
+            col       : (user, args, cb) -> cb (if args? and args[0]? then colors[args[0].toUpperCase()] else colors['WHITE'])
         
-            rand      : (user, args) ->
-                return 0 unless args
+            rand      : (user, args, cb) ->
+                return cb() unless args
                 
                 switch args.length
                         when 1
                             a = parseInt(args[0], 10)
-                            ~~ (Math.random() * a)
+                            return cb ~~ (Math.random() * a)
                         when 2
                             a = parseInt(args[0], 10)
                             b = parseInt(args[1], 10)
-                            ~~ (Math.random() * (b - a)) + a
+                            return cb ~~ (Math.random() * (b - a)) + a
                         else
                             idx = ~~ (Math.random() * args.length)
-                            args[idx]
+                            return cb args[idx]
                         
             
-            time      : (user, args) ->
+            time      : (user, args, cb) ->
                 now = new time.Date()
+                tz = now.getTimezone() # TODO or whatever the method is called
                 try
                     now.setTimezone args[0]
                 catch error
                     
                 str = formatTime now
-                now.setTimezone 'CET'
-                return str
+                now.setTimezone (tz ? 'Europe/Oslo')
+                cb str
                     
                     
     register: (cmd, handler) ->
@@ -176,7 +177,7 @@ class Vars
             message = cb m, cmd, args
             
 
-    handle: (user, cmd, args, raw) ->
+    handle: (user, cmd, args, raw, cb) ->
         
         # Check for positional variables
         if /^-?\d+?$/.test cmd
@@ -192,8 +193,8 @@ class Vars
             
         # Otherwise, either return the command,
         # or handle it with the configured handler.
-        return cmd unless handler = @handlers[cmd]
-        handler user, args
+        return cb() unless handler = @handlers[cmd]
+        handler user, args, cb
         
     strip: (msg) ->
         msg.replace varREg, ''

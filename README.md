@@ -133,10 +133,11 @@ where `err` is just a string indicating the nature of the error to the client. `
 {
     "id": id,
     "name": name,
-    "status": status
+    "status": status,
+    "bot": botname
 }
 ```
-where `id` is the unique identifier used in the database to distinguish the channel, `name` is the name of the channel, and `status` is the status of the channel, either `1` to indicate that the channel is enabled or `0` for it being disabled.
+where `id` is the unique identifier used in the database to distinguish the channel, `name` is the name of the channel, `status` is the status of the channel, either `1` to indicate that the channel is enabled or `0` for it being disabled, and `botname` is the name of the bot responsible for that channel.
 
 Configuration
 -------------

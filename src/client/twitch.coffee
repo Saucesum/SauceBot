@@ -12,11 +12,6 @@ log        = require '../common/logger'
 {Channel}  = require './saucechan'
 
 
-# Set up logging
-logger = new log.Logger logging.root, "jtv.log"
-pmlog  = new log.Logger logging.root, "pm.log"
-
-
 # Twitch Message Interface connection handler class
 #
 #  List of possible emits:
@@ -74,10 +69,11 @@ class Twitch
         account = @getAccount bot
         unless account?
             return @emit 'error', 'join', 'No such bot-account!'
-            
+        idx = account.name + '::' + chan.toLowerCase()
+        return if @connections[idx]
         channel = @createChannel chan, account
         channel.connect()
-        @connections[account.name + '::' + chan.toLowerCase()] = channel
+        @connections[idx] = channel
         
         
     # Removes a connection from the specified channel using the specified bot.
@@ -91,7 +87,10 @@ class Twitch
         
         @connections[idx]?.part()
         delete @connections[idx]
-                    
+    
+    # Completely shuts down this Twitch instance.
+    close: ->
+        conn.part() for conn in @connections
     
     # Creates a new Channel object and connects all handlers.
     # * chan: Channel name.
@@ -101,24 +100,55 @@ class Twitch
         channel = new Channel chan, account.name, account.pass
         
         channel.on 'message', (data) =>
-            {from, message, op} = data
+            {from, op, message} = data
+            @emit 'message', chan, from, op, message
             
         channel.on 'pm', (data) =>
             {from, message} = data
+            @emit 'pm', from, message
             
         channel.on 'error', (data) =>
-            @emit 'error', 'Channel/' + chan, "#{key}: #{val}" for key, val of data  
+            {message} = data
+            @emit 'error', chan, message
         
         channel.on 'connected', =>
-            1 # ...
+            @emit 'connected', chan
             
         channel.on 'connecting', =>
-            1 # ...
+            @emit 'connecting', chan
             
         channel.on 'disconnecting', =>
-            1 # ...
+            @emit 'disconnecting', chan
             
         return channel
+    
+    getAccounts: ->
+        (account for account of accounts)
+    
+    getChannels: ->
+        (chan for chan of @connections)
+    
+    getShortChannels: ->
+        (chan.name for chan in @connections)
+    
+    # These functions ignore the possibility that there can be two bots in one
+    # channel. This is probably okay.
+        
+    say: (chan, message, logger) ->
+        # Some people just don't appreciate beauty when they see it
+        # (@connections[test] for account of accounts when @connections[test = "#{account}::#{chan.toLowerCase()}"])?[0]?.say message
+        for account of accounts when (conn = connections["#{account.name}::#{chan.toLowerCase()}"])?
+            logger?.timestamp 'SAY', chan, msg
+            conn.say msg
+            io.irc chan, account, msg.cyan
+            return
+        
+    sayRaw: (chan, message, logger) ->
+        for account of accounts when (con = connections["#{account.name}::#{chan.toLowerCase()}"])?
+            logger?.timestamp 'RAW', chan, msg
+            conn.sayRaw msg
+            io.irc chan, account, msg.red
+            return
         
 
 exports.Twitch = Twitch

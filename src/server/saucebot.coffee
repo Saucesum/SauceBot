@@ -49,6 +49,7 @@ updateClientChannels = (socket) ->
             id    : e.id
             name  : e.name
             status: e.status
+            bot   : e.bot
         }
     
     if socket?

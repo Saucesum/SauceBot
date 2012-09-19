@@ -23,11 +23,14 @@ HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 
 logger = new log.Logger logging.root, "client.log"
 
+# Connection to the SauceBot server
 sauce = new Client HOST, PORT
 
-twitch = new Twitch
+# Connection manager for Twitch chats
+twitch = new Twitch logger
 
-for password, username in accounts
+# Register all bot accounts for use
+for username, password of accounts
     twitch.addAccount username, password
 
 # Add handlers for messages from Twitch
@@ -70,36 +73,27 @@ twitch.on 'disconnecting', (chan) ->
 
 sauce.on 'say', (data) ->
     {chan, msg} = data
-    twitch.say chan, msg, logger
+    twitch.say chan, msg
 
 sauce.on 'ban', (data) ->
     {chan, user} = data
-    console.log "/ban #{user}"
-    twitch.sayRaw chan, "/ban #{user}", logger
+    twitch.sayRaw chan, "/ban #{user}"
 
 sauce.on 'unban', (data) ->
     {chan, user} = data
-    console.log "/unban #{user}"
-    twitch.sayRaw chan, "/unban #{user}", logger
+    twitch.sayRaw chan, "/unban #{user}"
 
 sauce.on 'timeout', (data) ->
     {chan, user, time} = data
     time ?= 600
-    console.log "/timeout #{user} #{time}"
-    twitch.sayRaw chan, "/timeout #{user} #{time}", logger
+    twitch.sayRaw chan, "/timeout #{user} #{time}"
 
 sauce.on 'commercial', (data) ->
     {chan} = data
     twitch.say chan, "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
-    twitch.sayRaw chan, '/commercial', logger
+    twitch.sayRaw chan, '/commercial'
 
 sauce.on 'channels', (channels) ->
-    # I suppose this is unnecessary
-    # twitch.part chan.name, chan.bot for chan in channels when "#{chan.name.toLowerCase()}::#{chan.bot.toLowerCase()}" in twitch.getChannels and not chan.status
-    # twitch.join chan.name, chan.bot for chan in channels when not "#{chan.name.toLowerCase()}::#{chan.bot.toLowerCase()}" in twitch.getChannels and chan.status
-    
-    # Twitch checks whether channels are connected for us already, so we
-    # probably don't need to check on our own
     twitch.part chan.name, chan.bot for chan in channels when not chan.status
     twitch.join chan.name, chan.bot for chan in channels when chan.status
  
@@ -112,17 +106,12 @@ currentBot = 'SauceBot'
 
 term = new Term currentBot
 
-term.on 'part', [twitch.getShortChannels], (chan) ->
-    twitch.part chan, currentBot
-   
-term.on 'join', [true], (chan) ->
-    twitch.join chan, currentBot
 
 term.on 'say', [twitch.getShortChannels, true], (chan, msg) ->
     twitch.sayRaw chan, msg, logger
     
 term.on 'list', [], ->
-    console.log ("#{bot.underline.bold.blue}: #{chan.magenta}" for channel in twitch.getChannels() when [bot, chan] = channel.split("::")).join '\n'
+    console.log "Channel list:\n\t".bold.blue + twitch.getShortChannels().join(", ")
     
 term.on 'use', [twitch.getAccounts], (bot) ->
     io.debug "Switched to #{bot.bold}"
@@ -135,9 +124,6 @@ term.on 'close', [], ->
         process.exit()
     , 5000
 
-# Start it all up    
 
-sauce.emit 'get',
-    cookie : 'OMNOMNOM',
-    chan   : '4',
-    type   : 'Channels'
+# Register with the server as a chat client by requesting a channel list
+sauce.emit 'get', { type: 'Channels' }

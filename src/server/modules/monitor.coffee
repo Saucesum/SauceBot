@@ -2,6 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
+spam  = require '../spamlogger'
 
 io    = require '../ioutil'
 log   = require '../../common/logger'
@@ -19,7 +20,11 @@ exports.strings = {
 
 io.module '[Monitor] Init'
 
+# Mentions to easily find references to "Ravn", "SauceBot", etc.
 mentions = new log.Logger Sauce.Path, "mentions.log"
+
+# Load the spam lists
+spam.reload()
 
 class Monitor
     constructor: (@channel) ->
@@ -53,7 +58,8 @@ class Monitor
                 switch args[0]
                     when 'count' then Object.keys(@users).length
                     when 'rand'  then @getRandomUser()
-                    else 'undefined' 
+                    when 'random' then @getRandomUser()
+                    else '$(error: use count or rand)'
 
 
     unload:->
@@ -77,6 +83,7 @@ class Monitor
     handle: (user, msg, bot) ->
         @writelog user, msg
         @users[user.name] = 1
+        spam.run @channel.id, user.name, msg
 
 
 exports.New = (channel) ->

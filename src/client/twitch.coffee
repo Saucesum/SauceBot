@@ -70,6 +70,7 @@ class Twitch
             return @emit 'error', 'join', 'No such bot-account!'
 
         idx = account.name + '::' + chan.toLowerCase()
+        io.debug "Joining: #{idx}"
         return if @connections[idx]
 
         channel = @createChannel chan, account
@@ -127,30 +128,30 @@ class Twitch
 
     
     getAccounts: ->
-        (account for account of accounts)
+        (account for account of @accounts)
 
     
     getChannels: ->
-        (chan for chan of @connections)
+        (chan for _, chan of @connections)
 
     
     getShortChannels: ->
-        (chan.name for chan in @connections)
+        (chan.name for _, chan of @connections)
    
  
-    say: (chan, message) ->
-        for account of accounts when (conn = connections["#{account.name}::#{chan.toLowerCase()}"])?
+    say: (chan, msg) ->
+        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
             @logger?.timestamp 'SAY', chan, msg
             conn.say msg
-            io.irc chan, account, msg.cyan
+            io.irc conn.name, account.name, msg.cyan
             return
 
         
-    sayRaw: (chan, message) ->
-        for account of accounts when (con = connections["#{account.name}::#{chan.toLowerCase()}"])?
+    sayRaw: (chan, msg) ->
+        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
             @logger?.timestamp 'RAW', chan, msg
             conn.sayRaw msg
-            io.irc chan, account, msg.red
+            io.irc conn.name, account.name, msg.red
             return
         
 

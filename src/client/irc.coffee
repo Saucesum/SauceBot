@@ -52,6 +52,10 @@ class SauceIRC
         @bot.say @channel, message
 
 
+    send: (code, args...) ->
+        @bot.send code, args...
+
+
     isCached: (message) ->
         now = io.now()
         if @sinceLast(now, DELAY) or (@sinceLast(now, REPEAT_DELAY) and (message is @lastMessage))

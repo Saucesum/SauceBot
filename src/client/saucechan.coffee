@@ -25,6 +25,11 @@ class Channel
             @emit 'error', message
             
         @irc.on 'motd' , (motd) =>
+            @irc.send 'JTVROOMS', @irc.channel
+            setTimeout =>
+                @irc.send 'WHO', @irc.channel
+            , 3000
+
             @emit 'connected'
             
         @irc.on 'names', (channel, nicks) =>

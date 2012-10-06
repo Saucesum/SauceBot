@@ -7,7 +7,7 @@ io    = require '../ioutil'
 request = require 'request'
 util    = require 'util'
 
-{ConfigDTO, HashDTO} = require '../dto' 
+{ConfigDTO, HashDTO} = require '../dto'
 
 
 # Module description
@@ -98,7 +98,7 @@ class LastFM
             track = data.recenttracks.track
             track = track[0] if track[0]?
             
-            artist = track.artist['#text']
+            artist = track.artist['#text'] ? track.artist["name"]
             track  = track.name
             
             return "#{artist} - #{track}"

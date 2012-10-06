@@ -12,18 +12,13 @@ log        = require '../common/logger'
 {Channel}  = require './saucechan'
 
 
-# Set up logging
-logger = new log.Logger logging.root, "jtv.log"
-pmlog  = new log.Logger logging.root, "pm.log"
-
-
 # Twitch Message Interface connection handler class
 #
 #  List of possible emits:
 #  * error(source, reason)
 #
 class Twitch
-    constructor: ->
+    constructor: (@logger) ->
         # Accounts: {username: {name, pass}}
         @accounts = {}
         
@@ -71,13 +66,16 @@ class Twitch
     # * bot: Bot name to use. Case-insensitive.
     # Note: If no such bot exists, an error is emitted.
     join: (chan, bot) ->
-        account = @getAccount bot
-        unless account?
+        unless (account = @getAccount bot)?
             return @emit 'error', 'join', 'No such bot-account!'
-            
+
+        idx = account.name + '::' + chan.toLowerCase()
+        io.debug "Joining: #{idx}"
+        return if @connections[idx]
+
         channel = @createChannel chan, account
         channel.connect()
-        @connections[account.name + '::' + chan.toLowerCase()] = channel
+        @connections[idx] = channel
         
         
     # Removes a connection from the specified channel using the specified bot.
@@ -91,7 +89,13 @@ class Twitch
         
         @connections[idx]?.part()
         delete @connections[idx]
-                    
+
+    
+    # Completely shuts down this Twitch instance.
+    close: ->
+        conn.part() for conn in @connections
+        @connections = []
+
     
     # Creates a new Channel object and connects all handlers.
     # * chan: Channel name.
@@ -101,24 +105,54 @@ class Twitch
         channel = new Channel chan, account.name, account.pass
         
         channel.on 'message', (data) =>
-            {from, message, op} = data
+            {from, op, message} = data
+            @emit 'message', chan, from, op, message
             
         channel.on 'pm', (data) =>
             {from, message} = data
+            @emit 'pm', from, message
             
         channel.on 'error', (data) =>
-            @emit 'error', 'Channel/' + chan, "#{key}: #{val}" for key, val of data  
+            @emit 'error', chan, ("#{key}: #{val}" for key, val of data).join(', ')
         
         channel.on 'connected', =>
-            1 # ...
+            @emit 'connected', chan
             
         channel.on 'connecting', =>
-            1 # ...
+            @emit 'connecting', chan
             
         channel.on 'disconnecting', =>
-            1 # ...
+            @emit 'disconnecting', chan
             
         return channel
+
+    
+    getAccounts: ->
+        (account for account of @accounts)
+
+    
+    getChannels: ->
+        (chan for _, chan of @connections)
+
+    
+    getShortChannels: ->
+        (chan.name for _, chan of @connections)
+   
+ 
+    say: (chan, msg) ->
+        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
+            @logger?.timestamp 'SAY', chan, msg
+            conn.say msg
+            io.irc conn.name, account.name, msg.cyan
+            return
+
+        
+    sayRaw: (chan, msg) ->
+        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
+            @logger?.timestamp 'RAW', chan, msg
+            conn.sayRaw msg
+            io.irc conn.name, account.name, msg.red
+            return
         
 
 exports.Twitch = Twitch

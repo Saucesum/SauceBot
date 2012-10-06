@@ -67,6 +67,18 @@ class JTV
             (user,args,bot) =>
                 @cmdTitle user, args, bot
         
+        @channel.vars.register 'jtv', (user, args, cb) =>
+            usage = '$(jtv (game|viewers|views|title)'
+            unless args[0]?
+                cb usage
+            else
+                switch args[0]
+                    when 'game'    then @getGame cb
+                    when 'viewers' then @getViewers cb
+                    when 'views'   then @getViews cb
+                    when 'title'   then @getTitle cb
+                    else cb usage
+
         
     cmdGame: (user, args, bot) ->
         @getGame (game) =>

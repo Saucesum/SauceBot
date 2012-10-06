@@ -161,17 +161,19 @@ class Timer
             (user,args,bot) =>
                 @cmdCountdownStop user, args, bot
                 
-        @channel.vars.register 'countdown', (user, args) =>
-            return "N/A" unless args? and (cdown = @countdowns.get args[0])?
-            time = cdown - Date.now()
-            return @formatTime time, args[1]
-                
+        @channel.vars.register 'countdown', (user, args, cb) =>
+            unless args? and (cdown = @countdowns.get args[0])?
+                cb 'N/A'
+            else
+                time = cdown - Date.now()
+                cb @formatTime time, args[1]
             
-        @channel.vars.register 'timer', (user, args) =>
-            return "N/A" unless args? and (timer = @timers.get args[0])?
-            time = Date.now() - timer
-            return @formatTime time, args[1]
-            
+        @channel.vars.register 'timer', (user, args, cb) =>
+            unless args? and (timer = @timers.get args[0])?
+                cb 'N/A'
+            else
+                time = Date.now() - timer
+                cb @formatTime time, args[1]
                 
     formatTime: (time, format) ->
         fmt = format ? 'short'

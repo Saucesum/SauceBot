@@ -101,13 +101,12 @@ class Vars
             
             time      : (user, args, cb) ->
                 now = new time.Date()
-                tz = now.getTimezone() # TODO or whatever the method is called
                 try
                     now.setTimezone args[0]
                 catch error
                     
                 str = formatTime now
-                now.setTimezone (tz ? 'Europe/Oslo')
+                now.setTimezone 'Europe/Oslo'
                 cb str
                     
                     
@@ -119,13 +118,10 @@ class Vars
         delete @handlers[cmd]
         
     
-    #-----------------------------
-    # // Experimental var system
-        
-    parseMessage: (user, message, raw, cb) ->
+    parse: (user, message, raw, cb) ->
         if m = @checkVars message
             @replaceVar m, message, user, raw, (replaced) =>
-                @parseMessage user, replaced, raw, cb
+                @parse user, replaced, raw, cb
         else
             cb message
             
@@ -148,34 +144,6 @@ class Vars
             
             cb pre + result + post
         
-        
-    # // Exp end
-    #-----------------------------
-    
-                    
-    parse: (user, message, raw) ->
-        @matchVars message, (m, cmd, args) =>
-            result = @handle user, cmd, args, raw
-            
-            idx = m.index
-            len = m[0].length
-            
-            pre  = message.substring 0, idx
-            post = message.substring idx + len
-            
-            message = pre + result + post
-        
-        message
-            
-
-    matchVars: (message, cb) ->
-        return unless '$' in message
-        
-        while m = varRE.exec message
-            cmd  = m[1]
-            args = if m[2] then m[2].split ',' else [] 
-            message = cb m, cmd, args
-            
 
     handle: (user, cmd, args, raw, cb) ->
         

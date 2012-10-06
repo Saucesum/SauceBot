@@ -55,11 +55,11 @@ class Monument
         # Load monument data
         @obtained.load()
         
-        @channel.vars.register @command, (user, args) =>
+        @channel.vars.register @command, (user, args, cb) =>
             if not args[0] or args[0] is 'list'
-                return @getBlockString()
+                return cb @getBlockString()
             
-            switch args[0]
+            cb switch args[0]
                 when 'count'     then @obtained.get().length
                 when 'total'     then @blocks.length
                 when 'remaining' then @blocks.length - @obtained.get().length

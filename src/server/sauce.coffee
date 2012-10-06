@@ -8,7 +8,7 @@ catch error
     io.error "Error in configuration file 'server'"
     process.exit 1
 
-exports.Version = '3.1'
+exports.Version = '3.2'
 exports.Name    = conf.name
 
 

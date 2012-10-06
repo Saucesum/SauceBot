@@ -38,7 +38,7 @@ class Monitor
     writelog: (user, msg) ->
         @log.timestamp "#{if user.op then '@' else ' '}#{user.name}", msg
         
-        if /ravn|sauce|sause|\brav\b|drunkbot|cloudbro/i.test msg
+        if /ravn|sauce|sause|\brav\b|drunkbot|cloudbro|beardbot/i.test msg
             mentions.write new Date(), @channel.name, user.name, msg
 
     load:->
@@ -52,10 +52,10 @@ class Monitor
                 @users = {}
                 bot.say "[Users] " + @str('users-cleared')
 
-        @channel.vars.register 'users', (user, args) =>
-                if not args[0]? then return Object.keys(@users).length
+        @channel.vars.register 'users', (user, args, cb) =>
+                if not args[0]? then return cb Object.keys(@users).length
                 
-                switch args[0]
+                cb switch args[0]
                     when 'count' then Object.keys(@users).length
                     when 'rand'  then @getRandomUser()
                     when 'random' then @getRandomUser()

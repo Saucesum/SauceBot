@@ -51,10 +51,11 @@ class Hangman
         @channel.register  this, "hm", Sauce.Level.User,
             (user,args,bot) =>
                 @word = randomWord @language
-                bot.say @str('test-random-word', @word)
+                @word2 = randomWord @language
+                bot.say @str('test-random-word', @word, @word2)
                 
-        @channel.vars.register 'hm', (user, args) =>
-            @word
+        @channel.vars.register 'hm', (user, args, cb) =>
+            cb @word
             
     unload: ->
         @channel.vars.unregister 'hm'

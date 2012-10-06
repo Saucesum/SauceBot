@@ -66,9 +66,11 @@ class Counter
             for ctr of @counters.data
                 @addTrigger ctr
 
-        @channel.vars.register 'counter', (user, args) =>
-            return 'N/A' unless args? and @counters.get()[args[0]]?
-            return @counters.get(args[0])
+        @channel.vars.register 'counter', (user, args, cb) =>
+            if args? and (counter = @counters.get()[args[0]])?
+                cb counter
+            else
+                cb 'N/A'
         
 
     unload:->

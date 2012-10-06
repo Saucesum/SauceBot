@@ -42,17 +42,17 @@ class Poll
         @pollDTO.load =>
             @updatePollList()
             
-        @channel.vars.register 'poll', (user, args) =>
-            return 'N/A' unless @activePoll?
+        @channel.vars.register 'poll', (user, args, cb) =>
+            return cb 'N/A' unless @activePoll?
             
             if not args[0] or args[0] is 'name'
-                return @activePoll
+               return cb @activePoll
             
-            switch args[0]
+            cb switch args[0]
                 when 'options' then @polls[@activePoll]
                 when 'votes'   then @hasVoted.length
                 when 'results' then (if @activePoll? then @getResults() else 'N/A')
-                else 'undefined' 
+                else 'undefined'
 
         
     updatePollList: ->

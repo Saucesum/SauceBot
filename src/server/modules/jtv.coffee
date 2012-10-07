@@ -23,7 +23,9 @@ exports.strings = {
     'show-title'  : '@1@'
 }
 
-cache = new WebCache (key) -> "https://api.twitch.tv/kraken/channels/#{key}"
+# Set up caches for ttv(twitch.tv) and jtv(justin.tv) API calls
+ttvcache = new WebCache (key) -> "https://api.twitch.tv/kraken/channels/#{key}"
+jtvcache = new WebCache (key) -> "http://api.justin.tv/api/stream/list.json?channel=#{key}"
 
 strip = (msg) -> msg.replace /[^a-zA-Z0-9_]/g, ''
 
@@ -101,28 +103,34 @@ class JTV
             
          
     getGame: (chan, cb) ->
-        @getData chan, (data) ->
+        @getTTVData chan, (data) ->
             cb (data["game"] ? "N/A")
             
             
     getViewers: (chan, cb) ->
-        @getData chan, (data) ->
-            cb ("[Unavailable]")
+        @getJTVData chan, (data) ->
+            cb (data["channel_count"] ? "N/A")
             
             
     getViews: (chan, cb) ->
-        @getData chan, (data) ->
-            return cb "N/A" unless (chan = data["channel"])?
-            cb ("[Unavailable]")
+        @getJTVData chan, (data) ->
+            cb (data["channel_view_count"] ? "N/A")
             
             
     getTitle: (chan, cb) ->
-        @getData chan, (data) ->
+        @getTTVData chan, (data) ->
             cb (data["status"] ? "N/A")
             
             
-    getData: (chan, cb) ->
-        cache.get chan.toLowerCase(), cb
+    getTTVData: (chan, cb) ->
+        ttvcache.get chan.toLowerCase(), cb
+
+
+    getJTVData: (chan, cb) ->
+        jtvcache.get chan.toLowerCase(), (data) ->
+            data = data?[0]
+            data = {} unless data?["channel"]?["login"]?.toLowerCase() is chan
+            cb data
 
     handle: (user, msg, bot) ->
         

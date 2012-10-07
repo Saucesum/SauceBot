@@ -49,12 +49,22 @@ class LastFM
         io.module "[Last.FM] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        @channel.vars.unregister 'lastfm'
 
         
     registerHandlers: ->
         @channel.register this, "lastfm", Sauce.Level.User,
             (user,args,bot) =>
                 @cmdLastFM user, args, bot
+
+        @channel.vars.register 'lastfm', (user, args, cb) =>
+            unless args[0]?
+                cb 'N/A'
+            else
+                # Filter out bad characters
+                name = args[0].replace /[^-a-zA-Z_0-9]/g, ''
+                @getSong name, (song) ->
+                    cb song
         
         
     cmdLastFM: (user, args, bot) ->

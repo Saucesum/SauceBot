@@ -123,7 +123,8 @@ class JTV
             
             
     getTTVData: (chan, cb) ->
-        ttvcache.get chan.toLowerCase(), cb
+        ttvcache.get chan.toLowerCase(), (data) ->
+            cb data ? {}
 
 
     getJTVData: (chan, cb) ->

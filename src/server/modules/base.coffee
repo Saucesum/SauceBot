@@ -28,6 +28,12 @@ exports.strings = {
 
 io.module '[Base] Init'
 
+# Math functions to include in the !calc command
+MATH = ['tan', 'atan2', 'min', 'abs', 'random',
+        'round', 'sqrt', 'log', 'floor',
+        'sin', 'max', 'exp', 'cos', 'atan',
+        'ceil', 'asin', 'pow', 'acos']
+
 # Base module
 # - Handles:
 #  !saucebot
@@ -39,9 +45,14 @@ class Base
     constructor: (@channel) ->
         @loaded = false
         
+        # Set some constants
         mathValues =
-            e: 2.718281828459045235360
-            pi: 3.141592
+            e : 2.718281828459045235360
+            pi: 3.141592653589793238462
+
+        # Include methods from Math
+        mathValues[func] = Math[func] for func in MATH
+
         
         @sandbox = vm.createContext mathValues
 

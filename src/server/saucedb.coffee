@@ -43,9 +43,10 @@ timedOut = ->
 # * args: the arguments to pass to the MySQL client query function; in order,
 # the SQL statement, the parameters to the query, and a callback function of
 # the form (error, results) ->
-query = (args...) ->
+exports.query = query = (args...) ->
     connect() if timedOut()
     client.query args...
+
 
 
 # Loads all of the data for a specific channel from a specified table, then

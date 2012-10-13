@@ -154,10 +154,10 @@ class Vars
             if cmd < 0
                 cmd = (-cmd) - 1
                 # Negative index means from N to the end
-                return ((raw.split ' ')[cmd...] ? []).join ' '
+                return cb (((raw.split ' ')[cmd...] ? []).join ' ')
             else
                 # Positive index means only the Nth word
-                return (raw.split ' ')[cmd - 1] ? ''
+                return cb ((raw.split ' ')[cmd - 1] ? '')
             
         # Otherwise, either return the command,
         # or handle it with the configured handler.

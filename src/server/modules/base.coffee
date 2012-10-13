@@ -29,6 +29,20 @@ exports.strings = {
     'verify-syntax' : 'No code specified. Usage: @1@'
     'verify-ok'     : '@1@: Verified.'
     'verify-err'    : '@1@: Invalid code.'
+
+    # Moderator-only mode configuration
+    'mod-enabled'   : 'All commands are now mod-only.'
+    'mod-disabled'  : 'All commands are no longer mod-only.'
+
+    # Quiet mode configuration
+    'quiet-enabled' : 'Quiet mode enabled.'
+    'quiet-disabled': 'Quiet mode disabled.'
+
+    # Usage messages
+    'usage-enable'  : 'Enable with @1@'
+    'usage-disable' : 'Disable with @1@'
+    'usage-invalid' : 'Invalid syntax. Usage: @1@'
+
 }
 
 io.module '[Base] Init'
@@ -109,12 +123,8 @@ class Base
 
         @channel.register this, "test", Sauce.Level.Mod,
             (user,args,bot) ->
-              bot.say "Test command! #{user.name} - #{Sauce.LevelStr user.op}"
+              bot.say "[Test] #{user.name} - #{Sauce.LevelStr user.op}"
               
-        @channel.register this, "admtest", Sauce.Level.Admin,
-            (user,args,bot) ->
-              bot.say 'Admin test command!'
-
         @channel.register this, "saucetime", Sauce.Level.User,
             (user,args,bot) ->
               date = new Date()
@@ -151,8 +161,6 @@ class Base
                     msgcode = if verified then 'verify-ok' else 'verify-err'
                     bot.say "[Verify] " + @str(msgcode, user.name)
 
-                
-
         @channel.register this, "calc", Sauce.Level.Mod,
             (user, args, bot) =>
                 return unless args
@@ -162,6 +170,34 @@ class Base
                     bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm")
                 catch error
                     bot.say "[Calc] " + @str('math-invalid', math)
+
+        @channel.register this, "mode", Sauce.Level.Admin,
+            (user, args, bot) =>
+                bot.say "[Mode] " + @str('usage-invalid', '!mode [modonly|quiet] [on|off]')
+
+        @channel.register this, "mode modonly", Sauce.Level.Admin,
+            (user, args, bot) =>
+                switch args[0]
+                    when 'on'
+                        @channel.setModOnly true
+                        bot.say '[Mode] ' + @str('mod-enabled') + ' ' + @str('usage-disable', '!mode modonly off')
+                    when 'off'
+                        @channel.setModOnly false
+                        bot.say '[Mode] ' + @str('mod-disabled') + ' ' + @str('usage-enable', '!mode modonly on')
+                    else
+                        bot.say '[Mode] ' + @str('usage-invalid', '!mode modonly (on|off)')
+
+        @channel.register this, "mode quiet", Sauce.Level.Admin,
+            (user, args, bot) =>
+                switch args[0]
+                    when 'on'
+                        @channel.setQuiet true
+                        bot.say '[Mode] ' + @str('quiet-enabled') + ' ' + @str('usage-disable', '!mode quiet off')
+                    when 'off'
+                        @channel.setQuiet false
+                        bot.say '[Mode] ' + @str('quiet-disabled') + ' ' + @str('usage-enable', '!mode quiet on')
+                    else
+                        bot.say '[Mode] ' + @str('usage-invalid', '!mode quiet (on|off)')
                  
 
     unload:->

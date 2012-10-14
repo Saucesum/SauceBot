@@ -51,11 +51,12 @@ twitch.on 'message', (chan, from, op, message) ->
         msg : message
         op  : op
 
-twitch.on 'pm', (from, message) ->
-    io.irc 'PM', from, message
+twitch.on 'pm', (srcchan, from, message) ->
+    io.irc 'PM', srcchan + '/' + from, message
     pmlog.timestamp from, message
     
     sauce.emit 'pm',
+        chan: srcchan
         user: from
         msg : message
 

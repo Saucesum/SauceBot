@@ -70,7 +70,6 @@ class Twitch
             return @emit 'error', 'join', 'No such bot-account!'
 
         idx = account.name + '::' + chan.toLowerCase()
-        io.debug "Joining: #{idx}"
         return if @connections[idx]
 
         channel = @createChannel chan, account
@@ -110,7 +109,7 @@ class Twitch
             
         channel.on 'pm', (data) =>
             {from, message} = data
-            @emit 'pm', from, message
+            @emit 'pm', chan, from, message
             
         channel.on 'error', (data) =>
             @emit 'error', chan, ("#{key}: #{val}" for key, val of data).join(', ')

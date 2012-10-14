@@ -7,27 +7,26 @@
 # Config
 Sauce = require './sauce'
 
+# Common
+auth  = require '../common/session'
+io    = require '../common/ioutil'
+sio   = require '../common/socket'
+log   = require '../common/logger'
+
+# Set up logging
+io.setLevel io.Level.Normal
+io.setLogger new log.Logger Sauce.Path, "server.log"
+
 # Sauce
 db    = require './saucedb'
 users = require './users'
 chans = require './channels'
 spam  = require './spamlogger'
 
-# Common 
-auth  = require '../common/session'
-io    = require '../common/ioutil'
-sio   = require '../common/socket'
-log   = require '../common/logger'
-
 # Node.js
 net   = require 'net'
 url   = require 'url'
 color = require 'colors'
-
-# Disable extra output
-# (Possibly make it go somewhere else instead for logging?)
-io.setDebug false
-io.setVerbose false
 
 # Loads user data
 loadUsers = ->
@@ -130,7 +129,7 @@ class SauceBot
     # * msg : [REQ] Message
     #
     handlePM: (json) ->
-        {user, msg} = json
+        {chan, user, msg} = json
 
         if user is 'jtv'
             # Handle jtv messages:
@@ -139,7 +138,7 @@ class SauceBot
             # - ...
             if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.exec msg
                 [_, name, role] = m
-                console.log name.blue.inverse + ": " + role
+                io.irc chan, name, role.blue.inverse
                 specialUsers[name.toLowerCase()] = role.toLowerCase()
 
         else

@@ -4,11 +4,36 @@ color = require 'colors'
 util  = require 'util'
 
 
-DEBUG   = true
-VERBOSE = true
+LOGGER  = null
+LEVEL   = 0
 
-exports.setDebug   = (state) -> DEBUG   = state
-exports.setVerbose = (state) -> VERBOSE = state
+exports.Level = Level = {
+    # All messages are shown
+    All    : 0
+    # Only messages with debug or higher are shown
+    Debug  : 1
+    # Only messages with verbose or higher are shown
+    Verbose: 2
+    # Only the normal messages are shown
+    Normal : 3
+    # Only errors are shown
+    Error  : 4
+    # No messages are shown
+    None   : 5
+}
+
+# Sets the logger object. null for no logging.
+exports.setLogger = (logger) -> LOGGER = logger
+
+# Sets the logger level. "level" must be in exports.Level
+exports.setLevel  = (level ) -> LEVEL  = level
+
+log = (level, tag, message) ->
+    if level >= LEVEL
+        util.log ('[' + tag + '] ').bold + message
+    
+    if LOGGER?
+        LOGGER.timestamp level, tag.stripColors, message.stripColors
 
 # Returns the current stack trace's last location
 getPrevStack = ->
@@ -16,28 +41,36 @@ getPrevStack = ->
     line = new Error().stack.split("\n")[3].trim()
     line.substring(line.indexOf('bin/') + 4).replace(')', '')
 
+
 # Logs a message
 exports.say = (chan, message) ->
-    util.log ( '[SAY@'.magenta + chan.blue + '] '.magenta).bold + message
+    log(Level.Normal, '#' + chan.blue, message)
+
 
 # Logs a debug message
 exports.debug = (message) ->
-    util.log ('[DEBUG] '.bold + message).green if DEBUG
+    log(Level.Debug, 'DEBUG'.green, message.green)
+
 
 # Logs a module-info message
 exports.module = (message) ->
-    util.log ('[MODULE] '.bold + message).blue if VERBOSE
+    log(Level.Verbose, 'MODULE'.blue, message.blue)
+
 
 # Logs a socket-related message
 exports.socket = (message) ->
-    util.log ('[SOCKET] '.bold + message).cyan 
+    log(Level.Normal, 'SOCKET'.cyan, message.cyan)
+
 
 # Logs an error message
 exports.error = (message) ->
-    util.log ('[ERROR] '.bold + getPrevStack().underline + ' ' + message).red.inverse
+    log(Level.Error, 'ERROR', (getPrevStack().underline + "\t" + message).red.inverse)
+
 
 exports.irc = (chan, user, message) ->
-    util.log (('[' + chan.blue + ']').bold + ' ' + user[hashRand user, cols] + ': ' + message)
+    userStr = user[hashRand user, cols]
+    log(Level.Normal, '#' + chan.blue, userStr + ": " + message)
+
 
 # HashCode
 String.prototype.hashCode = ->
@@ -49,9 +82,11 @@ String.prototype.hashCode = ->
         hash = hash & hash
     hash
 
+
 cols = [
     'red', 'blue', 'green', 'yellow', 'cyan', 'grey', 'magenta', 'black'
 ]
+
 
 hashRand = (str, list) ->
     list[Math.abs(str.hashCode() % list.length)]
@@ -61,6 +96,7 @@ hashRand = (str, list) ->
 chars = [',', '-', '_', '!', '>', '<', '#', '\'', '?', '~']
 start = ['{', '<', '[', '(']
 end   = ['}', '>', ']', ')']
+
 
 # Infixes the message by matching random start and end characters, such as ( ), { } and < >
 exports.infix = (message) ->

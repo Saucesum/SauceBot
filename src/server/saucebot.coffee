@@ -7,26 +7,26 @@
 # Config
 Sauce = require './sauce'
 
-# Sauce
-db    = require './saucedb'
-users = require './users'
-chans = require './channels'
-
-# Common 
+# Common
 auth  = require '../common/session'
 io    = require '../common/ioutil'
 sio   = require '../common/socket'
 log   = require '../common/logger'
 
+# Set up logging
+io.setLevel io.Level.Normal
+io.setLogger new log.Logger Sauce.Path, "server.log"
+
+# Sauce
+db    = require './saucedb'
+users = require './users'
+chans = require './channels'
+spam  = require './spamlogger'
+
 # Node.js
 net   = require 'net'
 url   = require 'url'
 color = require 'colors'
-
-# Disable extra output
-# (Possibly make it go somewhere else instead for logging?)
-#io.setDebug false
-#io.setVerbose false
 
 # Loads user data
 loadUsers = ->
@@ -129,16 +129,16 @@ class SauceBot
     # * msg : [REQ] Message
     #
     handlePM: (json) ->
-        {user, msg} = json
+        {chan, user, msg} = json
 
         if user is 'jtv'
             # Handle jtv messages:
             # - "you are not a moderator in this channel"
             # - "the user you are trying to ban is a moderator"
             # - ...
-            if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.test msg
+            if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.exec msg
                 [_, name, role] = m
-                console.log name.blue.inverse + ": " + role
+                io.irc chan, name, role.blue.inverse
                 specialUsers[name.toLowerCase()] = role.toLowerCase()
 
         else
@@ -155,6 +155,7 @@ class SauceBot
     #  + Users      : reloads user data
     #  + Channels   : reloads channel data
     #  + Help       : notifies channel that help is coming
+    #  + Spam       : reloads spam lists
     #
     handleUpdate: (json) ->
         {channel, user, type} = @getWebData json, true
@@ -172,6 +173,9 @@ class SauceBot
             when 'Help'
                 if channel? and user.isGlobal()
                     @say channel.name, '[Help] ' + channel.getString('Base', 'help-incoming', user.name)
+
+            when 'Spam'
+                spam.reload()
                     
             when 'Timeout'
                 {username} = json

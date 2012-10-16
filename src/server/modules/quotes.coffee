@@ -42,11 +42,11 @@ class Quotes
 
 
     registerHandlers: ->
-        @channel.vars.register 'quote', (user, args) =>
-            return 'N/A' unless (list = args[0])?
-            return 'N/A' unless @hasQuotes list
-            
-            @quote = @getRandomQuote list
+        @channel.vars.register 'quote', (user, args, cb) =>
+            unless (list = args[0])? and (@hasQuotes list)
+                cb 'N/A'
+            else
+                cb @getRandomQuote list
                 
                 
     hasQuotes: (list)      -> @quotes[list]?.length

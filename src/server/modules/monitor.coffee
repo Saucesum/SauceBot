@@ -2,6 +2,7 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
+spam  = require '../spamlogger'
 
 io    = require '../ioutil'
 log   = require '../../common/logger'
@@ -14,12 +15,18 @@ exports.description = 'Chat monitoring and user listing'
 exports.locked      = true
 
 exports.strings = {
-    'users-cleared': 'Active users cleared.'
+    'users-cleared' : 'Active users cleared.'
+    'users-pick-one': 'Random user: @1@'
+    'users-pick-n'  : '@1@ random users: @2@'
 }
 
 io.module '[Monitor] Init'
 
+# Mentions to easily find references to "Ravn", "SauceBot", etc.
 mentions = new log.Logger Sauce.Path, "mentions.log"
+
+# Load the spam lists
+spam.reload()
 
 class Monitor
     constructor: (@channel) ->
@@ -33,7 +40,7 @@ class Monitor
     writelog: (user, msg) ->
         @log.timestamp "#{if user.op then '@' else ' '}#{user.name}", msg
         
-        if /ravn|sauce|sause|\brav\b|drunkbot|cloudbro/i.test msg
+        if /ravn|sauce|sause|\brav\b|drunkbot|cloudbro|beardbot/i.test msg
             mentions.write new Date(), @channel.name, user.name, msg
 
     load:->
@@ -42,18 +49,28 @@ class Monitor
         
         io.module "[Monitor] Loading for #{@channel.id}: #{@channel.name}"
 
+        userpicker = (user, args, bot) =>
+            if args[0]?
+                @cmdPickNUsers bot, args[0]
+            else
+                @cmdPickOneUser bot
+
+        @channel.register this, "pickuser" , Sauce.Level.Mod, userpicker
+        @channel.register this, "pickusers", Sauce.Level.Mod, userpicker
+
         @channel.register this, "users clear", Sauce.Level.Mod,
             (user, args, bot) =>
                 @users = {}
                 bot.say "[Users] " + @str('users-cleared')
 
-        @channel.vars.register 'users', (user, args) =>
-                if not args[0]? then return Object.keys(@users).length
+        @channel.vars.register 'users', (user, args, cb) =>
+                if not args[0]? then return cb Object.keys(@users).length
                 
-                switch args[0]
+                cb switch args[0]
                     when 'count' then Object.keys(@users).length
                     when 'rand'  then @getRandomUser()
-                    else 'undefined' 
+                    when 'random' then @getRandomUser()
+                    else '$(error: use count or rand)'
 
 
     unload:->
@@ -63,8 +80,30 @@ class Monitor
         io.module "[Monitor] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
-        
         @channel.vars.unregister 'users'
+     
+
+    cmdPickOneUser: (bot) ->
+        rand  = @getRandomUser()
+        bot.say "[Users] " + @str('users-pick-one', rand)
+
+
+    cmdPickNUsers: (bot, num) ->
+        num = parseInt(num)
+
+        if num < 2 or isNaN num
+            return @cmdPickOneUser bot
+
+        names  = @getShuffledUserList()
+
+        # Clamp number
+        if num > 10
+            num = 10
+        if num > names.length
+            num = names.length
+
+        picked = (names[i] for i in [0..num-1]).join ', '
+        bot.say "[Users] " + @str('users-pick-n', num, picked)
         
         
     getRandomUser: ->
@@ -73,10 +112,23 @@ class Monitor
         
         list[~~(Math.random() * list.length)]
         
+
+    getShuffledUserList: ->
+        list = Object.keys @users
+        i = list.length
+        return list if i is 0
+
+        # Fisher-Yates
+        while --i
+            j = Math.floor(Math.random() * (i + 1))
+            [list[i], list[j]] = [list[j], list[i]]
+
+        return list
         
     handle: (user, msg, bot) ->
         @writelog user, msg
         @users[user.name] = 1
+        spam.run @channel.id, user.name, msg
 
 
 exports.New = (channel) ->

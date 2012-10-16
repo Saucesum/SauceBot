@@ -7,7 +7,7 @@ io    = require '../ioutil'
 request = require 'request'
 util    = require 'util'
 
-{ConfigDTO, HashDTO} = require '../dto' 
+{ConfigDTO, HashDTO} = require '../dto'
 
 
 # Module description
@@ -49,12 +49,22 @@ class LastFM
         io.module "[Last.FM] Unloading from #{@channel.id}: #{@channel.name}"
         myTriggers = @channel.listTriggers { module:this }
         @channel.unregister myTriggers...
+        @channel.vars.unregister 'lastfm'
 
         
     registerHandlers: ->
         @channel.register this, "lastfm", Sauce.Level.User,
             (user,args,bot) =>
                 @cmdLastFM user, args, bot
+
+        @channel.vars.register 'lastfm', (user, args, cb) =>
+            unless args[0]?
+                cb 'N/A'
+            else
+                # Filter out bad characters
+                name = args[0].replace /[^-a-zA-Z_0-9]/g, ''
+                @getSong name, (song) ->
+                    cb song
         
         
     cmdLastFM: (user, args, bot) ->
@@ -98,7 +108,7 @@ class LastFM
             track = data.recenttracks.track
             track = track[0] if track[0]?
             
-            artist = track.artist['#text']
+            artist = track.artist['#text'] ? track.artist["name"]
             track  = track.name
             
             return "#{artist} - #{track}"

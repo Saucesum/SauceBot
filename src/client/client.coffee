@@ -21,13 +21,18 @@ PORT = server.port
 
 HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 
-logger = new log.Logger logging.root, "client.log"
+logger = new log.Logger logging.root, "jtv.log"
+pmlog  = new log.Logger logging.root, "pm.log"
 
+# Connection to the SauceBot server
 sauce = new Client HOST, PORT
 
-twitch = new Twitch
+# Connection manager for Twitch chats
+twitch = new Twitch logger
 
-for password, username in accounts
+# Register all bot accounts for use
+for username, password of accounts
+    io.debug "Account: " + username.bold
     twitch.addAccount username, password
 
 # Add handlers for messages from Twitch
@@ -41,16 +46,17 @@ twitch.on 'message', (chan, from, op, message) ->
         io.irc chan, prefix + from, message
        
     sauce.emit 'msg',
-        chan: chan.toLowerCase
+        chan: chan.toLowerCase()
         user: from
         msg : message
         op  : op
 
-twitch.on 'pm', (from, message) ->
-    io.irc 'PM', from, message
+twitch.on 'pm', (srcchan, from, message) ->
+    io.irc 'PM', srcchan + '/' + from, message
     pmlog.timestamp from, message
     
     sauce.emit 'pm',
+        chan: srcchan
         user: from
         msg : message
 
@@ -58,53 +64,47 @@ twitch.on 'error', (chan, message) ->
     io.error "Error in channel #{chan}: #{message}"
 
 twitch.on 'connected', (chan) ->
-    io.socket "Connected to #{@chan}"
+    io.socket "Connected to #{chan}"
 
 twitch.on 'connecting', (chan) ->
-    io.socket "Connecting to #{@chan}"
+    io.socket "Connecting to #{chan}"
 
 twitch.on 'disconnecting', (chan) ->
-    io.socket "Disconnecting from #{@chan}"
+    io.socket "Disconnecting from #{chan}"
 
 # Add handlers for messages from SauceBot
 
 sauce.on 'say', (data) ->
     {chan, msg} = data
-    twitch.say chan, msg, logger
+    twitch.say chan, msg
 
 sauce.on 'ban', (data) ->
     {chan, user} = data
-    console.log "/ban #{user}"
-    twitch.sayRaw chan, "/ban #{user}", logger
+    twitch.sayRaw chan, "/ban #{user}"
 
 sauce.on 'unban', (data) ->
     {chan, user} = data
-    console.log "/unban #{user}"
-    twitch.sayRaw chan, "/unban #{user}", logger
+    twitch.sayRaw chan, "/unban #{user}"
 
 sauce.on 'timeout', (data) ->
     {chan, user, time} = data
     time ?= 600
-    console.log "/timeout #{user} #{time}"
-    twitch.sayRaw chan, "/timeout #{user} #{time}", logger
+    twitch.sayRaw chan, "/timeout #{user} #{time}"
 
 sauce.on 'commercial', (data) ->
     {chan} = data
     twitch.say chan, "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
-    twitch.sayRaw chan, '/commercial', logger
+    twitch.sayRaw chan, '/commercial'
 
 sauce.on 'channels', (channels) ->
-    # I suppose this is unnecessary
-    # twitch.part chan.name, chan.bot for chan in channels when "#{chan.name.toLowerCase()}::#{chan.bot.toLowerCase()}" in twitch.getChannels and not chan.status
-    # twitch.join chan.name, chan.bot for chan in channels when not "#{chan.name.toLowerCase()}::#{chan.bot.toLowerCase()}" in twitch.getChannels and chan.status
-    
-    # Twitch checks whether channels are connected for us already, so we
-    # probably don't need to check on our own
-    twitch.part chan.name, chan.bot for chan in channels when not chan.status
-    twitch.join chan.name, chan.bot for chan in channels when chan.status
+    twitch.part chan.name, (chan.bot ? 'SauceBot') for chan in channels when not chan.status
+    twitch.join chan.name, (chan.bot ? 'SauceBot') for chan in channels when chan.status
  
 sauce.on 'error', (data) ->
     io.error data.msg
+
+sauce.on 'connect', ->
+    sauce.emit 'get', { type: 'Channels' }
 
 # Terminal stuff
 
@@ -112,19 +112,16 @@ currentBot = 'SauceBot'
 
 term = new Term currentBot
 
-term.on 'part', [twitch.getShortChannels], (chan) ->
-    twitch.part chan, currentBot
-   
-term.on 'join', [true], (chan) ->
-    twitch.join chan, currentBot
+sayFunc = -> twitch.getShortChannels()
+useFunc = -> twitch.getAccounts()
 
-term.on 'say', [twitch.getShortChannels, true], (chan, msg) ->
+term.on 'say', [sayFunc, true], (chan, msg) ->
     twitch.sayRaw chan, msg, logger
     
 term.on 'list', [], ->
-    console.log ("#{bot.underline.bold.blue}: #{chan.magenta}" for channel in twitch.getChannels() when [bot, chan] = channel.split("::")).join '\n'
+    console.log "Channel list:\n\t".bold.blue + twitch.getShortChannels().join(", ")
     
-term.on 'use', [twitch.getAccounts], (bot) ->
+term.on 'use', [useFunc], (bot) ->
     io.debug "Switched to #{bot.bold}"
     currentBot = bot
     term.setPrompt currentBot
@@ -135,9 +132,6 @@ term.on 'close', [], ->
         process.exit()
     , 5000
 
-# Start it all up    
 
-sauce.emit 'get',
-    cookie : 'OMNOMNOM',
-    chan   : '4',
-    type   : 'Channels'
+# Register with the server as a chat client by requesting a channel list
+#sauce.emit 'get', { type: 'Channels' }

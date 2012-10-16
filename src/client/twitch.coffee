@@ -18,7 +18,7 @@ log        = require '../common/logger'
 #  * error(source, reason)
 #
 class Twitch
-    constructor: ->
+    constructor: (@logger) ->
         # Accounts: {username: {name, pass}}
         @accounts = {}
         
@@ -66,11 +66,12 @@ class Twitch
     # * bot: Bot name to use. Case-insensitive.
     # Note: If no such bot exists, an error is emitted.
     join: (chan, bot) ->
-        account = @getAccount bot
-        unless account?
+        unless (account = @getAccount bot)?
             return @emit 'error', 'join', 'No such bot-account!'
+
         idx = account.name + '::' + chan.toLowerCase()
         return if @connections[idx]
+
         channel = @createChannel chan, account
         channel.connect()
         @connections[idx] = channel
@@ -87,10 +88,13 @@ class Twitch
         
         @connections[idx]?.part()
         delete @connections[idx]
+
     
     # Completely shuts down this Twitch instance.
     close: ->
         conn.part() for conn in @connections
+        @connections = []
+
     
     # Creates a new Channel object and connects all handlers.
     # * chan: Channel name.
@@ -105,11 +109,10 @@ class Twitch
             
         channel.on 'pm', (data) =>
             {from, message} = data
-            @emit 'pm', from, message
+            @emit 'pm', chan, from, message
             
         channel.on 'error', (data) =>
-            {message} = data
-            @emit 'error', chan, message
+            @emit 'error', chan, ("#{key}: #{val}" for key, val of data).join(', ')
         
         channel.on 'connected', =>
             @emit 'connected', chan
@@ -121,33 +124,33 @@ class Twitch
             @emit 'disconnecting', chan
             
         return channel
+
     
     getAccounts: ->
-        (account for account of accounts)
+        (account for account of @accounts)
+
     
     getChannels: ->
-        (chan for chan of @connections)
+        (chan for _, chan of @connections)
+
     
     getShortChannels: ->
-        (chan.name for chan in @connections)
-    
-    # These functions ignore the possibility that there can be two bots in one
-    # channel. This is probably okay.
-        
-    say: (chan, message, logger) ->
-        # Some people just don't appreciate beauty when they see it
-        # (@connections[test] for account of accounts when @connections[test = "#{account}::#{chan.toLowerCase()}"])?[0]?.say message
-        for account of accounts when (conn = connections["#{account.name}::#{chan.toLowerCase()}"])?
-            logger?.timestamp 'SAY', chan, msg
+        (chan.name for _, chan of @connections)
+   
+ 
+    say: (chan, msg) ->
+        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
+            @logger?.timestamp 'SAY', chan, msg
             conn.say msg
-            io.irc chan, account, msg.cyan
+            io.irc conn.name, account.name, msg.cyan
             return
+
         
-    sayRaw: (chan, message, logger) ->
-        for account of accounts when (con = connections["#{account.name}::#{chan.toLowerCase()}"])?
-            logger?.timestamp 'RAW', chan, msg
+    sayRaw: (chan, msg) ->
+        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
+            @logger?.timestamp 'RAW', chan, msg
             conn.sayRaw msg
-            io.irc chan, account, msg.red
+            io.irc conn.name, account.name, msg.red
             return
         
 

@@ -145,8 +145,9 @@ class News
 
 
     cmdNewsNext: (user, args, bot) ->
-        bot.say @getNext(user) ? ('[News] ' + @str('err-no-news', '!news add <message>'))
-        
+        @getNext user, (news) ->
+            news ?= '[News] ' + @str('err-no-news', '!news add <message>')
+            bot.say news
 
     save: ->
         @news.save()
@@ -155,22 +156,21 @@ class News
         io.module "News saved"
 
 
-    getNext: (user) ->
+    getNext: (user, cb) ->
         @lastTime = io.now()
         @messageCount = 0
 
         @data = @news.get()
-        return null if @data.length is 0
+        return cb() if @data.length is 0
         
         # Wrap around the news list
         @index = 0 if @index >= @data.length
         
-        news = @channel.vars.parse user, @data[@index++], ''
+        @channel.vars.parse user, @data[@index++], '', (news) ->
+            cb "[News] #{news}"
         
-        "[News] #{news}"
         
-        
-    tickNews: ->
+    tickNews: (cb) ->
         now = io.now()
         @messageCount++
         
@@ -178,19 +178,18 @@ class News
         seconds  = @config.get 'seconds'
         messages = @config.get 'messages'
         
-        return unless ((state         is (1))                   and 
-                       (now           >  (@lastTime + seconds)) and
-                       (@messageCount >= (messages)))
+        return cb() unless ((state         is (1))                   and
+                            (now           >  (@lastTime + seconds)) and
+                            (@messageCount >= (messages)))
 
-        @getNext("SauceBot")
+        @getNext "SauceBot", cb
     
     
     # Auto-news
     handle: (user, msg, bot) ->
  
-        # Check if it's time to print some news
-        if ((news = @tickNews())?)
-            bot.say news
+        # Print news if there is any
+        @tickNews (msg) -> bot.say msg if msg?
 
 
 

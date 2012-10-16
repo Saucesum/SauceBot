@@ -105,6 +105,7 @@ class Channel
                 io.error "Error loading module #{moduleName}: #{error}"
         
         return module
+
         
     # Reloads a module with a given name. This function is pretty much
     # identical to @loadModule.
@@ -145,6 +146,7 @@ class Channel
     unloadModule: (module) ->
         module.unload()
         @modules.splice @modules.indexOf(module), 1
+
             
     # Fetches any available data about a user given a {username, oplevel} pair.
     # The database is first checked to see if the user is registered, in which
@@ -244,6 +246,7 @@ class Channel
 
         return true
 
+
     # Removes the given triggers from this channel.
     #
     # * triggersToRemove: surprisingly, the triggers to remove
@@ -261,14 +264,29 @@ class Channel
             results = (elem for elem in results when (elem[attr] is value))
 
         results
-        
+
+
+    # Changes the status of quiet mode.
+    #
+    # * status: Whether to activate quiet mode.
+    setQuiet: (status) ->
+        @modes.add 'quiet', status
+
         
     # Returns whether quiet mode is enabled.
     #
     # = whether quiet mode is active
     isQuiet: ->
         @modes.get 'quiet'
+
+
+    # Changes the status of mod-only mode.
+    #
+    # * status: Whether to activate mod-only mode.
+    setModOnly: (status) ->
+        @modes.add 'modonly', status
     
+
     # Returns whether mod-only mode is enabled. Because mod-only mode is a
     # subset of quiet mode, this will also return true if quiet mode is active.
     #

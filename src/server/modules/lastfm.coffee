@@ -29,7 +29,9 @@ api_key  = 'b25b959554ed76058ac220b7b2e0a026'
 getURL = (username) ->
     "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=#{username}&api_key=#{api_key}&format=json&limit=1&time=#{Date.now()}"
 
-songCache = new WebCache getUrl, CACHE_TIMEOUT
+# The song cache is global, since there's really no need to have it per module
+# instance
+songCache = new WebCache getURL, CACHE_TIMEOUT
 
 class LastFM
     constructor: (@channel) ->
@@ -80,13 +82,12 @@ class LastFM
             
     
     getSong: (name, cb) ->
-        songCache.get name, (song) ->
-            cb @parseSongJSON song
+        songCache.get name, (song) =>
+            cb @parseSong song
 
 
-    parseSongJSON: (json) ->
+    parseSong: (data) ->
         try
-            data = JSON.parse json
             return 'N/A' unless data? and data.recenttracks?
             
             track = data.recenttracks.track

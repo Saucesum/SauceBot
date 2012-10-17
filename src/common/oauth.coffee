@@ -6,8 +6,7 @@ io      = require './ioutil'
 # Base URL for all API requests
 API_ROOT = 'https://api.twitch.tv/kraken'
 
-# Redirect location required but not needed unless
-# dealing with client account authorization.
+# Redirect URL that must match the application page's redirect URL
 REDIRECT_URI = 'http://localhost'
 
 # API Scopes
@@ -35,11 +34,89 @@ exports.Scope = Scope =
         Stream    : 'channel_stream'
 
 
+# A TokenJar stores an authentication token acquired from the Twitch API, and
+# then allows for resource requests to be made to the API using the token.
+class TokenJar
+
+
+    # Constructs a new instance of a TokenJar. Note that the instance returned
+    # is not initialized and has not yet requested an authentication token.
+    #
+    # * clientID: the client_id of the application
+    # * clientID: the client_secret of the application
+    constructor: (@clientID, @clientSecret) ->
+        # Any requests that could not be completed when requested
+        # due to the token not being acquired yet
+        @queue = []
+
+
+    # Requests an OAuth token from the Twitch API, using the previously
+    # supplied client_id and client_secret, and authenticating with the given
+    # username, password, requesting the permissions specified in scope. The
+    # possible permissions that can be requested can be found in the Scope
+    # variable.
+    #
+    # * username: the username used for authenticating
+    # * password: the password used for authenticating
+    # * scope: a list of the permissions being requested in this token request
+    requestToken: (username, password, scope) ->
+        tokenRequest = {
+            url     : API_ROOT + '/oauth2/token'
+            method  : 'POST'
+            form    : {
+                grant_type    : 'password'
+                client_id     : @clientID
+                client_secret : @clientSecret
+                username      : username
+                password      : password
+                scope         : scope.join ' '
+            }
+        }
+        
+        request tokenRequest, (err, resp, body) =>
+            console.log resp
+            return io.error err if err?
+            return io.error "no token in response" unless body?.access_token?
+            
+            @token = body.access_token
+            
+            # Clear out any pending requests from the queue
+            @queue.pop()() while @queue.length
+
+
+    # Requests a resource from the API using a HTTP GET request. The name of
+    # the resource always begins with a '/', and the response passed to the
+    # callback is an object translated from the JSON response from the server.
+    #
+    # * resource: the resource being requested
+    # * callback: a function taking the response object as an argument
+    get: (resource, callback) ->
+        action = =>
+            getRequest = {
+                url   : API_ROOT + resource
+                qs    : {
+                    oauth_token : @token
+                }
+                json  : true
+            }
+            
+            request getRequest, (err, resp, body) ->
+                console.log resp
+                return io.error err if err?
+                return io.error "no body in response for #{resource}" unless body?
+                callback body
+        
+        # If the token has not yet been acquired, push this request to the
+        # queue; otherwise, just execute it immediately
+        if @token? then action() else @queue.push action
+
+
 parseAuthenticityToken = (body) ->
     if (m = body.match(/<input.+?name\s*=\s*"authenticity_token".+?value\s*=\s*"([^"]+)"/))?
         return m[1]
     else
         return null
+
 
 parseAccessToken = (response) ->
     return unless (loc = response.headers['location'])?
@@ -48,6 +125,7 @@ parseAccessToken = (response) ->
         return m[1]
     else
         return null
+
 
 class OAuth
     constructor: (@clientID, @username, @password, @scopes) ->
@@ -61,7 +139,7 @@ class OAuth
         authorizeRequest = {
             url: "#{API_ROOT}/oauth2/authorize"
             qs : {
-                redirect_uri : REDIRECT_URL
+                redirect_uri : REDIRECT_URI
                 client_id    : @clientID
                 response_type: 'token'
                 scope        : scopeList
@@ -83,6 +161,7 @@ class OAuth
                     utf8              : '\u2713'
                     authenticity_token: authToken
                     scope             : scopeList
+                    response_type     : 'token'
                     client_id         : @clientID
                     redirect_uri      : REDIRECT_URI
                     'user[login]'     : @username
@@ -96,6 +175,7 @@ class OAuth
                     return io.error err
 
                 @token ?= parseAccessToken resp
+                console.log @token
                 @authenticated = true
                 @queue.pop()() while @queue.length
                 
@@ -116,4 +196,6 @@ class OAuth
 
         if @authenticated then send() else @queue.push send
 
+
+exports.TokenJar = TokenJar
 exports.OAuth = OAuth

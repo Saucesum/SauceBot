@@ -4,6 +4,8 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 io    = require '../ioutil'
 
+{Cache, WebCache} = require '../cache'
+
 request = require 'request'
 util    = require 'util'
 
@@ -20,19 +22,18 @@ exports.strings = {
     'playing-now': 'Now playing - @1@: @2@'
 }
 
-CACHE_TIMEOUT = 45 * 1000
+CACHE_TIMEOUT = 30 * 1000
 
 api_key  = 'b25b959554ed76058ac220b7b2e0a026'
 
 getURL = (username) ->
     "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=#{username}&api_key=#{api_key}&format=json&limit=1&time=#{Date.now()}"
 
+songCache = new WebCache getUrl, CACHE_TIMEOUT
 
 class LastFM
     constructor: (@channel) ->
-        
         @loaded = false
-        @cache = {}
         
                 
     load: ->
@@ -77,27 +78,10 @@ class LastFM
         @getSong name, (song) =>
             bot.say "[last.fm] " + @str('playing-now', name, song)
             
-            
+    
     getSong: (name, cb) ->
-        cached = @getCachedSong name
-        return cb cached if cached?
-        
-        request {url: getURL(name), timeout: 2000}, (err, resp, json) =>
-            song = @parseSongJSON json
-            @setCachedSong name, song
-            cb song
-       
-        
-    getCachedSong: (name) ->
-        lc = name.toLowerCase()
-        return unless (cache = @cache[lc])?
-        
-        expire = cache.expire
-        if expire < Date.now()
-            delete @cache[lc]
-            return null
-        else
-            return cache.value
+        songCache.get name, (song) ->
+            cb @parseSongJSON song
 
 
     parseSongJSON: (json) ->
@@ -116,11 +100,6 @@ class LastFM
         catch err
             return 'N/A'
 
-
-    setCachedSong: (name, song) ->
-        @cache[name.toLowerCase()] =
-            expire: Date.now() + CACHE_TIMEOUT
-            value : song
 
     handle: (user, msg, bot) ->
         

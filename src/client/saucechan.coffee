@@ -26,6 +26,7 @@ class Channel
             
         @irc.on 'motd' , (motd) =>
             @irc.send 'JTVROOMS', @irc.channel
+            @irc.send 'JTVCLIENT', @irc.channel
             setTimeout =>
                 @irc.send 'WHO', @irc.channel
             , 3000

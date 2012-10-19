@@ -1,4 +1,7 @@
-# TODO
+npm install colors
+npm install request
+npm install groan
+npm install mysql
 
 # Utilities
 npm install walk

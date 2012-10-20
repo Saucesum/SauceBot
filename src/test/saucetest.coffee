@@ -1,10 +1,13 @@
 # SauceBot testing utilities
 
-# TODO
-
+# Test libraries
 assert = require 'assert'
-db = require '../../saucedb'
-{Channel} = require '../../channels'
+should = require 'should'
+
+# SauceBot
+db        = require '../server/saucedb'
+{Channel} = require '../server/channels'
+
 
 # A fake Bot that simply logs any calls to it for future analysis
 class TestBot
@@ -53,7 +56,7 @@ class CheckBot
         @tests.push check 'timeout', test
         @
     commercial: ->
-        @tests.push check 'commercial', -> true 
+        @tests.push check 'commercial', -> true
         @
 
     @equals: (key, value) ->
@@ -75,102 +78,118 @@ class CheckBot
         other.log.every (entry, index) -> @tests[index] entry
 
 
-# Creates a user object.
-#
-# * name: the username
-# * level: the permsissions level
-user: (name, level) ->
-    {
-        name : name
-        op   : level 
-    }
+# Object for test utility methods.
+exports.test = test = {
+
+    # Creates a user object.
+    #
+    # * name: the username
+    # * level: the permsissions level
+    user: (name, level) -> { name: name, op: level }
 
 
-# Creates a new channel and populates the database (used for testing).
-#
-# * options: the parameters for creating this channel; valid options are:
-#            * channelID: the fake ID of the channel, default 0
-#            * name: the name to use for the channel, default 'Test'
-#            * bot: the name of the bot for the channel, default 'TestBot'
-#            * modonly: whether the channel is in mod-only mode, default 0
-#            * quiet: whether the channel is in quiet mode, default 0
-#            * strings: any localization strings to include with the channel
-#            * modules: any modules to load with this channel
-       
-testChannel: (options) ->
-    chanid = options?.channelID ? 0
-    name = options?.name ? 'Test'
-    botname = options?.bot ? 'TestBot'
+    # Creates a new channel and populates the database (used for testing).
+    #
+    # * options: the parameters for creating this channel; valid options are:
+    #      * chanid  : the fake ID of the channel, default 0
+    #      * name    : the name to use for the channel, default 'Test'
+    #      * bot     : the name of the bot for the channel, default 'TestBot'
+    #      * modonly : whether the channel is in mod-only mode, default 0
+    #      * quiet   : whether the channel is in quiet mode, default 0
+    #      * strings : any localization strings to include with the channel
+    #      * modules : any modules to load with this channel
+    channel: (options) ->
+        defaultOpts = {
+            chanid  : 0
+            name    : 'Test'
+            bot     : 'TestBot'
+            modonly : 0
+            quiet   : 0
+            strings : {}
+            modules : []
+        }
+
+        for k, v of defaultOpts
+            options[k] ?= v
+
+        {chanid, name, bot} = options
+
+        db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [{
+            chanid : chanid
+            name   : name
+            status : 1
+            bot    : bot
+        }]
+
+        {modonly, quiet} = options
     
-    db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [{
-        chanid : chanid
-        name   : name
-        status : 1
-        bot    : botname
-    }]
-    
-    db.addData 'channelconfig', ['chanid', 'modonly', 'quiet'], [{
-        chanid  : chanid
-        modonly : options?.modonly ? 0
-        quiet   : options?.quiet ? 0
-    }]
-    
-    db.addData 'strings', ['key', 'value'], ({
-        key : key
-        value : value
-    } for key, value of options?.strings?)
-    
-    db.addData 'module', ['chanid', 'module', 'state'], [{
-        chanid : chanid
-        module : module
-        state  : 1
-    }] for module in options?.modules?
+        db.addData 'channelconfig', ['chanid', 'modonly', 'quiet'], [{
+            chanid  : chanid
+            modonly : modonly
+            quiet   : quiet
+        }]
 
-    new Channel {
-        chanid : chanid
-        name   : name
-        status : 1
-        bot    : botname
-    }
-
-
-# Returns a function that can be passed to "it(...)" for unit testing commands
-#
-# * context: an object containing "channel", the channel to test the command
-#            in, and "user", the user to test the command as 
-# * command: the command to submit to the test framework
-# * expected: a CheckBot instance that will determine if the result is correct
-# = the callback to be used for testing
-testCommand: (context, command, expected) ->
-    (done) ->
-        bot = new TestBot ->
-            assert expected.test bot
-            done()
-        , expected.size
+        {strings} = options
         
-        context.channel.handle {
-            user : context.user.name
-            op   : context.user.level
-            msg  : command
-        }, bot
+        db.addData 'strings', ['key', 'value'], ({
+            key   : key
+            value : value
+        } for key, value of strings)
 
+        {modules} = options
+        
+        db.addData 'module', ['chanid', 'module', 'state'], [{
+            chanid : chanid
+            module : module
+            state  : 1
+        }] for module in modules
+    
+        return new Channel {
+            chanid : chanid
+            name   : name
+            status : 1
+            bot    : bot
+        }
+    
+    
+    # Returns a function that can be passed to "it(...)" for unit testing commands
+    #
+    # * context: an object containing "channel", the channel to test the command
+    #            in, and "user", the user to test the command as 
+    # * command: the command to submit to the test framework
+    # * expected: a CheckBot instance that will determine if the result is correct
+    # = the callback to be used for testing
+    ommand: (context, command, expected) ->
+        (done) ->
+            bot = new TestBot ->
+                assert expected.test bot
+                done()
+            , expected.size
+            
+            context.channel.handle {
+                user : context.user.name
+                op   : context.user.level
+                msg  : command
+            }, bot
+    
+    
+    # Returns a function that can be passed to "it(...)" for unit testing variables
+    #
+    # * context: an object containing "channel", the channel to test the variable
+    #            in, and "user", the user to test the variable as
+    # * variable: the name of the variable to test
+    # * args: the arguments to pass to the variable
+    # * condition: a function that returns whether the result of the variable is correct
+    # = the callback to be used for testing
+    variable: (context, variable, args, condition) ->
+        (done) ->
+            bot = new TestBot ->
+            context.channel.vars.handlers[variable] context.user, args, (result) ->
+                assert condition result
+                done()
 
-# Returns a function that can be passed to "it(...)" for unit testing variables
-#
-# * context: an object containing "channel", the channel to test the variable
-#            in, and "user", the user to test the variable as
-# * variable: the name of the variable to test
-# * args: the arguments to pass to the variable
-# * condition: a function that returns whether the result of the variable is correct
-# = the callback to be used for testing
-testVariable: (context, variable, args, condition) ->
-    (done) ->
-        bot = new TestBot ->
-        context.channel.vars.handlers[variable] context.user, args, (result) ->
-            assert condition result
-            done()
-
-
+}
+    
 ### EXAMPLE
 context = { 
     channel: testChannel { modules: ['Base'] }
@@ -181,6 +200,3 @@ it('should be a number', testVariable context, 'rand', ['1', '10'], (result) -> 
 ###
 
 exports.CheckBot = CheckBot
-exports.user = user
-exports.testCommand = testCommand
-exports.testVariable = testVariable

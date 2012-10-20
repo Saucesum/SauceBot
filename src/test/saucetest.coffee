@@ -53,7 +53,7 @@ class CheckBot
         @tests.push check 'timeout', test
         @
     commercial: ->
-        @tests.push check 'commercial', -> true 
+        @tests.push check 'commercial', -> true
         @
 
     @equals: (key, value) ->
@@ -165,7 +165,6 @@ testCommand: (context, command, expected) ->
 # = the callback to be used for testing
 testVariable: (context, variable, args, condition) ->
     (done) ->
-        bot = new TestBot ->
         context.channel.vars.handlers[variable] context.user, args, (result) ->
             assert condition result
             done()

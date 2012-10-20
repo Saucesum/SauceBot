@@ -4,9 +4,16 @@ request = require 'request'
 io      = require './ioutil'
 Sauce   = require './sauce'
 
-API_ROOT = "http://api.steampowered.com"
+# Module description
+exports.name        = 'Steam'
+exports.version     = '1.0'
+exports.description = 'Steam API'
+
+API_ROOT = 'http://api.steampowered.com'
+NEWS_COUNT = 1
 
 games = {}
+gamesArray = []
 
 class Steam
     
@@ -15,21 +22,66 @@ class Steam
         
     
     load: ->
+        return if @loaded
+        
+        # Load the list of all games
+        get {
+            api     : 'ISteamApps'
+            method  : 'GetAppList'
+            version : 2
+        }, {}, (data) ->
+            return io.err "no games found from GetAppList" unless data.applist?.apps?
+            
+            games[entry.id] = entry.name for entry in data.applist.apps
+            gamesArray.push { id: id, name: name } for id, name of games
+            
+            @channel.register 'steam news', Sauce.Level.User, news
+            @channel.register 'steam user', Sauce.Level.User, user
+            
+            @loaded = true
+    
+    
+    unload: ->
+        return unless @loaded
+        
         @channel.register 'steam news', Sauce.Level.User, news
         @channel.register 'steam user', Sauce.Level.User, user
+        
+        @loaded = false
     
     
     news: (user, args, bot) ->
-        game = args[0].toLowerCase()
-        gameID = id for id, name of games if name.toLowerCase() = game
+        game = args[0..].join(' ').toLowerCase()
         
-        get 'ISteamNews', 'GetNewsForApp', 2, { appid : gameID }, (data) ->
-            # TODO Figure out how to display news
+        matches = gamesArray
+        .filter((e) -> e.name.toLowerCase().indexOf(game) isnt -1)
+        .sort((a, b) -> a.name.length - b.name.length)
+        
+        return bot.say "Game \"#{game}\" not found" unless matches
+        
+        get {
+            api     : 'ISteamNews'
+            method  : 'GetNewsForApp'
+            version : 2
+        }, {
+            appid : matches[0].id
+        }, (data) ->
+            return bot.say "No news found for #{game}" unless data.appnews?.newsitems?
+            news = data.appnews.newsitems[0..NEWS_COUNT - 1]
+            bot.say "News for #{matches[0].name} from #{formatDate new Date item.date}: #{item.title}" for item in news
     
     
     user: (user, args, bot) ->
         username = args[0].toLowerCase()
         # TODO Figure out how to look up a user profile (might need API key)
+
+
+sanitize = (string) ->
+    string.replace /<[^>]+>|\n|\r/, ''
+
+
+formatDate = (date) ->
+    "#{date.getMonth()/date.getDate()/date.getFullYear()}"
 
 
 # Fetches a resource from the Steam API.
@@ -41,7 +93,7 @@ class Steam
 #           * key (optional): a Steam API key to use
 # * parameters: parameters to pass with the method call
 # * callback: a callback that takes the API response as an argument
-get: (access, parameters, callback) ->
+get = (access, parameters, callback) ->
     parameters.key = access.key if access.key?
     
     options = {
@@ -55,10 +107,5 @@ get: (access, parameters, callback) ->
         return io.err error if error?
         return io.err "no body in response #{response.statusCode}" unless body?
         callback body
-            
 
-# Load the list of games once
-get 'ISteamApps', 'GetAppList', 2, {}, (data) ->
-    return io.err "no games found from GetAppList" unless data?.applist?.apps?
-    
-    games[id] = name for id, name of data.applist.apps
+exports.New = (channel) -> new Steam channel 

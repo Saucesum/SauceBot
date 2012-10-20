@@ -2,9 +2,8 @@ npm install colors
 npm install request
 npm install groan
 npm install mysql
-
-# Utilities
 npm install walk
+npm install docopt
 
 # Testing libraries
 npm install mocha

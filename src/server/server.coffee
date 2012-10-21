@@ -14,28 +14,27 @@ Options:
   -d --debug    Enables debug messages.
   -v --verbose  Enable verbose output messages.
   -q --quiet    Disables all non-error messages.
-  -c --config   Where to generate a new config file.
 """
 
 Sauce    = require './sauce'
 question = require '../common/question'
 
-
+fs       = require 'fs'
 readline = require 'readline'
 {docopt} = require 'docopt'
 
 args = docopt(doc, version: Sauce.Version)
 
 
-#console.log args
-
 if args.init
     file = args['<file>']
 
     qs = new question.QuestionSystem()
 
+    defaultPort = 28333
+
     qs.add 'Server', 'name', 'SauceBot'
-    qs.add 'Server', 'port', '28333'
+    qs.add 'Server', 'port', "#{defaultPort}"
     
     qs.add 'MySQL', 'username', 'root'
     qs.add 'MySQL', 'password'
@@ -49,5 +48,27 @@ if args.init
 
     qs.start (data) ->
         {Server, MySQL, Logging} = data
-        console.log "\n#{file}:"
-        console.log JSON.stringify(data)
+
+        Server.port = parseInt(Server.port, 10) or defaultPort
+
+        config = {
+            name: Server.name
+            port: Server.port
+            mysql: MySQL
+            logging: Logging
+        }
+        json = JSON.stringify(config, null, 4)
+        
+        # Write config file
+        fs.writeFile file, json, 'utf8', (err) ->
+            if err
+                console.log "\nerror: could not write config file (#{err})".red.inverse
+            else
+                console.log "\nWrote configuration to #{file}"
+                console.log 'Start server: ' + ("node server '#{file}'").magenta
+                process.exit()
+
+else
+    # TODO: Load config file and start server
+    1
+

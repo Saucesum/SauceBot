@@ -37,7 +37,7 @@ class QuestionSystem
     # * cb: (optional) Sets the callback.
     #       See #setCallback(cb) for more info.
     start: (cb) ->
-        @callback ?= cb
+        @callback = cb if cb?
 
         # Reset question index
         @qid = 0

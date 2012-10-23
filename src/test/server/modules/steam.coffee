@@ -3,15 +3,21 @@
 Sauce = require '../../../server/sauce'
 {CheckBot, test} = require '../../saucetest'
 
+Steam = require '../../../server/modules/steam'
+
 describe 'Steam', ->
     channel = test.channel { modules: ['Steam'] }
-    command = '!steam news Borderlands 2'
+    game = 'Borderlands 2'
+    command = "!steam news #{game}"
     describe command, ->
-        it 'should respond with Borderlands 2 news',
+        it "should respond with #{game} news",
             test.command {
                 channel : channel
                 user    : test.user 'Joe_User', Sauce.Level.User
             }, command,
-            new CheckBot().say (test) ->
-                test.message.toLowerCase().indexOf('borderlands 2') != -1 and
-                /News for .*? from \d+\/\d+\/\d+: .*/.test test.message
+            new CheckBot().say CheckBot.regex 'message',
+                new RegExp(channel.str('news-item',
+                    game,
+                    channel.str('date-format', '\\d+', '\\d+', '\\d+'),
+                    '.*'
+                ), 'i')

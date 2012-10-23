@@ -31,24 +31,16 @@
 #
 
 
-time       = require 'time'
+tz         = require('ioutil').tz
 color      = require 'colors'
 os         = require 'os'
 
 Sauce      = require './sauce'
 
+
+
 varRE  = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/
 varREg = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/g
-
-pad = (num) ->
-    if num < 10 then "0" + num else num
-
-formatTime = (date) ->
-    hours = pad date.getHours()
-    mins  = pad date.getMinutes()
-    secs  = pad date.getSeconds()
-    
-    "#{hours}:#{mins}:#{secs}"
         
        
 # MineCraft chat colours
@@ -100,14 +92,9 @@ class Vars
                         
             
             time      : (user, args, cb) ->
-                now = new time.Date()
-                try
-                    now.setTimezone args[0]
-                catch error
-                    
-                str = formatTime now
-                now.setTimezone 'Europe/Oslo'
-                cb str
+                now = new Date().getTime()
+                time = tz now, args[0] ? 'Europe/Oslo', '%H:%M:%S'
+                cb time
                     
                     
     register: (cmd, handler) ->
@@ -170,4 +157,3 @@ class Vars
 
 
 exports.Vars = Vars
-exports.formatTime = formatTime

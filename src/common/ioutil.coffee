@@ -118,3 +118,9 @@ randIdx = (arr) ->
 exports.now = ->
     new Date().getTime() / 1000
 
+exports.tz = require('timezone')(
+    require "timezone/#{region}" for region in ['Africa', 'America',
+    'Antarctica', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian',
+    'Pacific']
+)
+

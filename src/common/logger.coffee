@@ -1,8 +1,7 @@
 # Logger utility
 
 fs   = require 'fs'
-time = require 'time'
-
+tz   = require('ioutil').tz
 
 class Logger
     constructor: (@root, @name) ->
@@ -26,9 +25,7 @@ class Logger
 
 
 getTime = ->
-    date = new time.Date()
-    date.setTimezone 'CET'
-    ~~ (date/1000)
+    ~~ (tz(new Date().getTime(), 'Europe/Oslo')/1000)
     
 
 exports.Logger = Logger

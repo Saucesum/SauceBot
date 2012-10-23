@@ -10,6 +10,7 @@ vars  = require '../vars'
 vm    = require 'vm'
 util  = require 'util'
 
+
 # Module description
 exports.name        = 'Base'
 exports.version     = '1.2'
@@ -127,9 +128,8 @@ class Base
               
         @channel.register this, "saucetime", Sauce.Level.User,
             (user,args,bot) ->
-              date = new Date()
-              tz = -date.getTimezoneOffset()/60
-              bot.say "[SauceTime] #{vars.formatTime(date)} GMT #{if tz > 0 then '+' + tz else tz}"
+              now = new Date().getTime
+              bot.say "[SauceTime] #{io.tz now, 'Europe/Oslo', '%H:%M:%S GMT %:z'}"
               
         @channel.register this, "help", Sauce.Level.Mod,
             (user,args,bot) =>

@@ -31,7 +31,7 @@
 #
 
 
-tz         = require('ioutil').tz
+tz         = require('./ioutil').tz
 color      = require 'colors'
 os         = require 'os'
 

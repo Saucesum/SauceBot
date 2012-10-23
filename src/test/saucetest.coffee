@@ -98,7 +98,7 @@ exports.test = test = {
     #      * quiet   : whether the channel is in quiet mode, default 0
     #      * strings : any localization strings to include with the channel
     #      * modules : any modules to load with this channel
-    channel: (options) ->
+    channel: (options, callback) ->
         defaultOpts = {
             chanid  : 0
             name    : 'Test'
@@ -112,44 +112,44 @@ exports.test = test = {
         for k, v of defaultOpts
             options[k] ?= v
 
+        # TODO: Implement the callback stack to prevent this ugliness
+
         {chanid, name, bot} = options
 
-        db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [{
-            chanid : chanid
-            name   : name
-            status : 1
-            bot    : bot
-        }]
+        db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [[
+            chanid
+            name
+            1
+            bot
+        ]], ->
 
-        {modonly, quiet} = options
-    
-        db.addData 'channelconfig', ['chanid', 'modonly', 'quiet'], [{
-            chanid  : chanid
-            modonly : modonly
-            quiet   : quiet
-        }]
+            {modonly, quiet} = options
+            db.addData 'channelconfig', ['chanid', 'modonly', 'quiet'], [[
+                chanid
+                modonly
+                quiet
+            ]], ->
 
-        {strings} = options
+                {strings} = options
+                db.addData 'strings', ['key', 'value'], ([
+                    key
+                    value
+                ] for key, value of strings), ->
+
+                    {modules} = options
+                    
+                    db.addData 'module', ['chanid', 'module', 'state'], ([
+                        chanid
+                        module
+                        1
+                    ] for module in modules), ->
         
-        db.addData 'strings', ['key', 'value'], ({
-            key   : key
-            value : value
-        } for key, value of strings)
-
-        {modules} = options
-        
-        db.addData 'module', ['chanid', 'module', 'state'], [{
-            chanid : chanid
-            module : module
-            state  : 1
-        }] for module in modules
-    
-        return new Channel {
-            chanid : chanid
-            name   : name
-            status : 1
-            bot    : bot
-        }
+                        return new Channel {
+                            chanid : chanid
+                            name   : name
+                            status : 1
+                            bot    : bot
+                        }
 
 
     # Returns a function that can be passed to "it(...)" for unit testing commands

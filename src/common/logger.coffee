@@ -1,7 +1,7 @@
 # Logger utility
 
 fs   = require 'fs'
-tz   = require('ioutil').tz
+tz   = require('./ioutil').tz
 
 class Logger
     constructor: (@root, @name) ->

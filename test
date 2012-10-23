@@ -1,1 +1,1 @@
-mocha ./bin/test/ --reporter list --recursive
+mocha ../test/ --reporter list --recursive

@@ -156,8 +156,8 @@ getWildcards = (num) ->
 # * fields: the columns being given values in the addition
 # * datalist: a set of rows each containing values corresponding to the
 #             specified columns
-exports.addChanData = (channel, table, fields, datalist) ->
-    exports.addData(table, ['chanid'].concat(fields), [channel].concat(data) for data in datalist)
+exports.addChanData = (channel, table, fields, datalist, cb) ->
+    exports.addData(table, ['chanid'].concat(fields), [channel].concat(data) for data in datalist, cb)
 
 
 # Adds or replaces the rows defined by fields and datalist to the specified
@@ -166,11 +166,11 @@ exports.addChanData = (channel, table, fields, datalist) ->
 # * table: the table to add the data to
 # * fields: the columns whose values are being set in the new rows
 # * datalist: the actual data of each row, labeled by fields
-exports.addData = (table, fields, datalist) ->
+exports.addData = (table, fields, datalist, cb) ->
     wc = getWildcards fields.length
     queryStr = "REPLACE INTO #{table} (`#{fields.join '`, `'}`) VALUES (#{wc})"
-    
-    query queryStr, data for data in datalist
+    empty = ->
+    query queryStr, data, cb for data in datalist
 
 # Performs the same function as addChanData, but first clears all data for the
 # channel in the specified table.

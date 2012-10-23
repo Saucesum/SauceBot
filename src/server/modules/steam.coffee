@@ -1,8 +1,8 @@
 # Steam API module
 
 request = require 'request'
-io      = require './ioutil'
-Sauce   = require './sauce'
+io      = require '../ioutil'
+Sauce   = require '../sauce'
 
 # Module description
 exports.name        = 'Steam'

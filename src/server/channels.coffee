@@ -397,3 +397,5 @@ exports.load = (finished) ->
         
         finished? channels
             
+
+exports.Channel = Channel

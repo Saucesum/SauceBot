@@ -5,7 +5,7 @@ io = require './ioutil'
 db = require './saucedb'
 {HashDTO} = require './dto'
 
-PATH = './modules/'
+PATH = __dirname + '/modules/'
 
 exports.MODULES = {}
 

@@ -3,7 +3,7 @@
 io = require '../common/ioutil'
 
 try
-    conf = require('../common/config').load 'server'
+    conf = require('../common/config').load '.', 'server'
 catch error
     io.error "Error in configuration file 'server'"
     process.exit 1

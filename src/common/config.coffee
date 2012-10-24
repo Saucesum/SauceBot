@@ -2,8 +2,19 @@
 
 fs = require 'fs'
 
-exports.load = (confname) ->
-    fname = "../../config/#{confname}.json"
+DEFAULT_DIR = '../../config'
+
+
+# Attempts to load a JSON configurations file.
+#
+# * dir     : (optional) Where to find the config file.
+# * confname: Name of configurations (without file type).
+exports.load = (dir, confname) ->
+    unless confname?
+        confname = dir
+        dir = DEFAULT_DIR
+
+    fname = "#{dir}/#{confname}.json"
     
     try
         filedata = fs.readFileSync fname, 'utf-8'

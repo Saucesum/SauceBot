@@ -4,7 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 io    = require '../ioutil'
 
-{ConfigDTO, HashDTO} = require '../dto' 
+{ConfigDTO, HashDTO} = require '../dto'
 
 
 # Module description
@@ -28,7 +28,7 @@ exports.strings = {
 
 # Time utility methods
 
-timeRE = /(?:(\d+)\s*[dD]\w*?)?\s*(?:(\d+)\s*[hHtT]\w*?)?\s*(?:(\d+)\s*[mM]\w*?)?\s*(?:(\d+)\s*[sS]\w*?)?\s*/
+timeRE = /(?:(\d+)\s*[dD]\w*)?\s*(?:(\d+)\s*[hHtT]\w*)?\s*(?:(\d+)\s*[mM]\w*)?\s*(?:(\d+)\s*[sS]\w*)?\s*/
 
 strToTime = (str) ->
     return '' unless m = timeRE.exec str

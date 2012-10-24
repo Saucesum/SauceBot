@@ -90,7 +90,7 @@ TIMEOUT = 3 * 60 * 60 * 1000
 
 URL_RE = /(?:(?:https?:\/\/[-a-zA-Z0-9\.]*)|(?:[-a-zA-Z0-9]+\.))[-a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,})\b/
 
-reasons = new log.Logger Sauce.Path, 'reasons.log'
+reasons = new log.Logger Sauce.Logging.Root, 'reasons.log'
 
 io.module '[Filters] Init'
 

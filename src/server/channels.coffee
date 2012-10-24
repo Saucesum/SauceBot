@@ -232,7 +232,7 @@ class Channel
           when 4
             trigger = trig.buildTrigger args...
           else
-            argstrings = String(arg) for arg in args
+            argstrings = (String(arg) for arg in args)
             io.error "Bad number of arguments when registering trigger: " +
                      argstrings.join(" ")
             return false

@@ -8,13 +8,13 @@ DEFAULT_DIR = '../../config'
 # Attempts to load a JSON configurations file.
 #
 # * dir     : (optional) Where to find the config file.
-# * confname: Name of configurations (without file type).
+# * confname: Name of configurations.
 exports.load = (dir, confname) ->
     unless confname?
         confname = dir
         dir = DEFAULT_DIR
 
-    fname = "#{dir}/#{confname}.json"
+    fname = "#{dir}/#{confname}"
     
     try
         filedata = fs.readFileSync fname, 'utf-8'

@@ -131,7 +131,7 @@ class News
 
     cmdNewsMessages: (user, args, bot) ->
         @config.add 'messages', parseInt(args[0], 10) if args[0]?
-        bot.say '[News] ' + @str('config-messages', @config.get 'seconds')
+        bot.say '[News] ' + @str('config-messages', @config.get 'messages')
 
 
     cmdNewsClear: (user, args, bot) ->
@@ -145,7 +145,7 @@ class News
 
 
     cmdNewsNext: (user, args, bot) ->
-        @getNext user, (news) ->
+        @getNext user, (news) =>
             news ?= '[News] ' + @str('err-no-news', '!news add <message>')
             bot.say news
 
@@ -166,7 +166,7 @@ class News
         # Wrap around the news list
         @index = 0 if @index >= @data.length
         
-        @channel.vars.parse user, @data[@index++], '', (news) ->
+        @channel.vars.parse user, @data[@index++], '', (news) =>
             cb "[News] #{news}"
         
         

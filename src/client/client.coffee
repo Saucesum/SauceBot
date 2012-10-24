@@ -14,7 +14,7 @@ log        = require '../common/logger'
 {Term}     = require '../common/term'
 {Twitch}   = require './twitch'
 
-{server, highlight, accounts, logging} = config.load 'jtv'
+{server, highlight, accounts, logging} = config.load 'jtv.json'
 
 HOST = server.host
 PORT = server.port

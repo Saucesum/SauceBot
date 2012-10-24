@@ -1,5 +1,8 @@
 # Steam module unit test
 
+assert = require 'assert'
+should = require 'should'
+
 Sauce = require '../../../server/sauce'
 {CheckBot, test} = require '../../saucetest'
 
@@ -7,6 +10,7 @@ Steam = require '../../../server/modules/steam'
 
 describe 'Steam', ->
     test.channel { modules: ['Steam'] }, (channel) ->
+        channel.modules[0].should.equal 'Steam'
         console.log channel
         game = 'Borderlands 2'
         command = "!steam news #{game}"

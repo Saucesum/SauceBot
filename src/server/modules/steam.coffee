@@ -37,13 +37,13 @@ class Steam
             api     : 'ISteamApps'
             method  : 'GetAppList'
             version : 2
-        }, {}, (data) ->
+        }, {}, (data) =>
             return io.err "no games found from GetAppList" unless data.applist?.apps?
             
             games = data.applist.apps
             
-            @channel.register 'steam news', Sauce.Level.User, news
-            @channel.register 'steam user', Sauce.Level.User, user
+            @channel.register this, 'steam news', Sauce.Level.User, @news
+            @channel.register this, 'steam user', Sauce.Level.User, @user
             
             @loaded = true
     
@@ -72,7 +72,7 @@ class Steam
             version : 2
         }, {
             appid : matches[0].appid
-        }, (data) ->
+        }, (data) =>
             return @say bot, @str('no-news', game) unless data.appnews?.newsitems?
             news = data.appnews.newsitems[0..NEWS_COUNT - 1]
             @say bot, @str('news-item', matches[0].name, formatDate new Date item.date, item.title) for item in news
@@ -86,8 +86,9 @@ class Steam
     say: (bot, message) ->
         bot.say prefix + message
     
+    handle: -> 0
     
-    formatDate = (date) ->
+    formatDate: (date) ->
         @str('date-format', date.getDay(), date.getMonth(), date.getFullYear())
 
 

@@ -23,7 +23,7 @@ exports.strings = {
 io.module '[Monitor] Init'
 
 # Mentions to easily find references to "Ravn", "SauceBot", etc.
-mentions = new log.Logger Sauce.Path, "mentions.log"
+mentions = new log.Logger Sauce.Logging.Root, "mentions.log"
 
 # Load the spam lists
 spam.reload()
@@ -32,7 +32,7 @@ class Monitor
     constructor: (@channel) ->
         @loaded = false
 
-        @log = new log.Logger Sauce.Path, "channels/#{@channel.name}.log"
+        @log = new log.Logger Sauce.Logging.Root, "channels/#{@channel.name}.log"
         
         @users = {}
         

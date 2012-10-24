@@ -119,17 +119,17 @@ class Base
         io.module "[Base] Loading for #{@channel.id}: #{@channel.name}"
 
         @channel.register this, "saucebot", Sauce.Level.User,
-            (user,args,bot) ->
+            (user,args,bot) =>
               bot.say "[SauceBot] SauceBot v#{Sauce.Version} by @RavnTM - CoffeeScript/Node.js"
 
         @channel.register this, "test", Sauce.Level.Mod,
-            (user,args,bot) ->
+            (user,args,bot) =>
               bot.say "[Test] #{user.name} - #{Sauce.LevelStr user.op}"
               
         @channel.register this, "saucetime", Sauce.Level.User,
-            (user,args,bot) ->
-              now = new Date().getTime
-              bot.say "[SauceTime] #{io.tz now, 'Europe/Oslo', '%H:%M:%S GMT %:z'}"
+            (user,args,bot) =>
+              now = new Date()
+              bot.say "[SauceTime] #{io.tz now, '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
               
         @channel.register this, "help", Sauce.Level.Mod,
             (user,args,bot) =>

@@ -31,9 +31,9 @@ exports.setLevel  = (level ) -> LEVEL  = level
 log = (level, tag, message) ->
     if level >= LEVEL
         util.log ('[' + tag + '] ').bold + message
-    
+
     if LOGGER?
-        LOGGER.timestamp level, tag.stripColors, message.stripColors
+        LOGGER.timestamp level, tag?.stripColors, message?.stripColors
 
 # Returns the current stack trace's last location
 getPrevStack = ->

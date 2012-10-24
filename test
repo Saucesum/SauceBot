@@ -1,1 +1,1 @@
-mocha ../test/ --reporter list --recursive
+mocha ./bin/test/ --recursive --require should -R spec

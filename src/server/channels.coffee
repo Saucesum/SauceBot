@@ -95,12 +95,12 @@ class Channel
         
         if module?
             # The module instance already exists, so just reload it 
-            module.load()
+            module.loadModule()
         else
             try
                 # Create a new instance of the module and then load it
                 module = mod.instance moduleName, this
-                module.load()
+                module.loadModule()
             catch error
                 console.log error.stack
                 io.error "Error loading module #{moduleName}: #{error}"
@@ -145,7 +145,7 @@ class Channel
     #
     # * module: the module to unload
     unloadModule: (module) ->
-        module.unload()
+        module.unloadModule()
         @modules.splice @modules.indexOf(module), 1
 
             

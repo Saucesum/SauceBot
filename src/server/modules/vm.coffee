@@ -27,5 +27,8 @@ usage = '!vm (white|light_gray|light_blue|diamond|...)'
 
 io.module '[VM] Init'
 
-exports.New = (channel) ->
-    Monument.New channel, exports.name, blocks, usage
+class VM extends Monument.Monument
+    constructor: (channel) ->
+        super channel, exports.name, blocks, usage
+
+exports.New = (channel) -> new VM channel

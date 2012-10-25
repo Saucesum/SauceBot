@@ -122,5 +122,4 @@ class Monument extends Module
         bot.say '[' + @name + '] ' + msg
 
 
-exports.New = (channel, name, blocks, usage) ->
-    new Monument channel, name, blocks, usage
+exports.Monument = Monument

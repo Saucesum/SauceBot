@@ -13,6 +13,8 @@ log   = require '../../common/logger'
     EnumDTO
 } = require '../dto'
 
+{Module} = require '../module'
+
 # Module description
 exports.name        = 'Filters'
 exports.version     = '1.3'
@@ -115,9 +117,10 @@ io.module '[Filters] Init'
 #  !regulars remove <name>
 #
 #
-class Filters
+class Filters extends Module
     constructor: (@channel) ->
-        
+        super @channel
+
         # Filter states
         @states   = new ConfigDTO @channel, 'filterstate', filterNames
         @regulars = new ArrayDTO  @channel, 'regulars' , 'username'
@@ -141,13 +144,7 @@ class Filters
         
 
     load:  ->
-        io.module "[Filters] Loading for #{@channel.id}: #{@channel.name}"
-        
-        @registerHandlers() unless @loaded
-        @loaded = true
-
-        @channel = chan if chan?
-        
+        @registerHandlers()
         
         # Load lists
         @loadTable table for table in tableNames
@@ -157,41 +154,30 @@ class Filters
         @regulars.load()
         
 
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Filters] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-
-
     registerHandlers: ->
-        io.debug "[Filters] Registering handlers"
-                
         # Register filter list commands
         for filterName, filterList of @lists
           do (filterName, filterList) =>
             # !<filterlist> add <value> - Adds value to filter list
-            @channel.register this, "#{filterName} add"   , Sauce.Level.Mod,
+            @regCmd "#{filterName} add"   , Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterAdd    filterName, filterList, args, bot
                     
             # !<filterlist> remove <value> - Removes value from filter list
-            @channel.register this, "#{filterName} remove", Sauce.Level.Mod,
+            @regCmd "#{filterName} remove", Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterRemove filterName, filterList, args, bot
 
             # !<filterlist> clear - Clears the filter list
-            @channel.register this, "#{filterName} clear" , Sauce.Level.Mod,
+            @regCmd "#{filterName} clear" , Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterClear  filterName, filterList, args, bot
                     
-        @channel.register this, "regulars add", Sauce.Level.Mod,
+        @regCmd "regulars add", Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdAddRegular args, bot
                     
-        @channel.register this, "regulars remove", Sauce.Level.Mod,
+        @regCmd "regulars remove", Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdRemoveRegular args, bot
 
@@ -200,17 +186,17 @@ class Filters
         for filter in filterNames
           do (filter) =>
             # !filter <filtername> on - Enables filter
-            @channel.register this, "filter #{filter} on" , Sauce.Level.Mod,
+            @regCmd "filter #{filter} on" , Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterEnable  filter, bot
                     
             # !filter <filtername> off - Disables filter
-            @channel.register this, "filter #{filter} off", Sauce.Level.Mod,
+            @regCmd "filter #{filter} off", Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterDisable filter, bot
 
             # !filter <filtername> - Shows filter state
-            @channel.register this, "filter #{filter}"    , Sauce.Level.Mod,
+            @regCmd "filter #{filter}"    , Sauce.Level.Mod,
                 (user, args, bot) =>
                     @cmdFilterShow    filter, bot
             
@@ -218,7 +204,7 @@ class Filters
         # Register misc commands
         
         # !permit <username>
-        @channel.register this, 'permit'                  , Sauce.Level.Mod,
+        @regCmd 'permit', Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdPermitUser args, bot
         
@@ -284,7 +270,7 @@ class Filters
             
         user = args[0].toLowerCase()
         @regulars.add user
-        delete @warnings[user] 
+        delete @warnings[user]
         bot.say @str('regulars-added', user)
        
        
@@ -302,7 +288,7 @@ class Filters
                 msg = "[Filter] " + @str('permit-unknown', target, permitLength)
             
             @permits[target.toLowerCase()] = permitTime
-            delete @warnings[target.toLowerCase()] 
+            delete @warnings[target.toLowerCase()]
             bot.say msg
         else
             bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')

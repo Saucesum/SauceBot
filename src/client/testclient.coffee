@@ -86,7 +86,9 @@ rl.on 'line', (line) ->
     else if m = /^\/get\s+([a-zA-Z_0-9]+)/.exec line
         type = m[1]
         cli.emit 'get',
-            type: type
+            cookie: '...'
+            chan  : chan
+            type  : type
         
     else
         cli.emit 'msg',

@@ -4,10 +4,10 @@ SauceBot is designed as a flexible chat bot, capable of interfacing with many di
 
 Table of Contents
 ----------------
+* **[Setup and Running](#setup-and-running)**
 * **[Client-Server Communication](#client-server-communication)**
    * [Client Messages](#client-messages)
    * [Server Responses](#server-responses)
-* **[Configuration](#configuration)**
 * **[Modules](#modules)**
     * [Requirements](#requirements)
     * [Localization](#localization)
@@ -15,6 +15,31 @@ Table of Contents
 * **[Message Handling](#message-handling)**
     * [Triggers](#triggers)
     * [Message Variables](#message-variables)
+
+Setup and Running
+-----------------
+###Prerequisites
+As a prerequisite to running a SauceBot server, Node.js and MySQL must be installed on the system. Please refer to their respective documentation on how to accomplish this. Once these are installed, the `dependencies.sh` file in the root directory of the SauceBot project can be run to install all of the necessary node.js modules. Although SauceBot is written in CoffeeScript, it must first be compiled to JavaScript in order to be run on Node.js. This can be done using the `coffee` command, and while manual compilation is possible, a more convenient method is to use `coffee -c -w -o <compiled> <source>`, which will watch the source directory for file changes, and automatically compile any modified files into the compiled directory.
+
+###Starting the Server
+The main executable for SauceBot is the `server` file. Once the SauceBot project is compiled, Node.js can be used to run this file, e.g., `>node bin/server/server.js ...`. SauceBot requires a configuration file to run, whose location is passed as an argument to `server`. It is recommended to use the built-in configuration utility, `server --config <file>`, to generate this file. This will prompt the user with several questions, and then create an appropriate configuration file at the specified location. Once the configuration file exists, the server can now be started via `server <file> [options...]`. The full usage of `server` is as follows:
+```
+Usage:
+    server <file> [-d | --debug | -v | --verbose | -q | --quiet] [--clear-db]
+    server -h | --help
+    server --version
+    server --config <file>
+
+Options:
+    -h --help     Shows this screen.
+    --version     Shows version.
+    --config      Configures the SauceBot server.
+    <file>        The config file to use [default ./server.json].
+    -d --debug    Enables debug messages.
+    -v --verbose  Enable verbose output messages.
+    -q --quiet    Disables all non-error messages.
+    --clear-db    Clears the database before starting the server.
+```
 
 Client-Server Communication
 ---------------------------
@@ -139,33 +164,17 @@ where `err` is just a string indicating the nature of the error to the client. `
 ```
 where `id` is the unique identifier used in the database to distinguish the channel, `name` is the name of the channel, `status` is the status of the channel, either `1` to indicate that the channel is enabled or `0` for it being disabled, and `botname` is the name of the bot responsible for that channel.
 
-Configuration
--------------
-The SauceBot server can be configured through a configuration file, `server.json`, in the directory `config` within the root SauceBot directory. As one might expect, this file is encoded with JSON, and has the following structure:
-```json
-{
-    "name": botname,
-    "port": port,
-    
-    "mysql": {
-        "database": database,
-        "username": username,
-        "password": password
-    },
-    
-    "logging": {
-        "root": logdir
-    }
-}
-```
-In this file, `botname` is the name used internally to represent SauceBot, `port` is the port that the server listens for clients on, the `mysql` object contains the name of the MySQL database where SauceBot is stored (`database`) and the username and password needed to connect to the database (`username` and `password`, respectively), and the `logging` object specifies the root directory for storing log files created by SauceBot (`logdir`).
-
 Modules
 -------
 A module is defined by a source file in the `modules` directory. Each channel has its own instance of a given module, so that module data can be channel specific, e.g., each channel can have its own list of chat filters, etc. To accomodate this, a channel object requests that a desired module be instantiated by [`module`](src/server/module.coffee). `module` registers a file listener to listen for any new modules being installed, and will also manually attempt to load a module with a given name from the filesystem. Once the module instance is created, it is tied to that channel.
 
 ###Requirements
-Although `module` facilitates the creation of module instances, it does not actually define any modules. The only requirement imposed by `module` is that the loaded module has a `name`, `description`, and `version` attribute, and that it contains a `New(channel)` function that returns an instance appropriate for the channel it is being created for. However, there are other requirements of a module. Specifically, the module class must have both a `load()` and `unload()` function, which  are called, respectively, when the module is first loaded or reloaded, and when the module is being removed. It must also contain a `handle(user, message, bot)` function, which is called by its associated channel whenever the channel receives data. The handle function is passed the user who said the message received, the contents of the message, and the instance of the bot server.
+While `module` facilitates the creation of module instances, it does not enforce many restrictions on what it loads. The only requirement imposed by the loader in `module` is that the loaded module has a `name`, `description`, and `version` attribute, and that it contains a `New(channel)` function that returns an instance appropriate for the channel argument that it is being created for; all of these required properties must be exported by the module file. However, `module` also provides a base class, `Module`, that implements a significant amount of module code. All modules should inherit from this class.
+
+###Module Functions
+The `Module` class, as mentioned above, provides many functions for use by implementing modules. `regCmd(trigger, level, fn)` and `regVar(name, fn)` are used to register commands and variables, respectively, with the channel (see [Message Handling](#message-handling)). In `regCmd`, `trigger` is the name of the command being registered; `level` is an optional argument that specifies the permission level required to use the command, and `fn` is a function to be called when the command is run. `regVar` simply takes `name`, the name of the variable being registered, and `fn`, the handler function for the variable.
+
+`Module` also defines several unimplemented functions that can be overridden by the module. These functions are `load`, `unload`, and `handle`. `load` and `unload` are simply no-argument functions that are called when the module is loaded and unloaded, respectively. The `handle` function is called whenever a message is received by the channel. It is passed the user who said the message received, the contents of the message, and the instance of the bot server, in that order.
 
 ###Localization
 Each module also has the option to export its own custom string values which can be localized on a per-channel basis, not only for language reasons, but also to make each channel fun and unique. A module that exports a `strings` map for string key-names to default values will have these values inserted into the string table, under a default entry. Each channel can then provide these strings to modules via the `getString(module, key, args...)` function, or a module can access its own localized strings with its `str(key, args...)` function. In both cases, the `key` is the string used to identify the string being localized, and args are optional values that can be substituted in sequentially for values of the form `"@<number>@"`. Channel administrators can modify these strings from the default values, and `getString` will return these custom strings when available.
@@ -189,13 +198,19 @@ exports.strings     = {
     'string-2' : 'default value of string 2'
 }
 
-class MyModule
-    constructor: (...) ->
-        # This will typically store the channel instance, but this is not a requirement.
-        ...
+class MyModule extends Module
+	constructor: (channel) ->
+		# The default constructor stores the associated Channel instance as
+		# @channel, so it is passed on to the superclass.
+		# If there is no module-specific constructor, then the channel will
+		# be automatically stored as an instance variable.
+		super channel
+		# Initialize any instance variables, etc.
+		...
     load: ->
-        # Handle all data loading and initialization here, bearing in mind, however,
-        # that this method may be called again to reload data.
+        # Handle all data loading and initialization here, bearing in mind,
+        # however, that this method may be called again to reload data,
+        # although only after unload has been called.
         # Initialization may also include registering handlers, etc.
         ...
     unload: ->
@@ -208,7 +223,7 @@ class MyModule
         ...
 exports.New = (channel) ->
     # Create and return a new instance of the module.
-    new MyModule ...
+    new MyModule channel
 ```
 
 Message Handling

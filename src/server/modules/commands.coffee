@@ -17,6 +17,8 @@ util = require 'util'
     EnumDTO
 } = require '../dto'
 
+{Module} = require '../module'
+
 # Module description
 exports.name        = 'Commands'
 exports.version     = '1.2'
@@ -43,27 +45,22 @@ io.module '[Commands] Init'
 #  !unset <command> <message>
 #  !<command>
 #
-class Commands
+class Commands extends Module
     constructor: (@channel) ->
+        super @channel
         @commands = new BucketDTO @channel, 'commands', 'cmdtrigger', ['message', 'level']
 
         @triggers = {}
-        @loaded = false
-        
-        
+    
+    
     load: ->
-        @unload()
-        @loaded = true
-                
-        io.module "[Commands] Loading for #{@channel.id}: #{@channel.name}"
-
-        @channel.register  this, "set"     , Sauce.Level.Mod,
+        @regCmd "set"     , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdSet user, args, bot
-        @channel.register  this, "setmod"  , Sauce.Level.Mod,
+        @regCmd "setmod"  , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdSetMod user, args, bot
-        @channel.register  this, "unset"   , Sauce.Level.Mod,
+        @regCmd "unset"   , Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdUnset user, args, bot
 
@@ -74,12 +71,6 @@ class Commands
 
 
     unload:->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Commands] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
         @triggers = {}
         
         
@@ -99,11 +90,9 @@ class Commands
         
         varcmd = "!" + cmd.toLowerCase()
         
-        @channel.vars.unregister varcmd
-        @channel.vars.register varcmd, (user, args, cb) =>
+        @regVar varcmd, (user, args, cb) =>
             cb @channel.vars.strip @commands.get(cmd).message
             
-
 
     delTrigger: (cmd) ->
         # Do nothing if the trigger doesn't exist.
@@ -146,6 +135,7 @@ class Commands
 
         return bot.say @str('action-set', cmd)
 
+
     # !setmod <command> <message>  - Set moderator-only command
     # !setmod <command>            - Unset command
     cmdSetMod: (user, args, bot) ->
@@ -173,10 +163,6 @@ class Commands
 
         @commands.add cmd, data
         @addTrigger   cmd
-
-
-    handle: (user, msg, bot) ->
-
 
 
 exports.New = (channel) ->

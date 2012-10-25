@@ -23,12 +23,15 @@ blocks = [
         
         # Bonus blocks:
         'Lapis', 'Iron', 'Gold',
-        'Diamond', 'Redstone', 'Coal' 
+        'Diamond', 'Redstone', 'Coal'
 ]
 
 usage = '!jm (13|mellohi|lapis|diamond|coal|...)'
 
 io.module '[JM] Init'
 
-exports.New = (channel) ->
-    Monument.New channel, exports.name, blocks, usage
+class JM extends Monument.Monument
+    constructor: (channel) ->
+        super channel, exports.name, blocks, usage
+
+exports.New = (channel) -> new JM channel

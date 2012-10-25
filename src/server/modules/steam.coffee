@@ -4,6 +4,8 @@ request = require 'request'
 io      = require '../ioutil'
 Sauce   = require '../sauce'
 
+{Module} = require '../module'
+
 # Module description
 exports.name        = 'Steam'
 exports.version     = '1.0'
@@ -16,6 +18,7 @@ exports.strings = {
     'steam-no-game'     : 'Game "@1@" not found'
     'steam-no-news'     : 'No news found for @1@'
     'steam-news-item'   : 'News for @1@ from @2@: @3@'
+    'steam-reloaded'    : 'Reloaded games list'
 }
 
 API_ROOT = 'http://api.steampowered.com'
@@ -23,41 +26,26 @@ NEWS_COUNT = 1
 
 games = []
 
-class Steam
-    
-    constructor: (@channel) ->
-        @loaded = false
-        
-    
+loadGames = (force) -> 
+    return if games.length unless force
+    get {
+        api     : 'ISteamApps'
+        method  : 'GetAppList'
+        version : 2
+    }, {}, (data) ->
+        return io.err "no games found from GetAppList" unless data.applist?.apps?
+        games = data.applist.apps
+
+
+class Steam extends Module
     load: ->
-        return if @loaded
-        
-        # Load the list of all games
-        get {
-            api     : 'ISteamApps'
-            method  : 'GetAppList'
-            version : 2
-        }, {}, (data) =>
-            return io.err "no games found from GetAppList" unless data.applist?.apps?
-            
-            games = data.applist.apps
-            
-            @channel.register @, 'steam news', Sauce.Level.User, @news
-            @channel.register @, 'steam user', Sauce.Level.User, @user
-            
-            @loaded = true
-    
-    
-    unload: ->
-        return unless @loaded
-        
-        myTriggers = @channel.listTriggers { module: this }
-        @channel.unregister myTriggers...
-        
-        @loaded = false
+        @regCmd 'steam news', @news
+        @regCmd 'steam user', @user
+        @regCmd 'steam reload', Sauce.Level.Admin, @reload
     
     
     news: (user, args, bot) ->
+        loadGames()
         game = args[0..].join(' ').toLowerCase()
         
         matches = games
@@ -83,10 +71,14 @@ class Steam
         # TODO Figure out how to look up a user profile (might need API key)
     
     
+    reload: (user, args, bot) ->
+        loadGames true
+        @say bot, @str('steam-reloaded')
+    
+    
     say: (bot, message) ->
         bot.say prefix + message
     
-    handle: -> 0
     
     formatDate: (date) ->
         @str('date-format', date.getDay(), date.getMonth(), date.getFullYear())
@@ -99,17 +91,15 @@ sanitize = (string) ->
     string.replace /<[^>]+>|\n|\r/g, ''
 
 
-
-
 # Fetches a resource from the Steam API.
 #
 # * access: an object describing how to access the resource; valid values are:
-#      * api: the Steam API to use
-#      * method: the Steam method within the API to call
+#      * api:     the Steam API to use
+#      * method:  the Steam method within the API to call
 #      * version: the version of the Steam method to use
-#      * key (optional): a Steam API key to use
+#      * key:     (optional) a Steam API key to use
 # * parameters: parameters to pass with the method call
-# * callback: a callback that takes the API response as an argument
+# * callback  : a callback that takes the API response as an argument
 get = (access, parameters, callback) ->
     parameters.key = access.key if access.key?
     
@@ -125,4 +115,6 @@ get = (access, parameters, callback) ->
         return io.err "no body in response #{response.statusCode}" unless body?
         callback body
 
-exports.New = (channel) -> new Steam channel 
+exports.New = (channel) -> new Steam channel
+
+loadGames()

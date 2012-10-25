@@ -8,6 +8,8 @@ io    = require '../ioutil'
 log   = require '../../common/logger'
 fs    = require 'fs'
 
+{Module} = require '../module'
+
 # Module description
 exports.name        = 'Monitor'
 exports.version     = '1.1'
@@ -28,9 +30,9 @@ mentions = new log.Logger Sauce.Logging.Root, "mentions.log"
 # Load the spam lists
 spam.reload()
 
-class Monitor
+class Monitor extends Module
     constructor: (@channel) ->
-        @loaded = false
+        super @channel
 
         @log = new log.Logger Sauce.Logging.Root, "channels/#{@channel.name}.log"
         
@@ -44,26 +46,21 @@ class Monitor
             mentions.write new Date(), @channel.name, user.name, msg
 
     load:->
-        return if @loaded
-        @loaded = true
-        
-        io.module "[Monitor] Loading for #{@channel.id}: #{@channel.name}"
-
         userpicker = (user, args, bot) =>
             if args[0]?
                 @cmdPickNUsers bot, args[0]
             else
                 @cmdPickOneUser bot
 
-        @channel.register this, "pickuser" , Sauce.Level.Mod, userpicker
-        @channel.register this, "pickusers", Sauce.Level.Mod, userpicker
+        @regCmd "pickuser" , Sauce.Level.Mod, userpicker
+        @regCmd "pickusers", Sauce.Level.Mod, userpicker
 
-        @channel.register this, "users clear", Sauce.Level.Mod,
+        @regCmd "users clear", Sauce.Level.Mod,
             (user, args, bot) =>
                 @users = {}
                 bot.say "[Users] " + @str('users-cleared')
 
-        @channel.vars.register 'users', (user, args, cb) =>
+        @regVar 'users', (user, args, cb) =>
                 if not args[0]? then return cb Object.keys(@users).length
                 
                 cb switch args[0]
@@ -72,16 +69,6 @@ class Monitor
                     when 'random' then @getRandomUser()
                     else '$(error: use count or rand)'
 
-
-    unload:->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Monitor] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        @channel.vars.unregister 'users'
-     
 
     cmdPickOneUser: (bot) ->
         rand  = @getRandomUser()
@@ -125,6 +112,7 @@ class Monitor
 
         return list
         
+
     handle: (user, msg, bot) ->
         @writelog user, msg
         @users[user.name] = 1

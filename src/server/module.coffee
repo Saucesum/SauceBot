@@ -1,8 +1,10 @@
 # SauceBot Module Loader
 
 fs = require 'fs'
-io = require './ioutil'
-db = require './saucedb'
+
+io        = require './ioutil'
+db        = require './saucedb'
+Sauce     = require './sauce'
 {HashDTO} = require './dto'
 
 PATH = __dirname + '/modules/'
@@ -18,6 +20,9 @@ defaultChannel = {
     name : 'Default'
 }
 
+# DTO to store module strings
+strDTO  = new HashDTO defaultChannel, STRS_TABLE, 'key', 'value'
+
 # Loads a module with the given file name, minus the extension, so that it can
 # be instantiated by the channels.
 #
@@ -27,7 +32,7 @@ defaultChannel = {
 # * name: the file name of the module to load
 loadModule = (name) ->
     try
-        module = require "#{PATH}#{name.toLowerCase()}" 
+        module = require "#{PATH}#{name.toLowerCase()}"
         io.debug "Loaded module #{module.name}(#{name.toLowerCase()}) v#{module.version}"
         
         exports.MODULES[module.name] = module
@@ -45,28 +50,29 @@ loadModule = (name) ->
       return null
 
 
-db.clearTable INFO_TABLE
 
-# Configure strings table
-strDTO  = new HashDTO defaultChannel, STRS_TABLE, 'key', 'value'
-strings = {}
+initialize = ->
+    db.clearTable INFO_TABLE
 
-# Watch the module file path for any new .js files that can be loaded as
-# modules, and add them to our list of modules.
-fs.readdirSync(PATH).forEach (file) ->
-    return unless match = /(\w+)\.js$/i.exec file
-    return unless (module = loadModule(match[1]))?
+    # Configure strings table
+    strings = {}
+
+    # Watch the module file path for any new .js files that can be loaded as
+    # modules, and add them to our list of modules.
+    fs.readdirSync(PATH).forEach (file) ->
+        return unless match = /(\w+)\.js$/i.exec file
+        return unless (module = loadModule(match[1]))?
+        
+        stringBase = module.name.toLowerCase()
     
-    stringBase = module.name.toLowerCase()
-
-    # Also update any strings that are loaded by this module
-    for k, v of (module.strings ? {})
-        key = "#{stringBase}-#{k}"
-        strings[key] = v
-
-# Update the default string values in case they've been modified.
-strDTO.set strings
-
+        # Also update any strings that are loaded by this module
+        for k, v of (module.strings ? {})
+            key = "#{stringBase}-#{k}"
+            strings[key] = v
+    
+    # Update the default string values in case they've been modified.
+    strDTO.set strings
+    
 exports.getDefaultString = (key) ->
     strDTO.get key
  
@@ -91,8 +97,82 @@ exports.instance = (name, chan) ->
     obj.name        = module.name
     obj.description = module.description
     obj.version     = module.version
-    
-    obj.str = (key, args...) ->
-        chan.getString obj.name, key, args...
 
     return obj
+
+
+# Base class from which all modules inherit.
+class Module
+
+    # Constructs a module object.
+    #
+    # * channel: The parent channel object.
+    constructor: (@channel) ->
+        @loaded = false
+
+
+    # Loads the module.
+    loadModule: ->
+        @unloadModule()
+        @loaded = true
+        io.module "[#{@getModuleName()}] Loading for #{@channel.id}: #{@channel.name}"
+        @load()
+
+
+    # Returns this module's class name.
+    # Useful for debugging.
+    getModuleName: ->
+        @constructor.name
+
+
+    # Unloads the module.
+    # This removes all registered commands and variables.
+    unloadModule: ->
+        return unless @loaded
+        @loaded = false
+        
+        io.module "[#{@getModuleName()}] Unloading from #{@channel.id}: #{@channel.name}"
+        @channel.unregisterFor this
+        @unload()
+
+
+    # Registers a command.
+    #
+    # * trigger: Command trigger.
+    # * level  : (optional) Minimum user level to trigger command.
+    # * fn     : The trigger callback. Called as fn(user, args, bot).
+    regCmd: (trigger, level, fn) ->
+        unless fn?
+            fn = level
+            # No level specified, use default.
+            level = Sauce.Level.User
+
+        @channel.register this, trigger, level, fn
+
+
+    # Registers a variable.
+    #
+    # * name: The variable name.
+    # * fn  : The variable callback. Called as fn(user, args, cb)
+    #         where cb must be called with the variable value.
+    regVar: (name, fn) ->
+        @channel.vars.register this, name, fn
+
+
+    # Returns a named string for this channel.
+    #
+    # * key : The key of the string. Usually "group-name"
+    # * args: Optional arguments to substitute in the string.
+    str: (key, args...) ->
+        @channel.getString @getModuleName(), key, args...
+
+    
+    # Unimplemented methods:
+    load  : -> 0
+    unload: -> 0
+    handle: -> 0
+
+
+exports.Module = Module
+
+initialize()

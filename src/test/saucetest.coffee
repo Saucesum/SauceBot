@@ -82,17 +82,14 @@ class CallStack
     
     constructor: (@result) ->
         @stack = []
-        @left = 0
         
     add: (callback) ->
         @stack.push =>
-            callback @stack.pop()
-            (@stack.pop() ? result)()
-    
-    decrement: ->
-        @result() if --@left is 0
+            callback @stack.pop() ? @result
             
     start: ->
+        @stack.reverse()
+        @stack.pop()()
 
 
 # Object for test utility methods.
@@ -130,41 +127,52 @@ exports.test = test = {
             options[k] ?= v
 
         # TODO: Implement the callback stack to prevent this ugliness
-
-        {chanid, name, bot} = options
-        db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [[
-            chanid
-            name
-            1
-            bot
-        ]], ->
-
+        
+        stack = new CallStack ->
+            callback new Channel {
+                chanid : chanid
+                name   : name
+                status : 1
+                bot    : bot
+            }
+            
+        stack.add (next) ->
+            {chanid, name, bot} = options
+            db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [[
+                chanid
+                name
+                1
+                bot
+            ]], next
+            
+        stack.add (next) ->
             {modonly, quiet} = options
             db.addData 'channelconfig', ['chanid', 'modonly', 'quiet'], [[
                 chanid
                 modonly
                 quiet
-            ]], ->
+            ]], next
 
-                {strings} = options
+        stack.add (next) ->
+            {strings} = options
+            if strings.length
                 db.addData 'strings', ['key', 'value'], ([
                     key
                     value
-                ] for key, value of strings), ->
+                ] for key, value of strings), next
+            else next()
 
-                    {modules} = options
-                    db.addData 'module', ['chanid', 'module', 'state'], ([
-                        chanid
-                        module
-                        1
-                    ] for module in modules), ->
+        stack.add (next) ->
+            {modules} = options
+            if Object.keys(modules).length
+                db.addData 'module', ['chanid', 'module', 'state'], ([
+                    chanid
+                    module
+                    1
+                ] for module in modules), next
+            else next()
         
-                        callback new Channel {
-                            chanid : chanid
-                            name   : name
-                            status : 1
-                            bot    : bot
-                        }
+        stack.start()
 
 
     # Returns a function that can be passed to "it(...)" for unit testing commands

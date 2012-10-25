@@ -31,13 +31,11 @@
 #
 
 
-tz         = require('./ioutil').tz
+{tz}       = require('./ioutil')
 color      = require 'colors'
 os         = require 'os'
 
 Sauce      = require './sauce'
-
-
 
 varRE  = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/
 varREg = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/g
@@ -67,7 +65,7 @@ class Vars
     constructor: (@channel) ->
         
         @handlers =
-            botname   : (user, args, cb) -> cb Sauce.Name
+            botname   : (user, args, cb) -> cb Sauce.Server.Name
             botversion: (user, args, cb) -> cb Sauce.Version
             
             name      : (user, args, cb) -> cb user.name
@@ -93,7 +91,7 @@ class Vars
             
             time      : (user, args, cb) ->
                 now = new Date().getTime()
-                time = tz now, args[0] ? 'Europe/Oslo', '%H:%M:%S'
+                time = tz now, "%H:%M:%S", '',  args[0] ? 'Europe/Oslo'
                 cb time
                     
                     

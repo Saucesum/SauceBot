@@ -1,31 +1,12 @@
 # SauceBot Configurations
 
-io = require '../common/ioutil'
-
-try
-    conf = require('../common/config').load 'server'
-catch error
-    io.error "Error in configuration file 'server'"
-    process.exit 1
-
-exports.Version = '3.2'
-exports.Name    = conf.name
+config = require './config'
+io     = require './ioutil'
 
 
-# Connection info
-exports.PORT = conf.port
-
-# FS
-exports.Path = conf.logging.root
-
-
-# Moderator levels
-exports.Level =
-    User : 0
-    Mod  : 1
-    Admin: 2
-    Owner: 3
-
+# Returns a string representing the specified level.
+# + Anything over "Owner" will be returned as "Global".
+# + Anything under "User" will be returned as "None".
 exports.LevelStr = (level) ->
     switch level
         when exports.Level.User  then 'User'
@@ -35,7 +16,10 @@ exports.LevelStr = (level) ->
         else
             if level > exports.Level.Owner then 'Global' else 'None'
 
+# Import exports from the config loader.
+exports.reload = ->
+    if config.isLoaded()
+        exports[k] = v for k, v of config
+    else
+        io.error "No config file loaded"
 
-
-# Database configuration
-exports.DB = conf.mysql

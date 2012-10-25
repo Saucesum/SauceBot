@@ -3,6 +3,7 @@ src/testing/
 build
 publish
 config
+logs/
 node_modules/
 -p/
 .project

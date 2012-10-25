@@ -1,1 +1,1 @@
-mocha ../test/ --reporter spec --recursive -t 20000
+mocha ./bin/test/ --recursive --require should -R spec

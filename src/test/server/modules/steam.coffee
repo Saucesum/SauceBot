@@ -1,5 +1,8 @@
 # Steam module unit test
 
+assert = require 'assert'
+should = require 'should'
+
 Sauce = require '../../../server/sauce'
 {CheckBot, test} = require '../../saucetest'
 

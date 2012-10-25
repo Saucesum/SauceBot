@@ -14,8 +14,9 @@ sio   = require '../common/socket'
 log   = require '../common/logger'
 
 # Set up logging
-io.setLevel io.Level.Normal
-io.setLogger new log.Logger Sauce.Path, "server.log"
+io.setLogger new log.Logger Sauce.Logging.Root, "server.log"
+
+weblog = new log.Logger Sauce.Logging.Root, 'updates.log'
 
 # Sauce
 db    = require './saucedb'
@@ -58,7 +59,6 @@ updateClientChannels = (socket) ->
         socket.emit 'channels', data for socket in server.sockets when socket.isClient?
 
 
-weblog = new log.Logger Sauce.Path, 'updates.log'
 
 # Special user map for twitch admins and staff
 specialUsers = { }
@@ -335,7 +335,7 @@ io.debug 'Loading channels...'
 loadChannels()
 
 # Start server
-server = new sio.Server Sauce.PORT,
+server = new sio.Server Sauce.Server.Port,
     (socket) ->
         io.socket "Client connected"
         new SauceBot socket

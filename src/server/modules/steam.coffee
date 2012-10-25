@@ -86,8 +86,9 @@ class Steam
     say: (bot, message) ->
         bot.say prefix + message
     
+    handle: -> 0
     
-    formatDate = (date) ->
+    formatDate: (date) ->
         @str('date-format', date.getDay(), date.getMonth(), date.getFullYear())
 
 

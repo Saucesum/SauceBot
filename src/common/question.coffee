@@ -34,9 +34,12 @@ class QuestionSystem
 
     # Starts the questionnaire.
     #
-    # * cb: (optional) Sets the callback.
-    #       See #setCallback(cb) for more info.
-    start: (cb) ->
+    # * header: (optional) A header message to print before starting.
+    # * cb    : (optional) Sets the callback.
+    #           See #setCallback(cb) for more info.
+    start: (header, cb) ->
+        @printHeader header if header?
+        
         @callback = cb if cb?
 
         # Reset question index
@@ -52,10 +55,25 @@ class QuestionSystem
         @ask()
 
 
+    # Prints a header
+    printHeader: (header) ->
+        length = header.stripColors.length
+        
+        # Create border. The +4 is for 2 padding on left & right.
+        border = ('#' for _ in [1..length+4]).join ''
+        
+        console.log "\n#{border}\n# #{header} #\n#{border}\n"
+
+
     # Checks the input answer and moves on to the next question.
     checkAnswer: (line) ->
         line = line.trim()
-        {group, name} = @getCurrent()
+        {group, name, value} = @getCurrent()
+
+        # Make sure the value type is the same as one of the default.
+        if value and typeof value is 'number'
+            line = parseInt line
+
         @answers[group][name] = line
 
         @qid++
@@ -77,7 +95,7 @@ class QuestionSystem
         # Ask the question and insert default answer
         @rl.question " * #{name}: ", (answer) =>
             @checkAnswer answer
-        @rl.write value
+        @rl.write "#{value}"
         
 
     # Returns whether the questionnaire is completed.

@@ -169,8 +169,8 @@ exports.addChanData = (channel, table, fields, datalist, cb) ->
 exports.addData = (table, fields, datalist, cb) ->
     wc = getWildcards fields.length
     queryStr = "REPLACE INTO #{table} (`#{fields.join '`, `'}`) VALUES (#{wc})"
-    empty = ->
-    query queryStr, data, cb for data in datalist
+    callback = (err, results) -> cb?()
+    query queryStr, data, callback for data in datalist
 
 # Performs the same function as addChanData, but first clears all data for the
 # channel in the specified table.

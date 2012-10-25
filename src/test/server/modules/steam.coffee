@@ -5,20 +5,22 @@ Sauce = require '../../../server/sauce'
 
 Steam = require '../../../server/modules/steam'
 
-describe 'Steam', ->
-    test.channel { modules: ['Steam'] }, (channel) ->
-        console.log channel
-        game = 'Borderlands 2'
-        command = "!steam news #{game}"
-        describe command, ->
-            it "should respond with #{game} news",
-                test.command {
+module = 'Steam'
+describe module, ->
+    game = 'Borderlands 2'
+    command = "!steam news #{game}"
+    describe command, ->
+        it "should respond with #{game} news", (done) ->
+            test.channel { modules: ['Steam'], strings: Steam.strings }, (channel) ->
+                test.command({
                     channel : channel
                     user    : test.user 'Joe_User', Sauce.Level.User
-                }, command,
+                },
+                command,
                 new CheckBot().say CheckBot.regex 'message',
-                    new RegExp(channel.getString('news-item',
+                    new RegExp(channel.getString(module, 'steam-news-item',
                         game,
-                        channel.getString('date-format', '\\d+', '\\d+', '\\d+'),
+                        channel.getString(module, 'steam-date-format', '\\d+', '\\d+', '\\d+'),
                         '.*'
                     ), 'i')
+                )(done)

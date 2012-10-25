@@ -12,10 +12,10 @@ exports.description = 'Steam API'
 prefix = '[Steam]: '
 
 exports.strings = {
-    'date-format' : '@3@-@2@-@1@'
-    'no-game'     : 'Game "@1@" not found'
-    'no-news'     : 'No news found for @1@'
-    'news-item'   : 'News for @1@ from @2@: @3@'
+    'steam-date-format' : '@3@-@2@-@1@'
+    'steam-no-game'     : 'Game "@1@" not found'
+    'steam-no-news'     : 'No news found for @1@'
+    'steam-news-item'   : 'News for @1@ from @2@: @3@'
 }
 
 API_ROOT = 'http://api.steampowered.com'
@@ -37,13 +37,13 @@ class Steam
             api     : 'ISteamApps'
             method  : 'GetAppList'
             version : 2
-        }, {}, (data) ->
+        }, {}, (data) =>
             return io.err "no games found from GetAppList" unless data.applist?.apps?
             
             games = data.applist.apps
             
-            @channel.register 'steam news', Sauce.Level.User, news
-            @channel.register 'steam user', Sauce.Level.User, user
+            @channel.register @, 'steam news', Sauce.Level.User, @news
+            @channel.register @, 'steam user', Sauce.Level.User, @user
             
             @loaded = true
     
@@ -64,7 +64,7 @@ class Steam
         .filter((e) -> e.name.toLowerCase().indexOf(game) isnt -1)
         .sort((a, b) -> a.name.length - b.name.length)
         
-        return @say bot, @str('no-game', game) unless matches
+        return @say bot, @str('steam-no-game', game) unless matches
         
         get {
             api     : 'ISteamNews'
@@ -72,10 +72,10 @@ class Steam
             version : 2
         }, {
             appid : matches[0].appid
-        }, (data) ->
-            return @say bot, @str('no-news', game) unless data.appnews?.newsitems?
+        }, (data) =>
+            return @say bot, @str('steam-no-news', game) unless data.appnews?.newsitems?
             news = data.appnews.newsitems[0..NEWS_COUNT - 1]
-            @say bot, @str('news-item', matches[0].name, formatDate new Date item.date, item.title) for item in news
+            @say bot, @str('steam-news-item', matches[0].name, formatDate new Date item.date, item.title) for item in news
     
     
     user: (user, args, bot) ->

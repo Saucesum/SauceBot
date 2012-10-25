@@ -1,1 +1,1 @@
-mocha ../test/ --reporter list --recursive
+mocha ../test/ --reporter spec --recursive -t 20000

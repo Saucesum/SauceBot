@@ -41,22 +41,22 @@ class CheckBot
         @tests = []
     
     say: (test) ->
-        @tests.push check 'say', test
+        @tests.push @check 'say', test
         @
     ban: (test) ->
-        @tests.push check 'ban', test
+        @tests.push @check 'ban', test
         @
     unban: (test) ->
-        @tests.push check 'unban', test
+        @tests.push @check 'unban', test
         @
     clear: (test) ->
-        @tests.push check 'clear', test
+        @tests.push @check 'clear', test
         @
     timeout: (test) ->
-        @tests.push check 'timeout', test
+        @tests.push @check 'timeout', test
         @
     commercial: ->
-        @tests.push check 'commercial', -> true
+        @tests.push @check 'commercial', -> true
         @
 
     @equals: (key, value) ->
@@ -76,6 +76,23 @@ class CheckBot
 
     test: (other) ->
         other.log.every (entry, index) -> @tests[index] entry
+
+
+class CallStack
+    
+    constructor: (@result) ->
+        @stack = []
+        @left = 0
+        
+    add: (callback) ->
+        @stack.push =>
+            callback @stack.pop()
+            (@stack.pop() ? result)()
+    
+    decrement: ->
+        @result() if --@left is 0
+            
+    start: ->
 
 
 # Object for test utility methods.
@@ -115,7 +132,6 @@ exports.test = test = {
         # TODO: Implement the callback stack to prevent this ugliness
 
         {chanid, name, bot} = options
-
         db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [[
             chanid
             name
@@ -137,14 +153,13 @@ exports.test = test = {
                 ] for key, value of strings), ->
 
                     {modules} = options
-                    
                     db.addData 'module', ['chanid', 'module', 'state'], ([
                         chanid
                         module
                         1
                     ] for module in modules), ->
         
-                        return new Channel {
+                        callback new Channel {
                             chanid : chanid
                             name   : name
                             status : 1

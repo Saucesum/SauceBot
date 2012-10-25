@@ -10,6 +10,7 @@ vars  = require '../vars'
 vm    = require 'vm'
 util  = require 'util'
 
+{Module} = require '../module'
 
 # Module description
 exports.name        = 'Base'
@@ -95,10 +96,10 @@ verify = (user, code, isVerified) ->
 #  !test
 #  !calc
 #
-class Base
+class Base extends Module
     constructor: (@channel) ->
-        @loaded = false
-        
+        super @channel
+ 
         # Set some constants
         mathValues =
             e : 2.718281828459045235360
@@ -108,30 +109,25 @@ class Base
 
         # Include methods from Math
         mathValues[func] = Math[func] for func in MATH
-
         
         @sandbox = vm.createContext mathValues
 
-    load:->
-        return if @loaded
-        @loaded = true
-        
-        io.module "[Base] Loading for #{@channel.id}: #{@channel.name}"
 
-        @channel.register this, "saucebot", Sauce.Level.User,
+    load:->
+        @regCmd "saucebot", Sauce.Level.User,
             (user,args,bot) =>
               bot.say "[SauceBot] SauceBot v#{Sauce.Version} by @RavnTM - CoffeeScript/Node.js"
 
-        @channel.register this, "test", Sauce.Level.Mod,
+        @regCmd "test", Sauce.Level.Mod,
             (user,args,bot) =>
               bot.say "[Test] #{user.name} - #{Sauce.LevelStr user.op}"
               
-        @channel.register this, "saucetime", Sauce.Level.User,
+        @regCmd "saucetime", Sauce.Level.User,
             (user,args,bot) =>
               now = new Date()
               bot.say "[SauceTime] #{io.tz now, '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
               
-        @channel.register this, "help", Sauce.Level.Mod,
+        @regCmd "help", Sauce.Level.Mod,
             (user,args,bot) =>
                 db.addData 'helprequests', ['chanid', 'time', 'user', 'reason'], [[
                     @channel.id,
@@ -145,14 +141,14 @@ class Base
                     bot.say "[Help] " + @str('help-basic', '!help <message>')
 
         # Command to test variable evaluation
-        @channel.register this, "var", Sauce.Level.Mod,
+        @regCmd "var", Sauce.Level.Mod,
             (user, args, bot) =>
                 return unless args
                 raw = args.join ' '
                 @channel.vars.parse user, raw, raw, (parsed) ->
                     bot.say "[Vars] #{parsed}"
 
-        @channel.register this, "verify", Sauce.Level.User,
+        @regCmd "verify", Sauce.Level.User,
             (user, args, bot) =>
                 unless args[0]?
                     return bot.say "[Verify] " + @str('verify-syntax', '!verify <code>')
@@ -161,7 +157,7 @@ class Base
                     msgcode = if verified then 'verify-ok' else 'verify-err'
                     bot.say "[Verify] " + @str(msgcode, user.name)
 
-        @channel.register this, "calc", Sauce.Level.Mod,
+        @regCmd "calc", Sauce.Level.Mod,
             (user, args, bot) =>
                 return unless args
                 txt = args.join ''
@@ -171,11 +167,11 @@ class Base
                 catch error
                     bot.say "[Calc] " + @str('math-invalid', math)
 
-        @channel.register this, "mode", Sauce.Level.Admin,
+        @regCmd "mode", Sauce.Level.Admin,
             (user, args, bot) =>
                 bot.say "[Mode] " + @str('usage-invalid', '!mode [modonly|quiet] [on|off]')
 
-        @channel.register this, "mode modonly", Sauce.Level.Admin,
+        @regCmd "mode modonly", Sauce.Level.Admin,
             (user, args, bot) =>
                 switch args[0]
                     when 'on'
@@ -187,7 +183,7 @@ class Base
                     else
                         bot.say '[Mode] ' + @str('usage-invalid', '!mode modonly (on|off)')
 
-        @channel.register this, "mode quiet", Sauce.Level.Admin,
+        @regCmd "mode quiet", Sauce.Level.Admin,
             (user, args, bot) =>
                 switch args[0]
                     when 'on'
@@ -199,18 +195,6 @@ class Base
                     else
                         bot.say '[Mode] ' + @str('usage-invalid', '!mode quiet (on|off)')
                  
-
-    unload:->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Base] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        
-
-    handle: (user, msg, bot) ->
-        
 
 exports.New = (channel) ->
     new Base channel

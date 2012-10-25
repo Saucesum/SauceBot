@@ -67,14 +67,14 @@ class Channel
         @loadChannelModules()
         
         # Channel specific vars
-        @vars = new Vars @
+        @vars = new Vars this
         
         # Channel modes configuration
-        @modes = new ConfigDTO @, 'channelconfig', ['modonly', 'quiet']
+        @modes = new ConfigDTO this, 'channelconfig', ['modonly', 'quiet']
         @modes.load()
 
         # Channel strings configuration
-        @strings = new HashDTO @, 'strings', 'key', 'value'
+        @strings = new HashDTO this, 'strings', 'key', 'value'
         @strings.load()
 
     
@@ -102,6 +102,7 @@ class Channel
                 module = mod.instance moduleName, this
                 module.load()
             catch error
+                console.log error.stack
                 io.error "Error loading module #{moduleName}: #{error}"
         
         return module
@@ -249,7 +250,7 @@ class Channel
 
     # Removes the given triggers from this channel.
     #
-    # * triggersToRemove: surprisingly, the triggers to remove
+    # * triggersToRemove: the triggers to remove.
     unregister: (triggersToRemove...) ->
         @triggers = (elem for elem in @triggers when not (elem in triggersToRemove))
 
@@ -265,6 +266,14 @@ class Channel
 
         results
 
+
+    unregisterFor: (module) ->
+        # Unregister commands
+        @triggers = (trigger for trigger in @triggers when trigger.module isnt module)
+
+        # Unregister variables
+        @vars.unregisterFor module
+    
 
     # Changes the status of quiet mode.
     #

@@ -4,7 +4,8 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 io    = require '../ioutil'
 
-{ConfigDTO} = require '../dto' 
+{ConfigDTO} = require '../dto'
+{Module   } = require '../module'
 
 # Module description
 exports.name        = 'AutoCommercial'
@@ -34,40 +35,29 @@ io.module '[AutoCommercial] Init'
 #  http://apiwiki.justin.tv/mediawiki/index.php/Channel/commercial       #
 #                                                                        #
 # ********************************************************************** #
-class AutoCommercial
+class AutoCommercial extends Module
     constructor: (@channel) ->
+        super @channel
         @comDTO = new ConfigDTO @channel, 'autocommercial', ['state', 'delay', 'messages']
         
         @messages = []
         @lastTime = 0
-        @loaded = false
         
         
     load: ->
-        io.module "[AutoCommercial] Loading for #{@channel.id}: #{@channel.name}"
-        
-        @registerHandlers() unless @loaded
-        
+        @registerHandlers()
         @comDTO.load()
         
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[AutoCommercial] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-
 
     registerHandlers: ->
         # !commercial on - Enable auto-commercials
-        @channel.register this, "commercial on"      , Sauce.Level.Mod,
+        @regCmd "commercial on", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdEnableCommercial()
                 bot.say '[AutoCommercial] ' + @str('config-enable')
         
         # !commercial off - Disable auto-commercials
-        @channel.register this, "commercial off"     , Sauce.Level.Mod,
+        @regCmd "commercial off", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdDisableCommercial()
                 bot.say '[AutoCommercial] ' + @str('config-disable')
@@ -92,6 +82,7 @@ class AutoCommercial
         
     messagesSinceLast: ->
         @messages.length
+
 
     handle: (user, msg, bot) ->
         return unless @comDTO.get 'state'

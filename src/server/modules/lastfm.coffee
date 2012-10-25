@@ -10,7 +10,7 @@ request = require 'request'
 util    = require 'util'
 
 {ConfigDTO, HashDTO} = require '../dto'
-
+{Module} = require '../module'
 
 # Module description
 exports.name        = 'LastFM'
@@ -33,34 +33,16 @@ getURL = (username) ->
 # instance
 songCache = new WebCache getURL, CACHE_TIMEOUT
 
-class LastFM
-    constructor: (@channel) ->
-        @loaded = false
-        
-                
+class LastFM extends Module
     load: ->
-        io.module "[Last.FM] Loading for #{@channel.id}: #{@channel.name}"
-
-        @registerHandlers() unless @loaded
-        @loaded = true
-
-        
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Last.FM] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        @channel.vars.unregister 'lastfm'
+        @registerHandlers()
 
         
     registerHandlers: ->
-        @channel.register this, "lastfm", Sauce.Level.User,
-            (user,args,bot) =>
+        @regCmd "lastfm", (user,args,bot) =>
                 @cmdLastFM user, args, bot
 
-        @channel.vars.register 'lastfm', (user, args, cb) =>
+        @regVar 'lastfm', (user, args, cb) =>
             unless args[0]?
                 cb 'N/A'
             else
@@ -101,8 +83,5 @@ class LastFM
         catch err
             return 'N/A'
 
-
-    handle: (user, msg, bot) ->
-        
 
 exports.New = (channel) -> new LastFM channel

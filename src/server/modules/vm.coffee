@@ -20,7 +20,7 @@ blocks = [
       'Pink', 'Gray', 'Light_gray',
       'Cyan', 'Purple', 'Blue',
       'Brown', 'Green', 'Red' ,
-      'Black', 'Iron', 'Gold', 'Diamond'   
+      'Black', 'Iron', 'Gold', 'Diamond'
 ]
 
 usage = '!vm (white|light_gray|light_blue|diamond|...)'

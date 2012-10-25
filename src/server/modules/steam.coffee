@@ -4,6 +4,8 @@ request = require 'request'
 io      = require '../ioutil'
 Sauce   = require '../sauce'
 
+{Module} = require '../module'
+
 # Module description
 exports.name        = 'Steam'
 exports.version     = '1.0'
@@ -23,38 +25,21 @@ NEWS_COUNT = 1
 
 games = []
 
-class Steam
-    
-    constructor: (@channel) ->
-        @loaded = false
-        
-    
+loadGames = ->
+    get {
+        api     : 'ISteamApps'
+        method  : 'GetAppList'
+        version : 2
+    }, {}, (data) =>
+        return io.err "no games found from GetAppList" unless data.applist?.apps?
+        games = data.applist.apps
+
+class Steam extends Module
     load: ->
-        return if @loaded
-        
-        # Load the list of all games
-        get {
-            api     : 'ISteamApps'
-            method  : 'GetAppList'
-            version : 2
-        }, {}, (data) =>
-            return io.err "no games found from GetAppList" unless data.applist?.apps?
-            
-            games = data.applist.apps
-            
-            @channel.register this, 'steam news', Sauce.Level.User, @news
-            @channel.register this, 'steam user', Sauce.Level.User, @user
-            
-            @loaded = true
-    
-    
-    unload: ->
-        return unless @loaded
-        
-        myTriggers = @channel.listTriggers { module: this }
-        @channel.unregister myTriggers...
-        
-        @loaded = false
+        @regCmd 'steam news', @news
+        @regCmd 'steam user', @user
+
+        loadGames() unless games.length
     
     
     news: (user, args, bot) ->
@@ -86,7 +71,6 @@ class Steam
     say: (bot, message) ->
         bot.say prefix + message
     
-    handle: -> 0
     
     formatDate: (date) ->
         @str('date-format', date.getDay(), date.getMonth(), date.getFullYear())
@@ -97,8 +81,6 @@ class Steam
 # * string: the string to sanitize
 sanitize = (string) ->
     string.replace /<[^>]+>|\n|\r/g, ''
-
-
 
 
 # Fetches a resource from the Steam API.
@@ -125,4 +107,4 @@ get = (access, parameters, callback) ->
         return io.err "no body in response #{response.statusCode}" unless body?
         callback body
 
-exports.New = (channel) -> new Steam channel 
+exports.New = (channel) -> new Steam channel

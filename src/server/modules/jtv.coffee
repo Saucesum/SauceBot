@@ -9,6 +9,7 @@ util    = require 'util'
 
 {ConfigDTO, HashDTO} = require '../dto'
 {Cache, WebCache   } = require '../cache'
+{Module            } = require '../module'
 
 
 # Module description
@@ -29,46 +30,29 @@ jtvcache = new WebCache (key) -> "http://api.justin.tv/api/stream/list.json?chan
 
 strip = (msg) -> msg.replace /[^a-zA-Z0-9_]/g, ''
 
-class JTV
-    constructor: (@channel) ->
-        
-        @loaded = false
-                
+class JTV extends Module
     load: ->
-        io.module "[JTV] Loading for #{@channel.id}: #{@channel.name}"
-
-        @registerHandlers() unless @loaded
-        @loaded = true
-
+        @registerHandlers()
         
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[JTV] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        @channel.vars.unregister 'jtv'
-
         
     registerHandlers: ->
-        @channel.register this, "game", Sauce.Level.Mod,
+        @regCmd "game", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdGame user, args, bot
 
-        @channel.register this, "viewers", Sauce.Level.Mod,
+        @regCmd "viewers", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdViewers user, args, bot
         
-        @channel.register this, "views", Sauce.Level.Mod,
+        @regCmd "views", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdViews user, args, bot
         
-        @channel.register this, "title", Sauce.Level.Mod,
+        @regCmd "title", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdTitle user, args, bot
         
-        @channel.vars.register 'jtv', (user, args, cb) =>
+        @regVar 'jtv', (user, args, cb) =>
             usage = '$(jtv (game|viewers|views|title))'
             unless args[0]?
                 cb usage
@@ -133,7 +117,5 @@ class JTV
             data = {} unless data?["channel"]?["login"]?.toLowerCase() is chan
             cb data
 
-    handle: (user, msg, bot) ->
-        
 
 exports.New = (channel) -> new JTV channel

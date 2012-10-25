@@ -2,10 +2,11 @@
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
-
 io    = require '../ioutil'
 
 fs    = require 'fs'
+
+{Module} = require '../module'
 
 # Module description
 exports.name        = 'Hangman'
@@ -36,8 +37,9 @@ wordlists = {}
 #  !hm <word>
 #  !hm <character>
 #
-class Hangman
+class Hangman extends Module
     constructor: (@channel) ->
+        super @channel
         
         # TODO: Allow for different wordlists depending on channel
         @language = 'english'
@@ -48,26 +50,15 @@ class Hangman
         
         loadWordList @language unless wordListLoaded @language
         
-        @channel.register  this, "hm", Sauce.Level.User,
+        @regCmd "hm", Sauce.Level.User,
             (user,args,bot) =>
                 @word = randomWord @language
                 @word2 = randomWord @language
                 bot.say @str('test-random-word', @word, @word2)
                 
-        @channel.vars.register 'hm', (user, args, cb) =>
+        @regVar 'hm', (user, args, cb) =>
             cb @word
             
-    unload: ->
-        @channel.vars.unregister 'hm'
-        
-        io.module "[Hangman] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        
-
-
-    handle: (user, msg, bot) ->
-        
         
 randomWord = (listname) ->
     list = wordList listname
@@ -93,7 +84,7 @@ loadWordList = (listname) ->
     fs.readFile wordfiles[listname], 'utf8', (err, data) ->
         throw err if err?
 
-        return if wordlists[listname]?        
+        return if wordlists[listname]?
         
         list = wordList listname
         

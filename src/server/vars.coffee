@@ -95,12 +95,19 @@ class Vars
                 cb time
                     
                     
-    register: (cmd, handler) ->
-        @handlers[cmd] = handler
+    register: (module, cmd, handler) ->
+        @handlers[cmd] = {
+            module: module
+            handle: handler
+        }
         
         
-    unregister: (cmd, handler) ->
+    unregister: (cmd) ->
         delete @handlers[cmd]
+
+
+    unregisterFor: (module) ->
+        @handlers = (handler for handler in @handlers when handler.module isnt module)
         
     
     parse: (user, message, raw, cb) ->
@@ -146,8 +153,8 @@ class Vars
             
         # Otherwise, either return the command,
         # or handle it with the configured handler.
-        return cb() unless handler = @handlers[cmd]
-        handler user, args, cb
+        return cb() unless variable = @handlers[cmd]
+        variable.handle user, args, cb
         
     strip: (msg) ->
         msg.replace varREg, ''

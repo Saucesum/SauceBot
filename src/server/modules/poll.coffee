@@ -4,7 +4,8 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 io    = require '../ioutil'
 
-{HashDTO} = require '../dto' 
+{HashDTO} = require '../dto'
+{Module } = require '../module'
 
 # Module description
 exports.name        = 'Poll'
@@ -24,25 +25,21 @@ exports.strings = {
 
 io.module '[Poll] Init'
 
-class Poll
+class Poll extends Module
     constructor: (@channel) ->
+        super @channel
         @pollDTO = new HashDTO @channel, 'poll', 'name', 'options'
-        
-        @loaded = false
         
         @reset()
 
         
     load: ->
-        io.module "[Poll] Loading for #{@channel.id}: #{@channel.name}"
-            
-        @registerHandlers() unless @loaded
-        @loaded = true
+        @registerHandlers()
         
         @pollDTO.load =>
             @updatePollList()
             
-        @channel.vars.register 'poll', (user, args, cb) =>
+        @regVar 'poll', (user, args, cb) =>
             return cb 'N/A' unless @activePoll?
             
             if not args[0] or args[0] is 'name'
@@ -68,30 +65,19 @@ class Poll
         @votes      = []
 
 
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Poll] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        
-        @channel.vars.unregister 'poll'
-
-
     registerHandlers: ->
         # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
-        @channel.register this, 'poll'    , Sauce.Level.Mod,
+        @regCmd 'poll'    , Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdPollStart args, bot
         
         # !poll end - Ends the active poll
-        @channel.register this, 'poll end', Sauce.Level.Mod,
+        @regCmd 'poll end', Sauce.Level.Mod,
             (user, args, bot) =>
                 @cmdPollEnd args, bot
         
         # !vote <value> - Adds a vote to the current poll
-        @channel.register this, 'vote'    , Sauce.Level.User,
+        @regCmd 'vote'    , Sauce.Level.User,
             (user, args, bot) =>
                 @cmdPollVote user, args, bot
 
@@ -149,14 +135,11 @@ class Poll
         
     cmdPollVote: (user, args, bot) ->
         user = user.name
-        return if !@activePoll? or user in @hasVoted 
+        return if !@activePoll? or user in @hasVoted
 
         if args[0]? and (idx = @polls[@activePoll].indexOf(args[0].toLowerCase())) isnt -1
             @hasVoted.push user
             @votes[idx]++
-
-
-    handle: (user, msg, bot) ->
 
         
 exports.New = (channel) -> new Poll channel

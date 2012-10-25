@@ -2,8 +2,9 @@
 
 Sauce = require './sauce'
 db    = require './saucedb'
-
 io    = require './ioutil'
+
+{Module} = require './module'
 
 { # Import DTO classes
     ArrayDTO,
@@ -28,15 +29,14 @@ exports.strings = {
 }
 
 
-class Monument
+class Monument extends Module
     constructor: (@channel, @name, @blocks, @usage) ->
+        super @channel
         @command = @name.toLowerCase()
 
         @obtained = new ArrayDTO @channel, @command, 'block'
         
         @blocksLC = (block.toLowerCase() for block in @blocks)
-        
-        @loaded = false
         
         
     save: ->
@@ -47,15 +47,12 @@ class Monument
         
     
     load: ->
-        io.module "[#{@name}] Loading for #{@channel.id}: #{@channel.name}"
-
-        @registerHandlers() unless @loaded
-        @loaded = true
+        @registerHandlers()
         
         # Load monument data
         @obtained.load()
         
-        @channel.vars.register @command, (user, args, cb) =>
+        @regVar @command, (user, args, cb) =>
             if not args[0] or args[0] is 'list'
                 return cb @getBlockString()
             
@@ -65,25 +62,13 @@ class Monument
                 when 'remaining' then @blocks.length - @obtained.get().length
                 else  'undefined'
             
-                
-
-    unload:->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[#{@name}}] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        
-        @channel.vars.unregister @command
-        
         
     registerHandlers: ->
-        @channel.register this, "#{@command}",       Sauce.Level.Mod, (user,args,bot) =>
+        @regCmd "#{@command}",        Sauce.Level.Mod, (user,args,bot) =>
             @cmdMonument user, args, bot
-        @channel.register this, "#{@command} clear", Sauce.Level.Mod,  (user,args,bot) =>
+        @regCmd "#{@command} clear",  Sauce.Level.Mod, (user,args,bot) =>
             @cmdMonumentClear user, args, bot
-        @channel.register this, "#{@command} remove", Sauce.Level.Mod, (user,args,bot) =>
+        @regCmd "#{@command} remove", Sauce.Level.Mod, (user,args,bot) =>
             @cmdMonumentRemove user, args, bot
         
 
@@ -137,8 +122,5 @@ class Monument
         bot.say '[' + @name + '] ' + msg
 
 
-    handle: (user, msg, bot) ->
-        
-
 exports.New = (channel, name, blocks, usage) ->
-    new Monument channel, name, blocks, usage 
+    new Monument channel, name, blocks, usage

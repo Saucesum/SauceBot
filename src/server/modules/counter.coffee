@@ -13,6 +13,8 @@ io    = require '../ioutil'
     EnumDTO
 } = require '../dto'
 
+{Module} = require '../module'
+
 # Module description
 exports.name        = 'Counter'
 exports.version     = '1.2'
@@ -36,20 +38,15 @@ io.module '[Counter] Init'
 #  !<counter> +<value>
 #  !<counter> -<value>
 #
-class Counter
+class Counter extends Module
     constructor: (@channel) ->
+        super @channel
         @counters = new HashDTO @channel, 'counter', 'name', 'value'
 
         @triggers = {}
-        @loaded = false
-        
-        
+       
+ 
     load: ->
-        @unload()
-        @loaded = true
-        
-        io.module "[Counter] Loading for #{@channel.id}: #{@channel.name}"
-
         regexBadCtr = /^!(\w+\s+(?:\+|\-).+)$/
         regexNewCtr = /^!(\w+\s+=.+)$/
 
@@ -66,7 +63,7 @@ class Counter
             for ctr of @counters.data
                 @addTrigger ctr
 
-        @channel.vars.register 'counter', (user, args, cb) =>
+        @regVar 'counter', (user, args, cb) =>
             if args? and (counter = @counters.get()[args[0]])?
                 cb counter
             else
@@ -74,13 +71,6 @@ class Counter
         
 
     unload:->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Counter] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        @channel.vars.unregister 'counter'
         @triggers = {}
 
 
@@ -182,10 +172,6 @@ class Counter
             @counters.remove(ctr)
             return @str('action-unset', ctr)
         
-        
-    handle: (user, msg, bot) ->
-
-
 
 exports.New = (channel) ->
     new Counter channel

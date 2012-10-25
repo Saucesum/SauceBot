@@ -4,7 +4,9 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 io    = require '../ioutil'
 
-{ConfigDTO, EnumDTO, BucketDTO} = require '../dto' 
+{ConfigDTO, EnumDTO, BucketDTO} = require '../dto'
+
+{Module} = require '../module'
 
 # Module description
 exports.name        = 'Quotes'
@@ -14,35 +16,24 @@ exports.locked      = false
 
 io.module '[Quotes] Init'
 
-class Quotes
+class Quotes extends Module
     constructor: (@channel) ->
+        super @channel
         @quoteDTO = new BucketDTO @channel, 'quotes', 'id', ['list', 'quote']
         @quotes   = {}
         
-        @loaded = false
-        
         
     load: ->
-        io.module "[Quotes] Loading for #{@channel.id}: #{@channel.name}"
-        
-        @registerHandlers() unless @loaded
+        @registerHandlers()
         
         @quoteDTO.load =>
             for id, {quote, list} of @quoteDTO.data
                 @quotes[list] = [] unless @quotes[list]?
                 @quotes[list].push quote
         
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Quotes] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-
 
     registerHandlers: ->
-        @channel.vars.register 'quote', (user, args, cb) =>
+        @regVar 'quote', (user, args, cb) =>
             unless (list = args[0])? and (@hasQuotes list)
                 cb 'N/A'
             else
@@ -56,9 +47,5 @@ class Quotes
     getRandomQuote: (list) ->
         @getQuote list, ~~ (Math.random() * @numQuotes list)
     
-    
-    handle: (user, msg, bot) ->
-        
-
         
 exports.New = (channel) -> new Quotes channel

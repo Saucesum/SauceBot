@@ -6,6 +6,7 @@ io    = require '../ioutil'
 
 {ConfigDTO, HashDTO} = require '../dto'
 
+{Module} = require '../module'
 
 # Module description
 exports.name        = 'Timer'
@@ -39,7 +40,6 @@ strToTime = (str) ->
     ms = 1000 * (seconds + 60 * (minutes + 60 * (hours + 24 * days)))
     
     
-    
 SECOND = 1000
 MINUTE = 60 * SECOND
 HOUR   = 60 * MINUTE
@@ -55,7 +55,6 @@ word = (num, str) ->
             num + ' ' + str + 's'
  
  
-
 timeToShortStr = (time) ->
     if time >= DAY
         days  = ~~( time / DAY)
@@ -111,64 +110,48 @@ timeToFullStr = (time) ->
         seconds = ~~ (time / SECOND)
         strs.push (word seconds, 'second') unless seconds is 0
         
-    return strs.join ' '
+    return (strs.join ' ').trim()
 
 
-class Timer
+class Timer extends Module
     constructor: (@channel) ->
+        super @channel
         @timers     = new HashDTO @channel, 'timers',     'name', 'time'
         @countdowns = new HashDTO @channel, 'countdowns', 'name', 'time'
         
-        @loaded = false
-        
-                
+ 
     load: ->
-        io.module "[Timer] Loading for #{@channel.id}: #{@channel.name}"
-
-        @registerHandlers() unless @loaded
-        @loaded = true
+        @registerHandlers()
 
         @timers.load()
         @countdowns.load()
         
         
-    unload: ->
-        return unless @loaded
-        @loaded = false
-        
-        io.module "[Timer] Unloading from #{@channel.id}: #{@channel.name}"
-        myTriggers = @channel.listTriggers { module:this }
-        @channel.unregister myTriggers...
-        
-        @channel.vars.unregister 'timer'
-        @channel.vars.unregister 'countdown'
-        
-        
     registerHandlers: ->
-        @channel.register this, "timer",          Sauce.Level.Mod,
+        @regCmd "timer",          Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdTimerStart user, args, bot
                 
-        @channel.register this, "timer stop",     Sauce.Level.Mod,
+        @regCmd "timer stop",     Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdTimerStop user, args, bot
                 
-        @channel.register this, "countdown",      Sauce.Level.Mod,
+        @regCmd "countdown",      Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdCountdownStart user, args, bot
                 
-        @channel.register this, "countdown stop", Sauce.Level.Mod,
+        @regCmd "countdown stop", Sauce.Level.Mod,
             (user,args,bot) =>
                 @cmdCountdownStop user, args, bot
                 
-        @channel.vars.register 'countdown', (user, args, cb) =>
+        @regVar 'countdown', (user, args, cb) =>
             unless args? and (cdown = @countdowns.get args[0])?
                 cb 'N/A'
             else
                 time = cdown - Date.now()
                 cb @formatTime time, args[1]
             
-        @channel.vars.register 'timer', (user, args, cb) =>
+        @regVar 'timer', (user, args, cb) =>
             unless args? and (timer = @timers.get args[0])?
                 cb 'N/A'
             else
@@ -220,8 +203,5 @@ class Timer
         bot.say "[Countdown] " + @str('action-countdown-stopped', args[0], timeToFullStr (timer - Date.now()))
         @countdowns.remove args[0]
             
-        
-    handle: (user, msg, bot) ->
-        
 
 exports.New = (channel) -> new Timer channel

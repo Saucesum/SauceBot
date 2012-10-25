@@ -23,7 +23,7 @@ blocks = [
         
         # Bonus blocks:
         'Lapis', 'Iron', 'Gold',
-        'Diamond', 'Redstone', 'Coal' 
+        'Diamond', 'Redstone', 'Coal'
 ]
 
 usage = '!jm (13|mellohi|lapis|diamond|coal|...)'

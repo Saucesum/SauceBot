@@ -170,6 +170,7 @@ class Counter extends Module
     counterUnset: (ctr) ->
         if @counters.get(ctr)?
             @counters.remove(ctr)
+            @channel.unregister @triggers[ctr]
             return @str('action-unset', ctr)
         
 

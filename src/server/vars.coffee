@@ -63,8 +63,10 @@ colors =
         
 class Vars
     constructor: (@channel) ->
-        
-        @handlers =
+        @handlers = {}
+
+
+        baseVars = {
             botname   : (user, args, cb) -> cb Sauce.Server.Name
             botversion: (user, args, cb) -> cb Sauce.Version
             
@@ -93,11 +95,17 @@ class Vars
                 now = new Date().getTime()
                 time = tz now, "%H:%M:%S", '',  args[0] ? 'Europe/Oslo'
                 cb time
+
+        }
+
+        # Register default vars and pretend they're from the "Base" module.
+        for cmd, handler of baseVars
+            @register { name: 'Base' }, cmd, handler
                     
                     
     register: (module, cmd, handler) ->
         @handlers[cmd] = {
-            module: module
+            module: module.name
             handle: handler
         }
         
@@ -107,9 +115,10 @@ class Vars
 
 
     unregisterFor: (module) ->
-        @handlers = (handler for handler in @handlers when handler.module isnt module)
-        
-    
+        for cmd, handler of @handlers when handler.module is module.name
+            @unregister cmd
+   
+ 
     parse: (user, message, raw, cb) ->
         if m = @checkVars message
             @replaceVar m, message, user, raw, (replaced) =>

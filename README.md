@@ -256,10 +256,22 @@ where `args` would contain, as its first entry, the name argument to the command
 with `args` again containing the name of the timer to process
  
 ###Message Variables
-In many case, it may be useful to store variables, which may even be dynamically determined, for use in user-created commands. By registering a variable with the `vars` of a channel, any message processed by that [`Vars`](src/server/vars.coffee) will have references to the variable in the message replaced with its evaluation. To register a variable, use the `Vars.register(var, handler)`, with `var` being the name of the variable to register, and `handler`, a function taking the user who submitted the command and the rest of the arguments to the variable, and calling a callback with the replacement string for the variable. Variables are signified in a string by `"$(name[ args...])"`.
+In many case, it may be useful to store variables, which may even be dynamically determined,
+for use in user-created commands. By registering a variable with the `vars` of a channel,
+any message processed by that [`Vars`](src/server/vars.coffee ) will have references to the
+variable in the message replaced with its evaluation. To register a variable, use the
+`Vars.register(module, var, handler)`, with `module` being the module creating the variable,
+`var` being the name of the variable to register, and `handler`, a function taking the user
+who submitted the command and the rest of the arguments to the variable, and calling a
+callback with the replacement string for the variable.
+Variables are signified in a string by `"$(name[ args...])"`.
 
 Consider a variable `$(time)`. A module could register this variable via the command
 ```coffeescript
-Vars.register 'time', (user, args, callback) -> ... # Call "callback" with result
+Vars.register <module>, 'time', (user, args, callback) -> ... # Call "callback" with result
 ```
-Any message being processed by this `Vars` instance would have every occurrence of `$(time)` replaced with the time, as calculated by our handler function. This could allow custom messages (see [`Commands`](src/server/modules/commands.coffee)) to have embedded variables in them, and opens many new possibilities for interactivity.
+
+Any message being processed by this `Vars` instance would have every occurrence of `$(time)`
+replaced with the time, as calculated by our handler function. This could allow custom messages
+(see [`Commands`](src/server/modules/commands.coffee)) to have embedded variables in them,
+and opens many new possibilities for interactivity.

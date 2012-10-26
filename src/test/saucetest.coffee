@@ -33,8 +33,7 @@ class TestBot
         @callback() if @log.length == @size
 
 
-# A "Bot" that creates a pattern that can be used to test whether a "TestBot"
-# matches it
+# A "Bot" that creates a pattern that can be used to test whether a "TestBot" matches it.
 class CheckBot
     
     constructor: ->
@@ -42,28 +41,28 @@ class CheckBot
     
     say: (test) ->
         @tests.push @check 'say', test
-        @
+        this
     ban: (test) ->
         @tests.push @check 'ban', test
-        @
+        this
     unban: (test) ->
         @tests.push @check 'unban', test
-        @
+        this
     clear: (test) ->
         @tests.push @check 'clear', test
-        @
+        this
     timeout: (test) ->
         @tests.push @check 'timeout', test
-        @
+        this
     commercial: ->
         @tests.push @check 'commercial', -> true
-        @
+        this
 
-    @equals: (key, value) ->
+    equals: (key, value) ->
         (entry) ->
             entry[key] = value
 
-    @regex: (key, pattern) ->
+    regex: (key, pattern) ->
         (entry) ->
             pattern.test entry[key]
     
@@ -78,6 +77,7 @@ class CheckBot
         other.log.every (entry, index) -> @tests[index] entry
 
 
+# A stack of callbacks used to ensure order of multiple calls.
 class CallStack
     
     constructor: (@result) ->
@@ -126,7 +126,9 @@ exports.test = test = {
         for k, v of defaultOpts
             options[k] ?= v
 
-        # TODO: Implement the callback stack to prevent this ugliness
+        {chanid, name, bot,
+         modonly, quiet,
+         strings, modules}  = options
         
         stack = new CallStack ->
             callback new Channel {
@@ -135,9 +137,8 @@ exports.test = test = {
                 status : 1
                 bot    : bot
             }
-            
+         
         stack.add (next) ->
-            {chanid, name, bot} = options
             db.addData 'channel', ['chanid', 'name', 'status', 'bot'], [[
                 chanid
                 name
@@ -146,7 +147,6 @@ exports.test = test = {
             ]], next
             
         stack.add (next) ->
-            {modonly, quiet} = options
             db.addData 'channelconfig', ['chanid', 'modonly', 'quiet'], [[
                 chanid
                 modonly
@@ -154,7 +154,6 @@ exports.test = test = {
             ]], next
 
         stack.add (next) ->
-            {strings} = options
             if strings.length
                 db.addData 'strings', ['key', 'value'], ([
                     key
@@ -163,7 +162,6 @@ exports.test = test = {
             else next()
 
         stack.add (next) ->
-            {modules} = options
             if Object.keys(modules).length
                 db.addData 'module', ['chanid', 'module', 'state'], ([
                     chanid
@@ -175,13 +173,13 @@ exports.test = test = {
         stack.start()
 
 
-    # Returns a function that can be passed to "it(...)" for unit testing commands
+    # Returns a function that can be passed to "it(...)" for unit testing commands.
     #
-    # * context: an object containing "channel", the channel to test the command
-    #            in, and "user", the user to test the command as 
-    # * command: the command to submit to the test framework
-    # * expected: a CheckBot instance that will determine if the result is correct
-    # = the callback to be used for testing
+    # * context : an object containing "channel", the channel to test the command
+    #             in, and "user", the user to test the command as.
+    # * command : the command to submit to the test framework.
+    # * expected: a CheckBot instance that will determine if the result is correct.
+    # = the callback to be used for testing.
     command: (context, command, expected) ->
         (done) ->
             bot = new TestBot ->
@@ -196,14 +194,14 @@ exports.test = test = {
             }, bot
     
     
-    # Returns a function that can be passed to "it(...)" for unit testing variables
+    # Returns a function that can be passed to "it(...)" for unit testing variables.
     #
-    # * context: an object containing "channel", the channel to test the variable
-    #            in, and "user", the user to test the variable as
-    # * variable: the name of the variable to test
-    # * args: the arguments to pass to the variable
-    # * condition: a function that returns whether the result of the variable is correct
-    # = the callback to be used for testing
+    # * context  : an object containing "channel", the channel to test the variable
+    #              in, and "user", the user to test the variable as.
+    # * variable : the name of the variable to test.
+    # * args     : the arguments to pass to the variable.
+    # * condition: a function that returns whether the result of the variable is correct.
+    # = the callback to be used for testing.
     variable: (context, variable, args, condition) ->
         (done) ->
             bot = new TestBot ->

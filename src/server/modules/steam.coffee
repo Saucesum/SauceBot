@@ -11,14 +11,14 @@ exports.name        = 'Steam'
 exports.version     = '1.0'
 exports.description = 'Steam API'
 
-prefix = '[Steam]: '
+prefix = '[Steam] '
 
 exports.strings = {
-    'steam-date-format' : '@3@-@2@-@1@'
-    'steam-no-game'     : 'Game "@1@" not found'
-    'steam-no-news'     : 'No news found for @1@'
-    'steam-news-item'   : 'News for @1@ from @2@: @3@'
-    'steam-reloaded'    : 'Reloaded games list'
+    'format-date'    : '@3@-@2@-@1@'
+    'err-no-game'    : 'Game "@1@" not found'
+    'err-no-news'    : 'No news found for @1@'
+    'item-news'      : 'News for @1@ from @2@: @3@'
+    'action-reloaded': 'Reloaded games list'
 }
 
 API_ROOT = 'http://api.steampowered.com'
@@ -26,7 +26,7 @@ NEWS_COUNT = 1
 
 games = []
 
-loadGames = (force) -> 
+loadGames = (force) ->
     return if games.length unless force
     get {
         api     : 'ISteamApps'
@@ -52,7 +52,7 @@ class Steam extends Module
         .filter((e) -> e.name.toLowerCase().indexOf(game) isnt -1)
         .sort((a, b) -> a.name.length - b.name.length)
         
-        return @say bot, @str('steam-no-game', game) unless matches
+        return @say bot, @str('err-no-game', game) unless matches
         
         get {
             api     : 'ISteamNews'
@@ -61,9 +61,9 @@ class Steam extends Module
         }, {
             appid : matches[0].appid
         }, (data) =>
-            return @say bot, @str('steam-no-news', game) unless data.appnews?.newsitems?
+            return @say bot, @str('err-no-news', game) unless data.appnews?.newsitems?
             news = data.appnews.newsitems[0..NEWS_COUNT - 1]
-            @say bot, @str('steam-news-item', matches[0].name, formatDate new Date item.date, item.title) for item in news
+            @say bot, @str('item-news', matches[0].name, formatDate new Date item.date, item.title) for item in news
     
     
     user: (user, args, bot) ->
@@ -73,7 +73,7 @@ class Steam extends Module
     
     reload: (user, args, bot) ->
         loadGames true
-        @say bot, @str('steam-reloaded')
+        @say bot, @str('action-reloaded')
     
     
     say: (bot, message) ->
@@ -81,7 +81,7 @@ class Steam extends Module
     
     
     formatDate: (date) ->
-        @str('date-format', date.getDay(), date.getMonth(), date.getFullYear())
+        @str('format-date', date.getDay(), date.getMonth(), date.getFullYear())
 
 
 # Very basic removal of HTML tags from a string.

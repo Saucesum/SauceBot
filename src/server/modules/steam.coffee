@@ -14,7 +14,7 @@ exports.description = 'Steam API'
 prefix = '[Steam] '
 
 exports.strings = {
-    'format-date'    : '@3@-@2@-@1@'
+    'format-date'    : '%B %-d, %Y'
     'err-no-game'    : 'Game "@1@" not found'
     'err-no-news'    : 'No news found for @1@'
     'item-news'      : 'News for @1@ from @2@: @3@'
@@ -39,12 +39,18 @@ loadGames = (force) ->
 
 class Steam extends Module
     load: ->
-        @regCmd 'steam news', @news
-        @regCmd 'steam user', @user
-        @regCmd 'steam reload', Sauce.Level.Admin, @reload
+        # Possibly consider declaring the command handlers as
+        # cmd...: (user, args, bot) => ...
+        # so that we don't have to add wrappers
+        @regCmd 'steam news', (user, args, bot) =>
+            @cmdNews user, args, bot
+        @regCmd 'steam user', (user, args, bot) =>
+            @cmdUser user, args, bot
+        @regCmd 'steam reload', Sauce.Level.Admin, (user, args, bot) =>
+            @cmdReload user, args, bot
     
     
-    news: (user, args, bot) ->
+    cmdNews: (user, args, bot) ->
         loadGames()
         game = args[0..].join(' ').toLowerCase()
         
@@ -52,7 +58,7 @@ class Steam extends Module
         .filter((e) -> e.name.toLowerCase().indexOf(game) isnt -1)
         .sort((a, b) -> a.name.length - b.name.length)
         
-        return @say bot, @str('err-no-game', game) unless matches
+        return @say bot, @str('err-no-game', game) unless matches.length
         
         get {
             api     : 'ISteamNews'
@@ -63,25 +69,21 @@ class Steam extends Module
         }, (data) =>
             return @say bot, @str('err-no-news', game) unless data.appnews?.newsitems?
             news = data.appnews.newsitems[0..NEWS_COUNT - 1]
-            @say bot, @str('item-news', matches[0].name, formatDate new Date item.date, item.title) for item in news
+            @say bot, @str('item-news', matches[0].name, io.tz(item.date * 1000, @str 'format-date'), item.title) for item in news
     
     
-    user: (user, args, bot) ->
+    cmdUser: (user, args, bot) ->
         username = args[0].toLowerCase()
         # TODO Figure out how to look up a user profile (might need API key)
     
     
-    reload: (user, args, bot) ->
+    cmdReload: (user, args, bot) ->
         loadGames true
         @say bot, @str('action-reloaded')
     
     
     say: (bot, message) ->
         bot.say prefix + message
-    
-    
-    formatDate: (date) ->
-        @str('format-date', date.getDay(), date.getMonth(), date.getFullYear())
 
 
 # Very basic removal of HTML tags from a string.
@@ -101,10 +103,12 @@ sanitize = (string) ->
 # * parameters: parameters to pass with the method call
 # * callback  : a callback that takes the API response as an argument
 get = (access, parameters, callback) ->
-    parameters.key = access.key if access.key?
+    # Do something proper here
+    parameters.key = access.key ? Sauce.API.Steam
     
     options = {
         method : 'GET'
+        # slice(-4) pads the version number with leading zeros to four characters in length
         url    : "#{API_ROOT}/#{access.api}/#{access.method}/v#{('000' + access.version).slice(-4)}"
         qs     : parameters
         json   : true

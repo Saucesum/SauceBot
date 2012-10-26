@@ -87,6 +87,8 @@ if args['--config']
     qs.add 'Logging', 'Root', config.Logging.Root
 
     qs.add 'API', 'Twitch', config.API.Twitch
+    qs.add 'API', 'LastFM', config.API.LastFM
+    qs.add 'API', 'Steam',  config.API.Steam
 
     qs.start 'Configuring SauceBot Server'.bold.magenta, (data) ->
 

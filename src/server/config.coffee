@@ -36,6 +36,8 @@ exports.DEFAULTS = {
     # Api keys
     API:
         Twitch: null
+        LastFM: null
+        Steam : null
 }
 
 # Flag to specify whether data has been loaded

@@ -24,10 +24,10 @@ exports.strings = {
 
 CACHE_TIMEOUT = 30 * 1000
 
-api_key  = 'b25b959554ed76058ac220b7b2e0a026'
+API_KEY = Sauce.API.LastFM
 
 getURL = (username) ->
-    "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=#{username}&api_key=#{api_key}&format=json&limit=1&time=#{Date.now()}"
+    "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=#{username}&api_key=#{API_KEY}&format=json&limit=1&time=#{Date.now()}"
 
 # The song cache is global, since there's really no need to have it per module
 # instance

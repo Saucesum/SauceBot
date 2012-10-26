@@ -42,16 +42,32 @@ class Debug extends Module
                @say bot, "Module #{moduleName} loaded"
                @channel.loadChannelModules()
 
+        @regCmd 'dbg all', global, (user, args, bot) =>
+            @cmdModules bot
+            @cmdTriggers bot
+            @cmdVars bot
+
         @regCmd 'dbg modules', global, (user, args, bot) =>
-            @say bot, ("#{m.name}#{if not m.loaded then '[?]' else ''}" for m in @channel.modules).join(' ')
+            @cmdModules bot
 
         @regCmd 'dbg triggers', global, (user, args, bot) =>
-            @say bot, "Triggers for #{@channel.name}:"
-            @say bot, "[#{t.oplevel}]#{t.pattern}" for t in @channel.triggers
+            @cmdTriggers bot
 
         @regCmd 'dbg vars', global, (user, args, bot) =>
-            @say bot, "Variables for #{@channel.name}:"
-            @say bot, "#{v.module} - #{k}" for k, v of @channel.vars.handlers
+            @cmdVars bot
+
+    cmdModules: (bot) ->
+        @say bot, ("#{m.name}#{if not m.loaded then '[?]' else ''}" for m in @channel.modules).join(' ').bold.red
+
+
+    cmdTriggers: (bot) ->
+        @say bot, "Triggers for #{@channel.name}:".bold.red
+        @say bot, "[#{t.oplevel}]#{t.pattern}" for t in @channel.triggers
+
+
+    cmdVars: (bot) ->
+        @say bot, "Variables for #{@channel.name}:".bold.red
+        @say bot, "#{v.module} - #{k}" for k, v of @channel.vars.handlers
 
     say: (bot, msg) ->
         bot.say "[Debug] #{msg}"

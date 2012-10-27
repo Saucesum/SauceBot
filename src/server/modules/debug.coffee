@@ -4,7 +4,8 @@ io    = require '../ioutil'
 Sauce = require '../sauce'
 db    = require '../saucedb'
 
-{Module} = require '../module'
+{Module  } = require '../module'
+{TokenJar} = require '../../common/oauth'
 
 # Module metadata
 exports.name        = 'Debug'
@@ -14,6 +15,8 @@ exports.ignore      = 1
 exports.locked      = 1
 
 io.module '[Debug] Init'
+
+oauth = new TokenJar Sauce.API.Twitch, Sauce.API.TwitchToken
 
 class Debug extends Module
     load: ->
@@ -56,21 +59,41 @@ class Debug extends Module
         @regCmd 'dbg vars', global, (user, args, bot) =>
             @cmdVars bot
 
+        @regCmd 'dbg oauth', global, (user, args, bot) =>
+            @cmdOauth bot
+
+        @regCmd 'dbg commercial', global, (user, args, bot) =>
+            @cmdCommercial bot
+
     cmdModules: (bot) ->
-        @say bot, ("#{m.name}#{if not m.loaded then '[?]' else ''}" for m in @channel.modules).join(' ').bold.red
+        @say bot, ("#{m.name}#{if not m.loaded then '[?]' else ''}" for m in @channel.modules).join(' ')
 
 
     cmdTriggers: (bot) ->
-        @say bot, "Triggers for #{@channel.name}:".bold.red
+        @say bot, "Triggers for #{@channel.name}:"
         @say bot, "[#{t.oplevel}]#{t.pattern}" for t in @channel.triggers
 
 
     cmdVars: (bot) ->
-        @say bot, "Variables for #{@channel.name}:".bold.red
+        @say bot, "Variables for #{@channel.name}:"
         @say bot, "#{v.module} - #{k}" for k, v of @channel.vars.handlers
+
+    cmdOauth: (bot) ->
+        oauth.get '/user', 'GET', (resp, body) =>
+            io.debug body
+            if body['display_name']?
+                @say bot, "Authenticated as #{body['display_name']}"
+            else
+                @say bot, "Not authenticated."
+
+    cmdCommercial: (bot) ->
+        oauth.get "/channels/#{@channel.name}/commercial", 'POST', (resp, body) =>
+            @say bot, "Commercial: #{resp.statusCode}"
+
 
     say: (bot, msg) ->
         bot.say "[Debug] #{msg}"
+
 
 exports.New = (channel) -> new Debug channel
 

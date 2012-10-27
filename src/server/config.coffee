@@ -5,7 +5,7 @@ conf = require '../common/config'
 # Default values for the configurations.
 exports.DEFAULTS = {
     # Server version
-    Version: '3.2'
+    Version: '3.3'
 
     DBDump: __dirname + '/../../db/my.sql'
     
@@ -36,6 +36,7 @@ exports.DEFAULTS = {
     # Api keys
     API:
         Twitch: null
+        TwitchToken: null
         LastFM: null
         Steam : null
 }

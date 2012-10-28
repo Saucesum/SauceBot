@@ -67,7 +67,7 @@ class Poll extends Module
 
     registerHandlers: ->
         # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
-        @regCmd 'poll'    , @cmdPollStart
+        @regCmd 'poll'    , Sauce.Level.Mod, @cmdPollStart
         
         # !poll end - Ends the active poll
         @regCmd 'poll end', Sauce.Level.Mod, @cmdPollEnd

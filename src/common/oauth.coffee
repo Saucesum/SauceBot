@@ -46,41 +46,71 @@ class TokenJar
     # * clientID : the client_id of the application.
     # * authToken: the active auth token.
     constructor: (@clientID, @authToken) ->
-        # Any requests that could not be completed when requested
-        # due to the token not being acquired yet
-        @queue = []
+        0xCAFEBABE # Because every class needs some Java love.
 
 
     # Requests a resource from the API using a HTTP GET request. The name of
     # the resource always begins with a '/', and the response passed to the
-    # callback is an object translated from the JSON response from the server.
+    # callback is the response object and the body, which may be null.
     #
-    # * resource: the resource being requested
-    # * callback: a function taking the response object as an argument
-    get: (resource, method, callback) ->
-        action = =>
-            getRequest = {
-                url   : API_ROOT + resource
-                form: { oauth_token: @authToken }
-                qs  : { oauth_token: @authToken }
-                method: method
-            }
-            
-            request getRequest, (err, resp, body) ->
-                io.debug "OAuth resp: #{resp.statusCode}"
-                return io.error err if err?
+    # * resource: the resource being requested.
+    # * callback: a function taking the response object and body as arguments.
+    get: (resource, callback) ->
+        getRequest = {
+            url   : API_ROOT + resource
+            method: 'GET'
+            json  : true
 
-                if body?
-                    try
-                        body = JSON.parse body
-                    catch err
-                        0 # Ignore
-                else
-                    io.debug "no body in response for #{resource}"
-
-                callback resp, body
+            qs    : { oauth_token: @authToken }
+        }
         
-        action()
+        request getRequest, (err, resp, body) =>
+            io.debug "[GET #{resource}] #{resp.headers.status}"
+            return io.error err if err?
+
+            @process resp, body, callback
 
 
+    # Requests a resource from the API using a HTTP POST request. The name of
+    # the resource always begins with a '/', and the response passed to the
+    # callback is the response object and the body, which may be null.
+    #
+    # * resource: the resource being requested.
+    # * callback: a function taking the response object and body as arguments.
+    post: (resource, callback) ->
+        postRequest = {
+            url   : API_ROOT + resource
+            method: 'POST'
+
+            form  : { oauth_token: @authToken }
+            qs    : { oauth_token: @authToken }
+        }
+
+        request postRequest, (err, rep, body) =>
+            io.debug "[POST #{resource}] #{resp.headers.status}"
+            return io.error err if err?
+
+            @process resp, body, callback
+
+
+    process: (resp, body, callback) ->
+        if body? and typeof body isnt 'object'
+            body = @parseJSON body
+
+        callback resp, body
+            
+
+    # Attempts to parse JSON, ignoring any errors thrown.
+    #
+    # * data: the string to parse.
+    # = object if successful, null otherwise.
+    parseJSON: (data) ->
+        try
+            return JSON.parse data
+        catch err
+            # Not JSON
+            return null
+             
+              
 exports.TokenJar = TokenJar
+              

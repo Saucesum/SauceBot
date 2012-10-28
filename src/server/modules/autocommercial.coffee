@@ -130,7 +130,7 @@ class AutoCommercial extends Module
         
         return unless @messagesSinceLast() >= msgsLimit and (now - @lastTime > (delay * 60 * 1000))
         
-        oauth.get "/channels/#{@channel.name}/commercial", 'POST', (resp, body) =>
+        oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
             # "204 No Content" if successful.
             bot.say @str('action-commercial', @channel.name) if resp.statusCode is 204
 

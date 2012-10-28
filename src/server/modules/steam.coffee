@@ -1,8 +1,10 @@
 # Steam API module
 
-request = require 'request'
-io      = require '../ioutil'
-Sauce   = require '../sauce'
+request     = require 'request'
+io          = require '../ioutil'
+{tz}        = require '../../common/time'
+{CallStack} = require '../../common/util'
+Sauce       = require '../sauce'
 
 {Module} = require '../module'
 
@@ -22,6 +24,7 @@ exports.strings = {
 }
 
 API_ROOT = 'http://api.steampowered.com'
+NEWS_TRIES = 3
 NEWS_COUNT = 1
 
 games = []
@@ -51,7 +54,6 @@ class Steam extends Module
     
     
     cmdNews: (user, args, bot) ->
-        loadGames()
         game = args[0..].join(' ').toLowerCase()
         
         matches = games
@@ -60,16 +62,31 @@ class Steam extends Module
         
         return @say bot, @str('err-no-game', game) unless matches.length
         
-        get {
-            api     : 'ISteamNews'
-            method  : 'GetNewsForApp'
-            version : 2
-        }, {
-            appid : matches[0].appid
-        }, (data) =>
-            return @say bot, @str('err-no-news', game) unless data.appnews?.newsitems?
-            news = data.appnews.newsitems[0..NEWS_COUNT - 1]
-            @say bot, @str('item-news', matches[0].name, io.tz(item.date * 1000, @str 'format-date'), item.title) for item in news
+        stack = new CallStack =>
+            @say bot, @str('err-no-news', game)
+        
+        for i in [0..NEWS_TRIES - 1]
+            # We have to be sure to close over the loop variable 'i', so we use
+            # a 'do' statement to ensure that the value is accessible in lower
+            # functions
+            do (i) =>
+                stack.add (next) =>
+                    get {
+                        api     : 'ISteamNews'
+                        method  : 'GetNewsForApp'
+                        version : 2
+                    }, {
+                        appid : matches[i].appid
+                    }, (data) =>
+                        return next() unless data.appnews?.newsitems?.length
+                        news = data.appnews.newsitems[0..NEWS_COUNT - 1]
+                        @say bot, @str('item-news',
+                            matches[i].name,
+                            tz(item.date * 1000, @str 'format-date'),
+                            item.title
+                        ) for item in news
+        
+        stack.start()
     
     
     cmdUser: (user, args, bot) ->

@@ -111,16 +111,4 @@ exports.noise = ->
 
 # Returns a random index of the specified array
 randIdx = (arr) ->
-    Math.floor (Math.random() * arr.length)
-
-
-# Returns the current time in seconds
-exports.now = ->
-    new Date().getTime() / 1000
-
-exports.tz = require('timezone')(
-    require "timezone/#{region}" for region in ['Africa', 'America',
-    'Antarctica', 'Asia', 'Atlantic', 'Australia', 'Europe', 'Indian',
-    'Pacific']
-)
-
+    Math.floor (Math.random() * arr.length)]

@@ -4,6 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 
 io    = require '../ioutil'
+time  = require '../../common/time'
 vars  = require '../vars'
 
 { # Import DTO classes
@@ -54,7 +55,7 @@ class News extends Module
         @index    = 0
         
         # News counters
-        @lastTime     = io.now()
+        @lastTime     = time.now()
         @messageCount = 0
        
         
@@ -143,7 +144,7 @@ class News extends Module
 
 
     getNext: (user, cb) ->
-        @lastTime = io.now()
+        @lastTime = time.now()
         @messageCount = 0
 
         @data = @news.get()
@@ -157,7 +158,7 @@ class News extends Module
         
         
     tickNews: (cb) ->
-        now = io.now()
+        now = time.now()
         @messageCount++
         
         state    = @config.get 'state'

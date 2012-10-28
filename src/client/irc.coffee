@@ -1,8 +1,9 @@
 # SauceBot IRC Connector
 
-irc = require '../node/irc'
+irc  = require '../node/irc'
 util = require 'util'
-io  = require '../common/ioutil'
+io   = require '../common/ioutil'
+time = require '../common/time' 
 
 # Flood limits
 DELAY        = 3
@@ -57,7 +58,7 @@ class SauceIRC
 
 
     isCached: (message) ->
-        now = io.now()
+        now = time.now()
         if @sinceLast(now, DELAY) or (@sinceLast(now, REPEAT_DELAY) and (message is @lastMessage))
             return true
             

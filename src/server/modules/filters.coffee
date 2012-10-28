@@ -4,6 +4,7 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 
 io    = require '../ioutil'
+time  = require '../../common/time'
 log   = require '../../common/logger'
 
 { # Import DTO classes
@@ -278,7 +279,7 @@ class Filters extends Module
        
     cmdPermitUser: (args, bot) ->
         permitLength = 3 * 60 # 3 minutes
-        permitTime   = io.now() + permitLength
+        permitTime   = time.now() + permitLength
         
         target = args[0] if args[0]?
         if target?
@@ -395,7 +396,7 @@ class Filters extends Module
         lc = name.toLowerCase()
 
         if (permitTime = @permits[lc])?
-            if io.now() > permitTime then delete @permits[lc] else return
+            if time.now() > permitTime then delete @permits[lc] else return
             
         
         @checkFilters name, msg, bot

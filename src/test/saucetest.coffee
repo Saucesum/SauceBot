@@ -8,6 +8,8 @@ should = require 'should'
 db        = require '../server/saucedb'
 {Channel} = require '../server/channels'
 
+{CallStack} = require '../common/util'
+
 
 # A fake Bot that simply logs any calls to it for future analysis
 class TestBot
@@ -75,21 +77,6 @@ class CheckBot
 
     test: (other) ->
         other.log.every (entry, index) -> @tests[index] entry
-
-
-# A stack of callbacks used to ensure order of multiple calls.
-class CallStack
-    
-    constructor: (@result) ->
-        @stack = []
-        
-    add: (callback) ->
-        @stack.push =>
-            callback @stack.pop() ? @result
-            
-    start: ->
-        @stack.reverse()
-        @stack.pop()()
 
 
 # Object for test utility methods.

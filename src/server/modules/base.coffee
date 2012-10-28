@@ -5,6 +5,7 @@ db    = require '../saucedb'
 trig  = require '../trigger'
 
 io    = require '../ioutil'
+{tz}  = require '../../common/time'
 vars  = require '../vars'
 
 vm    = require 'vm'
@@ -125,7 +126,7 @@ class Base extends Module
         @regCmd "saucetime", Sauce.Level.User,
             (user,args,bot) =>
               now = new Date()
-              bot.say "[SauceTime] #{io.tz now, '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
+              bot.say "[SauceTime] #{tz now, '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
               
         @regCmd "help", Sauce.Level.Mod,
             (user,args,bot) =>

@@ -31,7 +31,7 @@
 #
 
 
-{tz}       = require('./ioutil')
+{tz}       = require '../common/time'
 color      = require 'colors'
 os         = require 'os'
 
@@ -92,8 +92,7 @@ class Vars
                         
             
             time      : (user, args, cb) ->
-                now = new Date().getTime()
-                time = tz now, "%H:%M:%S", '',  args[0] ? 'Europe/Oslo'
+                time = tz Date.now(), "%H:%M:%S", '',  args[0] ? 'Europe/Oslo'
                 cb time
 
         }

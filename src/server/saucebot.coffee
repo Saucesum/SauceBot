@@ -271,6 +271,7 @@ class SauceBot
     #
     say: (channel, message) ->
         io.say channel, message
+        message = message.replace /\s+/g, ' '
         
         server.broadcast 'say',
             chan: channel

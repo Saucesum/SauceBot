@@ -50,14 +50,15 @@ class Hangman extends Module
         
         loadWordList @language unless wordListLoaded @language
         
-        @regCmd "hm", Sauce.Level.User,
-            (user,args,bot) =>
-                @word = randomWord @language
-                @word2 = randomWord @language
-                bot.say @str('test-random-word', @word, @word2)
+        @regCmd "hm", @cmdHm
                 
-        @regVar 'hm', (user, args, cb) =>
-            cb @word
+        @regVar 'hm', (user, args, cb) => cb @word
+
+
+    cmdHm: (user, args, bot) =>
+        @word = randomWord @language
+        bot.say @str('test-random-word', @word)
+        
             
         
 randomWord = (listname) ->

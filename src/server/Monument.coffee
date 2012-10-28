@@ -51,25 +51,14 @@ class Monument extends Module
         
         # Load monument data
         @obtained.load()
-        
-        @regVar @command, (user, args, cb) =>
-            if not args[0] or args[0] is 'list'
-                return cb @getBlockString()
-            
-            cb switch args[0]
-                when 'count'     then @obtained.get().length
-                when 'total'     then @blocks.length
-                when 'remaining' then @blocks.length - @obtained.get().length
-                else  'undefined'
-            
-        
+       
+ 
     registerHandlers: ->
-        @regCmd "#{@command}",        Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonument user, args, bot
-        @regCmd "#{@command} clear",  Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonumentClear user, args, bot
-        @regCmd "#{@command} remove", Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonumentRemove user, args, bot
+        @regCmd "#{@command}",        Sauce.Level.Mod, @cmdMonument
+        @regCmd "#{@command} clear",  Sauce.Level.Mod, @cmdMonumentClear
+        @regCmd "#{@command} remove", Sauce.Level.Mod, @cmdMonumentRemove
+
+        @regVar "#{@command}", @varMonument
         
 
     getMonumentState: ->
@@ -83,7 +72,7 @@ class Monument extends Module
 
     # !<name> - Print monument
     # !<name> <block> - Add the block to the obtained-list
-    cmdMonument: (user, args, bot) ->
+    cmdMonument: (user, args, bot) =>
         unless args[0]?
             return bot.say @getMonumentState()
         
@@ -98,13 +87,13 @@ class Monument extends Module
 
 
     # !<name> clear - Clear the monument
-    cmdMonumentClear: (user, args, bot) ->
+    cmdMonumentClear: (user, args, bot) =>
         @obtained.clear()
         @say bot, @str('action-cleared')
 
 
     # !<name> remove <block> - Removes the block from the obtained-list
-    cmdMonumentRemove: (user, args, bot) ->
+    cmdMonumentRemove: (user, args, bot) =>
         unless args[0]?
             return @say bot, @str('err-no-block-specified') + '. ' + @str('err-usage', '!' + @command + ' remove <block>')
         
@@ -118,8 +107,21 @@ class Monument extends Module
         @say bot, @str('action-removed', @blocks[idx])
 
 
+    # $(<name> list|count|total|remaining)
+    varMonument: (user, args, cb) =>
+        if not args[0] or args[0] is 'list'
+            return cb @getBlockString()
+        
+        cb switch args[0]
+            when 'count'     then @obtained.get().length
+            when 'total'     then @blocks.length
+            when 'remaining' then @blocks.length - @obtained.get().length
+            else  'undefined'
+
+
     say: (bot, msg) ->
-        bot.say '[' + @name + '] ' + msg
+        bot.say "[#{@name}] #{msg}"
 
 
 exports.Monument = Monument
+

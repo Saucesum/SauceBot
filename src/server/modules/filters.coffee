@@ -174,14 +174,6 @@ class Filters extends Module
                 (user, args, bot) =>
                     @cmdFilterClear  filterName, filterList, args, bot
                     
-        @regCmd "regulars add", Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdAddRegular args, bot
-                    
-        @regCmd "regulars remove", Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdRemoveRegular args, bot
-
 
         # Register filter state commands
         for filter in filterNames
@@ -204,11 +196,10 @@ class Filters extends Module
 
         # Register misc commands
         
-        # !permit <username>
-        @regCmd 'permit', Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdPermitUser args, bot
-        
+        @regCmd 'regulars add',    Sauce.Level.Mod, @cmdAddRegular
+        @regCmd 'regulars remove', Sauce.Level.Mod, @cmdRemoveRegular
+        @regCmd 'permit',          Sauce.Level.Mod, @cmdPermitUser
+
 
     # Filter list command handlers
 
@@ -254,52 +245,66 @@ class Filters extends Module
             bot.say "[Filter] " + @str('filter-is-disabled', @str('filter-' + filter), '!filter ' + filter + ' on')
             
     
-    # Regulars commands
+    # Misc command handlers
     
-    cmdRemoveRegular: (args, bot) ->
-        unless args[0]
+    # !regulars remove <name> - Removes a regular.
+    cmdRemoveRegular: (user, args, bot) =>
+        unless (name = args[0])?
             return bot.say "[Filter] " + @str('err-error') + ' ' + @str('err-usage', '!regulars remove <username>')
             
-        user = args[0].toLowerCase()
-        @regulars.remove user
-        bot.say @str('regulars-removed', user)
+        name = name.toLowerCase()
+
+        # Remove from regulars list.
+        @regulars.remove name
+
+        bot.say @str('regulars-removed', name)
             
-        
-    cmdAddRegular: (args, bot) ->
-        unless args[0]
+
+    # !regulars add <name> - Adds a regular.
+    cmdAddRegular: (user, args, bot) =>
+        unless (name = args[0])?
             return bot.say @str('err-error') + ' ' + @str('err-usage', '!regulars add <username>')
             
-        user = args[0].toLowerCase()
-        @regulars.add user
-        delete @warnings[user]
-        bot.say @str('regulars-added', user)
+        name = name.toLowerCase()
+
+        # Add user to regulars and remove existing strikes.
+        @regulars.add name
+        delete @warnings[name]
+
+        bot.say @str('regulars-added', name)
        
-       
-    # Misc command handlers       
-       
-    cmdPermitUser: (args, bot) ->
+
+    # !permit <name> - Permits a user.
+    cmdPermitUser: (user, args, bot) =>
         permitLength = 3 * 60 # 3 minutes
         permitTime   = time.now() + permitLength
         
-        target = args[0] if args[0]?
-        if target?
-            
+        if (target = args[0])?
+
+            # Filter out bad characters and convert to lower case.
+            target = (target.replace /[^a-zA-Z0-9_]+/g, '').toLowerCase()
+
             msg = "[Filter] " + @str('permit-permitted', target, permitLength)
+
+            # Look for the user in our user list.
             unless @channel.hasSeen target
                 msg = "[Filter] " + @str('permit-unknown', target, permitLength)
             
-            @permits[target.toLowerCase()] = permitTime
-            delete @warnings[target.toLowerCase()]
+            # Update permit time and remove strikes.
+            @permits[target] = permitTime
+            delete @warnings[target]
+
             bot.say msg
+
+            # Unban after 2 seconds to avoid the spam filter.
+            setTimeout ->
+                bot.unban target
+            , 2000
+
         else
             bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')
             
-        setTimeout ->
-            bot.unban target
-        , 2000
         
-
-       
     loadTable: (table) ->
         list = @lists[table]
         list.load ->

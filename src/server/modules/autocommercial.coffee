@@ -47,62 +47,59 @@ class AutoCommercial extends Module
 
     registerHandlers: ->
         # !commercial on - Enable auto-commercials
-        @regCmd "commercial on", Sauce.Level.Admin,
-            (user,args,bot) =>
-                @cmdEnableCommercial()
-                bot.say '[AutoCommercial] ' + @str('config-enable')
+        @regCmd "commercial on", Sauce.Level.Admin, @cmdEnableCommercial
         
         # !commercial off - Disable auto-commercials
-        @regCmd "commercial off", Sauce.Level.Admin,
-            (user,args,bot) =>
-                @cmdDisableCommercial()
-                bot.say '[AutoCommercial] ' + @str('config-disable')
+        @regCmd "commercial off", Sauce.Level.Admin, @cmdDisableCommercial
 
         # !commercial delay <minutes> - Set delay
-        @regCmd "commercial delay", Sauce.Level.Admin,
-            (user, args, bot) =>
-                @cmdDelay user, args, bot
+        @regCmd "commercial delay", Sauce.Level.Admin, @cmdDelay
 
         # !commercial messages <minutes> - Set messages
-        @regCmd "commercial messages", Sauce.Level.Admin,
-            (user, args, bot) =>
-                @cmdMessages user, args, bot
+        @regCmd "commercial messages", Sauce.Level.Admin, @cmdMessages
         
-        @regVar "commercial", (user, args, cb) =>
-            arg = args[0] ? 'state'
+        # Variables $(commercial state|delay|messages)
+        @regVar "commercial", @varCommercial
 
-            cb switch arg
-                when 'state'
-                    if @comDTO.get 'state' then 'Enabled' else 'Disabled'
-                when 'messages'
-                    @comDTO.get 'messages'
-                when 'delay'
-                    @comDTO.get 'delay'
-                else
-                    '$(commercial state|messages|delay)'
-                
-    cmdEnableCommercial: ->
+
+    cmdEnableCommercial: (user, args, bot)  =>
         @comDTO.add 'state', 1
         @lastTime = Date.now()
+        @say bot, @str('config-enable')
     
     
-    cmdDisableCommercial: ->
+    cmdDisableCommercial: (user, args, bot) =>
         @comDTO.add 'state', 0
+        @say bot, @str('config-disable')
 
 
-    cmdDelay: (user, args, bot) ->
+    cmdDelay: (user, args, bot) =>
         num = (parseInt args[0], 10) or 0
         num = MINIMUM_DELAY if num < MINIMUM_DELAY
         @comDTO.add 'delay', num
         bot.say "[AutoCommercial] " + @str('action-delay', num)
 
 
-    cmdMessages: (user, args, bot) ->
+    cmdMessages: (user, args, bot) =>
         num = (parseInt args[0], 10) or 0
         num = MINIMUM_MESSAGES if num < MINIMUM_MESSAGES
         @comDTO.add 'messages', num
         bot.say "[AutoCommercial] " + @str('action-messages', num)
+       
+
+    varCommercial: (user, args, cb) =>
+        arg = args[0] ? 'state'
         
+        cb switch arg
+            when 'state'
+                if @comDTO.get 'state' then 'Enabled' else 'Disabled'
+            when 'messages'
+                @comDTO.get 'messages'
+            when 'delay'
+                @comDTO.get 'delay'
+            else
+                '$(commercial state|messages|delay)'
+             
 
     updateMessagesList: (now) ->
         delay = @comDTO.get 'delay'
@@ -130,7 +127,7 @@ class AutoCommercial extends Module
         
         return unless @messagesSinceLast() >= msgsLimit and (now - @lastTime > (delay * 60 * 1000))
         
-        oauth.get "/channels/#{@channel.name}/commercial", 'POST', (resp, body) =>
+        oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
             # "204 No Content" if successful.
             bot.say @str('action-commercial', @channel.name) if resp.statusCode is 204
 

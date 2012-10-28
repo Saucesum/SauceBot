@@ -65,6 +65,7 @@ class Debug extends Module
         @regCmd 'dbg commercial', global, (user, args, bot) =>
             @cmdCommercial bot
 
+
     cmdModules: (bot) ->
         @say bot, ("#{m.name}#{if not m.loaded then '[?]' else ''}" for m in @channel.modules).join(' ')
 
@@ -78,17 +79,19 @@ class Debug extends Module
         @say bot, "Variables for #{@channel.name}:"
         @say bot, "#{v.module} - #{k}" for k, v of @channel.vars.handlers
 
+
     cmdOauth: (bot) ->
-        oauth.get '/user', 'GET', (resp, body) =>
+        oauth.get '/user', (resp, body) =>
             io.debug body
             if body['display_name']?
                 @say bot, "Authenticated as #{body['display_name']}"
             else
                 @say bot, "Not authenticated."
 
+
     cmdCommercial: (bot) ->
-        oauth.get "/channels/#{@channel.name}/commercial", 'POST', (resp, body) =>
-            @say bot, "Commercial: #{resp.statusCode}"
+        oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
+            @say bot, "Commercial: #{(resp?.headers?.status) ? resp.statusCode}"
 
 
     say: (bot, msg) ->

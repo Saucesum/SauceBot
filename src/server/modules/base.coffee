@@ -91,12 +91,6 @@ verify = (user, code, isVerified) ->
     
 
 # Base module
-# - Handles:
-#  !saucebot
-#  !time
-#  !test
-#  !calc
-#
 class Base extends Module
     constructor: (@channel) ->
         super @channel
@@ -114,87 +108,112 @@ class Base extends Module
         @sandbox = vm.createContext mathValues
 
 
-    load:->
-        @regCmd "saucebot", Sauce.Level.User,
-            (user,args,bot) =>
-              bot.say "[SauceBot] SauceBot v#{Sauce.Version} by @RavnTM - CoffeeScript/Node.js"
+    load: ->
+        botName = (@channel.bot ? 'SauceBot').toLowerCase()
 
-        @regCmd "test", Sauce.Level.Mod,
-            (user,args,bot) =>
-              bot.say "[Test] #{user.name} - #{Sauce.LevelStr user.op}"
-              
-        @regCmd "saucetime", Sauce.Level.User,
-            (user,args,bot) =>
-              now = new Date()
-              bot.say "[SauceTime] #{tz now, '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
-              
-        @regCmd "help", Sauce.Level.Mod,
-            (user,args,bot) =>
-                db.addData 'helprequests', ['chanid', 'time', 'user', 'reason'], [[
-                    @channel.id,
-                    ~~(Date.now()/1000),
-                    user.name.toLowerCase(),
-                    args.join ' '
-                ]]
-                if args.length > 0
-                    bot.say "[Help] " + @str('help-requested')
-                else
-                    bot.say "[Help] " + @str('help-basic', '!help <message>')
+        if botName isnt 'saucebot'
+            @regCmd botName, Sauce.Level.User, @cmdBot
 
-        # Command to test variable evaluation
-        @regCmd "var", Sauce.Level.Mod,
-            (user, args, bot) =>
-                return unless args
-                raw = args.join ' '
-                @channel.vars.parse user, raw, raw, (parsed) ->
-                    bot.say "[Vars] #{parsed}"
+        @regCmd "saucebot",     Sauce.Level.User,  @cmdBot
+        @regCmd "saucetime",    Sauce.Level.User,  @cmdSaucetime
+        @regCmd "verify",       Sauce.Level.User,  @cmdVerify
+        @regCmd "test",         Sauce.Level.Mod,   @cmdTest
+        @regCmd "help",         Sauce.Level.Mod,   @cmdHelp
+        @regCmd "var",          Sauce.Level.Mod,   @cmdVar
+        @regCmd "calc",         Sauce.Level.Mod,   @cmdCalc
+        @regCmd "mode",         Sauce.Level.Admin, @cmdMode
+        @regCmd "mode modonly", Sauce.Level.Admin, @cmdModeModonly
+        @regCmd "mode quiet",   Sauce.Level.Admin, @cmdModeQuiet
 
-        @regCmd "verify", Sauce.Level.User,
-            (user, args, bot) =>
-                unless args[0]?
-                    return bot.say "[Verify] " + @str('verify-syntax', '!verify <code>')
 
-                verify user.name, args[0], (verified) =>
-                    msgcode = if verified then 'verify-ok' else 'verify-err'
-                    bot.say "[Verify] " + @str(msgcode, user.name)
+    # !<botname> - Prints bot name and version.
+    cmdBot: (user, args, bot) =>
+        botName = (@channel.bot ? 'SauceBot')
+        bot.say "[#{botName}] #{Sauce.Server.Name} v#{Sauce.Version} by @RavnTM - CoffeeScript/Node.js"
 
-        @regCmd "calc", Sauce.Level.Mod,
-            (user, args, bot) =>
-                return unless args
-                txt = args.join ''
-                math = txt.replace(/[^()\d*\/+-=\w]/g, '')
-                try
-                    bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm")
-                catch error
-                    bot.say "[Calc] " + @str('math-invalid', math)
 
-        @regCmd "mode", Sauce.Level.Admin,
-            (user, args, bot) =>
-                bot.say "[Mode] " + @str('usage-invalid', '!mode [modonly|quiet] [on|off]')
+    # !test - Prints test command and user level.
+    cmdTest: (user, args, bot) =>
+        bot.say "[Test] #{user.name} - #{Sauce.LevelStr user.op}"
 
-        @regCmd "mode modonly", Sauce.Level.Admin,
-            (user, args, bot) =>
-                switch args[0]
-                    when 'on'
-                        @channel.setModOnly true
-                        bot.say '[Mode] ' + @str('mod-enabled') + ' ' + @str('usage-disable', '!mode modonly off')
-                    when 'off'
-                        @channel.setModOnly false
-                        bot.say '[Mode] ' + @str('mod-disabled') + ' ' + @str('usage-enable', '!mode modonly on')
-                    else
-                        bot.say '[Mode] ' + @str('usage-invalid', '!mode modonly (on|off)')
 
-        @regCmd "mode quiet", Sauce.Level.Admin,
-            (user, args, bot) =>
-                switch args[0]
-                    when 'on'
-                        @channel.setQuiet true
-                        bot.say '[Mode] ' + @str('quiet-enabled') + ' ' + @str('usage-disable', '!mode quiet off')
-                    when 'off'
-                        @channel.setQuiet false
-                        bot.say '[Mode] ' + @str('quiet-disabled') + ' ' + @str('usage-enable', '!mode quiet on')
-                    else
-                        bot.say '[Mode] ' + @str('usage-invalid', '!mode quiet (on|off)')
+    # !saucetime - Prints the time in SauceBot's timezone.
+    cmdSaucetime: (user, args, bot) =>
+        bot.say "[SauceTime] #{tz Date.now(), '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
+
+
+    # !help <message> - Requests help from a SauceBot admin.
+    cmdHelp: (user, args, bot) =>
+        db.addData 'helprequests', ['chanid', 'time', 'user', 'reason'], [[
+            @channel.id,
+            ~~(Date.now()/1000),
+            user.name.toLowerCase(),
+            args.join ' '
+        ]]
+        if args.length > 0
+            bot.say "[Help] " + @str('help-requested')
+        else
+            bot.say "[Help] " + @str('help-basic', '!help <message>')
+
+
+    # !var <expr> - Prints the result of evaluating <expr> as a var string.
+    cmdVar: (user, args, bot) =>
+        return unless args
+        raw = args.join ' '
+        @channel.vars.parse user, raw, raw, (parsed) ->
+            bot.say "[Vars] #{parsed}"
+
+
+    # !verify <code> - Attempts to verify the user.
+    cmdVerify: (user, args, bot) =>
+        unless args[0]?
+            return bot.say "[Verify] " + @str('verify-syntax', '!verify <code>')
+
+        verify user.name, args[0], (verified) =>
+            msgcode = if verified then 'verify-ok' else 'verify-err'
+            bot.say "[Verify] " + @str(msgcode, user.name)
+
+
+    # !calc <expr> - Prints the result of evaluating <expr> as a mathematical expression.
+    cmdCalc: (user, args, bot) =>
+        return unless args
+        txt = args.join ''
+        math = txt.replace(/[^()\d*\/+-=\w]/g, '')
+        try
+            bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm")
+        catch error
+            bot.say "[Calc] " + @str('math-invalid', math)
+
+
+    # !mode - Prints a help string for the mode commands.
+    cmdMode: (user, args, bot) =>
+        bot.say "[Mode] " + @str('usage-invalid', '!mode [modonly|quiet] [on|off]')
+
+
+    # !mode modonly on/off - Enables/disables mod only mode.
+    cmdModeModonly: (user, args, bot) =>
+        switch args[0]
+            when 'on'
+                @channel.setModOnly true
+                bot.say '[Mode] ' + @str('mod-enabled') + ' ' + @str('usage-disable', '!mode modonly off')
+            when 'off'
+                @channel.setModOnly false
+                bot.say '[Mode] ' + @str('mod-disabled') + ' ' + @str('usage-enable', '!mode modonly on')
+            else
+                bot.say '[Mode] ' + @str('usage-invalid', '!mode modonly (on|off)')
+
+
+    # !mode quiet on/off - Enables/disables quiet mode.
+    cmdModeQuiet: (user, args, bot) =>
+        switch args[0]
+            when 'on'
+                @channel.setQuiet true
+                bot.say '[Mode] ' + @str('quiet-enabled') + ' ' + @str('usage-disable', '!mode quiet off')
+            when 'off'
+                @channel.setQuiet false
+                bot.say '[Mode] ' + @str('quiet-disabled') + ' ' + @str('usage-enable', '!mode quiet on')
+            else
+                bot.say '[Mode] ' + @str('usage-invalid', '!mode quiet (on|off)')
                  
 
 exports.New = (channel) ->

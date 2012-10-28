@@ -111,4 +111,4 @@ exports.noise = ->
 
 # Returns a random index of the specified array
 randIdx = (arr) ->
-    Math.floor (Math.random() * arr.length)
+    ~~ (Math.random() * arr.length)

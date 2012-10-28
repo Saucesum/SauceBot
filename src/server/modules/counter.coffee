@@ -50,24 +50,15 @@ class Counter extends Module
         regexBadCtr = /^!(\w+\s+(?:\+|\-).+)$/
         regexNewCtr = /^!(\w+\s+=.+)$/
 
-        @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexBadCtr,
-            (user, commandString, bot) =>
-                @cmdBadCounter user, commandString, bot
-
-        @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexNewCtr,
-            (user, commandString, bot) =>
-                @cmdNewCounter user, commandString, bot
+        @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexBadCtr, @cmdBadCounter
+        @channel.register new trig.Trigger this, trig.PRI_LOW, Sauce.Level.Mod, regexNewCtr, @cmdNewCounter
 
         # Load custom commands
         @counters.load =>
             for ctr of @counters.data
                 @addTrigger ctr
 
-        @regVar 'counter', (user, args, cb) =>
-            if args? and (counter = @counters.get()[args[0]])?
-                cb counter
-            else
-                cb 'N/A'
+        @regVar 'counter', @varCounter
         
 
     unload:->
@@ -123,8 +114,8 @@ class Counter extends Module
 
     # Handles:
     #  !<not-a-counter> =<value>
-    cmdNewCounter: (user, commandString, bot) ->
-        [ctr,arg] = commandString[0..1]
+    cmdNewCounter: (user, args, bot) =>
+        [ctr,arg] = args[0..1]
 
         value = parseInt(arg.slice(1), 10)
 
@@ -137,11 +128,19 @@ class Counter extends Module
     # Handles:
     #  !<not-a-counter> +<value>
     #  !<not-a-counter> -<value>
-    cmdBadCounter: (user, commandString, bot) ->
-        ctr = commandString[0]
+    cmdBadCounter: (user, args, bot) =>
+        ctr = args[0]
 
         bot.say "[Counter] " + @str('err-unknown-counter', ctr, '!' + ctr + ' =0')
-        
+    
+
+    # $(counter <name>)
+    varCounter: (user, args, cb) =>
+        if args? and (counter = @counters.get()[args[0]])?
+            cb counter
+        else
+            cb 'N/A'
+    
 
     counterCheck: (ctr) ->
         if @counters.get(ctr)?

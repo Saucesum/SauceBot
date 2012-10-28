@@ -54,15 +54,9 @@ class Commands extends Module
     
     
     load: ->
-        @regCmd "set"     , Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdSet user, args, bot
-        @regCmd "setmod"  , Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdSetMod user, args, bot
-        @regCmd "unset"   , Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdUnset user, args, bot
+        @regCmd "set"     , Sauce.Level.Mod, @cmdSet
+        @regCmd "setmod"  , Sauce.Level.Mod, @cmdSetMod
+        @regCmd "unset"   , Sauce.Level.Mod, @cmdUnset
 
         # Load custom commands
         @commands.load =>
@@ -105,7 +99,7 @@ class Commands extends Module
 
 
     # !(un)?set <command>  - Unset command
-    cmdUnset: (user, args, bot) ->
+    cmdUnset: (user, args, bot) =>
         unless args[0]?
             return bot.say @str('err-usage', '!unset <name>') + '. ' + @str('err-only-forget-set', '!set')
 
@@ -119,7 +113,7 @@ class Commands extends Module
 
     # !set <command> <message>  - Set command
     # !set <command>            - Unset command
-    cmdSet: (user, args, bot) ->
+    cmdSet: (user, args, bot) =>
         unless args[0]?
             return bot.say @str('err-usage', '!set <name> <message>') + '. ' + @str('err-to-forget', '!set <name>', '!unset <name>')
 
@@ -138,7 +132,7 @@ class Commands extends Module
 
     # !setmod <command> <message>  - Set moderator-only command
     # !setmod <command>            - Unset command
-    cmdSetMod: (user, args, bot) ->
+    cmdSetMod: (user, args, bot) =>
         unless args[0]?
             return bot.say @str('err-usage', '!setmod <name> <message>') + '. ' + @str('err-to-forget', '!setmod <name>', '!unset <name>')
 

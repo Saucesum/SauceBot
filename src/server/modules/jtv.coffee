@@ -7,9 +7,11 @@ io    = require '../ioutil'
 request = require 'request'
 util    = require 'util'
 
+# Static imports
 {ConfigDTO, HashDTO} = require '../dto'
 {Cache, WebCache   } = require '../cache'
 {Module            } = require '../module'
+{TokenJar          } = require '../../common/oauth'
 
 
 # Module description
@@ -24,8 +26,14 @@ exports.strings = {
     'show-title'  : '@1@'
 }
 
+# Set up oauth jar to access the twitch API
+oauth = new TokenJar Sauce.API.Twitch, Sauce.API.TwitchToken
+
 # Set up caches for ttv(twitch.tv) and jtv(justin.tv) API calls
-ttvcache = new WebCache (key) -> "https://api.twitch.tv/kraken/channels/#{key}"
+ttvcache = new Cache (key, cb) ->
+    oauth.get "/channels/#{key}", (resp, body) ->
+        cb body
+
 jtvcache = new WebCache (key) -> "http://api.justin.tv/api/stream/list.json?channel=#{key}"
 
 strip = (msg) -> msg.replace /[^a-zA-Z0-9_]/g, ''
@@ -36,55 +44,52 @@ class JTV extends Module
         
         
     registerHandlers: ->
-        @regCmd "game", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdGame user, args, bot
+        @regCmd "game",    Sauce.Level.Mod, @cmdGame
+        @regCmd "viewers", Sauce.Level.Mod, @cmdViewers
+        @regCmd "views",   Sauce.Level.Mod, @cmdViews
+        @regCmd "title",   Sauce.Level.Mod, @cmdTitle
+        
+        @regVar 'jtv', @varJTV
 
-        @regCmd "viewers", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdViewers user, args, bot
-        
-        @regCmd "views", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdViews user, args, bot
-        
-        @regCmd "title", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdTitle user, args, bot
-        
-        @regVar 'jtv', (user, args, cb) =>
-            usage = '$(jtv (game|viewers|views|title))'
-            unless args[0]?
-                cb usage
-            else
-                chan = if args[1]? then strip(args[1]) else @channel.name
-                switch args[0]
-                    when 'game'    then @getGame    chan, cb
-                    when 'viewers' then @getViewers chan, cb
-                    when 'views'   then @getViews   chan, cb
-                    when 'title'   then @getTitle   chan, cb
-                    else cb usage
 
-        
-    cmdGame: (user, args, bot) ->
+    # !game - Print current game.
+    cmdGame: (user, args, bot) =>
         @getGame @channel.name, (game) =>
             bot.say '[Game] ' + @str('show-game', @channel.name, game)
             
-           
-    cmdViewers: (user, args, bot) ->
+
+    # !viewers - Print number of viewers.
+    cmdViewers: (user, args, bot) =>
         @getViewers @channel.name, (viewers) =>
             bot.say "[Viewers] " + @str('show-viewers', viewers)
             
-            
-    cmdViews: (user, args, bot) ->
+
+    # !views - Print number of views.
+    cmdViews: (user, args, bot) =>
         @getViews @channel.name, (views) =>
             bot.say "[Views] " + @str('show-views', views)
          
-         
-    cmdTitle: (user, args, bot) ->
+
+    # !title - Print current title.
+    cmdTitle: (user, args, bot) =>
         @getTitle @channel.name, (title) =>
             bot.say "[Title] " + @str('show-title', title)
-            
+           
+
+    # $(jtv game|viewers|views|title [, <channel>])
+    varJTV: (user, args, cb) =>
+        usage = '$(jtv game|viewers|views|title [, <channel>])'
+        unless args[0]?
+            cb usage
+        else
+            chan = if args[1]? then strip(args[1]) else @channel.name
+            switch args[0]
+                when 'game'    then @getGame    chan, cb
+                when 'viewers' then @getViewers chan, cb
+                when 'views'   then @getViews   chan, cb
+                when 'title'   then @getTitle   chan, cb
+                else cb usage
+         
          
     getGame: (chan, cb) ->
         @getTTVData chan, (data) ->

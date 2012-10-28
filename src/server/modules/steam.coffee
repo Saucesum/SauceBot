@@ -42,15 +42,9 @@ loadGames = (force) ->
 
 class Steam extends Module
     load: ->
-        # Possibly consider declaring the command handlers as
-        # cmd...: (user, args, bot) => ...
-        # so that we don't have to add wrappers
-        @regCmd 'steam news', (user, args, bot) =>
-            @cmdNews user, args, bot
-        @regCmd 'steam user', (user, args, bot) =>
-            @cmdUser user, args, bot
-        @regCmd 'steam reload', Sauce.Level.Admin, (user, args, bot) =>
-            @cmdReload user, args, bot
+        @regCmd 'steam news', @cmdNews
+        @regCmd 'steam user', @cmdUser
+        @regCmd 'steam reload', Sauce.Level.Admin, @cmdReload
     
     
     cmdNews: (user, args, bot) ->
@@ -89,17 +83,17 @@ class Steam extends Module
         stack.start()
     
     
-    cmdUser: (user, args, bot) ->
+    cmdUser: (user, args, bot) =>
         username = args[0].toLowerCase()
         # TODO Figure out how to look up a user profile (might need API key)
     
     
-    cmdReload: (user, args, bot) ->
+    cmdReload: (user, args, bot) =>
         loadGames true
         @say bot, @str('action-reloaded')
     
     
-    say: (bot, message) ->
+    say: (bot, message) =>
         bot.say prefix + message
 
 
@@ -133,7 +127,7 @@ get = (access, parameters, callback) ->
     
     request options, (error, response, body) =>
         return io.err error if error?
-        return io.err "no body in response #{response.statusCode}" unless body?
+        return io.err "no body in Steam response #{response.statusCode}" unless body?
         callback body
 
 exports.New = (channel) -> new Steam channel

@@ -39,8 +39,7 @@ class LastFM extends Module
 
         
     registerHandlers: ->
-        @regCmd "lastfm", (user,args,bot) =>
-                @cmdLastFM user, args, bot
+        @regCmd "lastfm", @cmdLastFM
 
         @regVar 'lastfm', (user, args, cb) =>
             unless args[0]?
@@ -52,7 +51,7 @@ class LastFM extends Module
                     cb song
         
         
-    cmdLastFM: (user, args, bot) ->
+    cmdLastFM: (user, args, bot) =>
         unless args[0]?
             return bot.say @str('err-usage', '!lastfm <username>')
             

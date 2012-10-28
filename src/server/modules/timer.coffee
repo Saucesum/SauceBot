@@ -128,21 +128,13 @@ class Timer extends Module
         
         
     registerHandlers: ->
-        @regCmd "timer",          Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdTimerStart user, args, bot
+        @regCmd "timer",          Sauce.Level.Mod, @cmdTimerStart
                 
-        @regCmd "timer stop",     Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdTimerStop user, args, bot
+        @regCmd "timer stop",     Sauce.Level.Mod, @cmdTimerStop
                 
-        @regCmd "countdown",      Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdCountdownStart user, args, bot
+        @regCmd "countdown",      Sauce.Level.Mod, @cmdCountdownStart
                 
-        @regCmd "countdown stop", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdCountdownStop user, args, bot
+        @regCmd "countdown stop", Sauce.Level.Mod, @cmdCountdownStop
                 
         @regVar 'countdown', (user, args, cb) =>
             unless args? and (cdown = @countdowns.get args[0])?
@@ -170,7 +162,7 @@ class Timer extends Module
             return timeToStr time
         
     
-    cmdTimerStart: (user, args, bot) ->
+    cmdTimerStart: (user, args, bot) =>
         unless args? and args[0]?
             return bot.say "[Timer] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!timer <timer name>')
             
@@ -179,7 +171,7 @@ class Timer extends Module
         bot.say "[Timer] " + @str('action-timer-started', name, '!timer stop ' + name)
         
         
-    cmdTimerStop: (user, args, bot) ->
+    cmdTimerStop: (user, args, bot) =>
         unless args? and (timer = @timers.get args[0])?
             return bot.say "[Timer] " + @str('err-timer') + '. ' + @str('err-usage', '!timer stop <timer name>')
             
@@ -187,7 +179,7 @@ class Timer extends Module
         @timers.remove args[0]
         
         
-    cmdCountdownStart: (user, args, bot) ->
+    cmdCountdownStart: (user, args, bot) =>
         unless args? and args[0]? and args[1]?
             return bot.say "[Countdown] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!countdown <name> <target>')
         
@@ -196,7 +188,7 @@ class Timer extends Module
         @countdowns.add name, Date.now() + target
         bot.say "[Countdown] " + @str('action-countdown-started', name, '!countdown stop ' + name)
         
-    cmdCountdownStop: (user, args, bot) ->
+    cmdCountdownStop: (user, args, bot) =>
         unless args? and (timer = @countdowns.get args[0])?
             return bot.say "[Countdown] " + @str('err-countdown') + '. ' + @str('err-usage', '!countdown stop <name>')
         

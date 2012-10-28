@@ -18,17 +18,17 @@ class TestBot
         @log = []
     
     say: (message) ->
-        @push { type : 'say', message : message }
+        @push { say : message }
     ban: (user) ->
-        @push { type : 'ban', user : user }
+        @push { ban : user }
     unban: (user) ->
-        @push { type : 'unban', user : user }
+        @push { unban : user }
     clear: (user) ->
-        @push { type : 'clear', user : user }
+        @push { clear : user }
     timeout: (user, length) ->
-        @push { type : 'timeout', user : user, time : length }
+        @push { timeout : { user : user, time : length } }
     commercial: ->
-        @push { type : 'commercial' }
+        @push { commercial }
     
     push: (entry) ->
         @log.push entry
@@ -36,10 +36,10 @@ class TestBot
 
 
 # A "Bot" that creates a pattern that can be used to test whether a "TestBot" matches it.
-class CheckBot
+class Check
     
-    constructor: ->
-        @tests = []
+    constructor: (expected) ->
+        @tests = ((@check action, test for action, test of entry)[0] for entry in expected ? [])
     
     say: (test) ->
         @tests.push @check 'say', test
@@ -60,23 +60,29 @@ class CheckBot
         @tests.push @check 'commercial', -> true
         this
 
-    equals: (key, value) ->
-        (entry) ->
-            entry[key] = value
+    @equals: (key, expected) ->
+        if expected? 
+            (value) -> value[key] is expected
+        else
+            (value) -> value is key
 
-    regex: (key, pattern) ->
-        (entry) ->
-            pattern.test entry[key]
+    @regex: (key, pattern) ->
+        if pattern?
+            (value) -> pattern.test value[key]
+        else
+            (value) -> key.test value
     
     check: (type, test) ->
-        (entry) ->
-            entry.type is type and test entry
+        (action, value) ->
+            action is type and test value
     
     size: ->
         @tests.length
 
     test: (other) ->
-        other.log.every (entry, index) -> @tests[index] entry
+        other.log.forEach (entry, index) =>
+            {action, value} = ({action, value} for action, value of entry)[0]
+            throw new Error "Found unexpected entry #{action}: #{JSON.stringify value} at index #{index}" unless @tests[index] action, value
 
 
 # Object for test utility methods.
@@ -172,7 +178,7 @@ exports.test = test = {
             bot = new TestBot ->
                 assert expected.test bot
                 done()
-            , expected.size
+            , expected.size()
             
             context.channel.handle {
                 user : context.user.name
@@ -207,4 +213,4 @@ it('should say "=4"', testCommand context, '!calc 2+2', new CheckBot().say Check
 it('should be a number', testVariable context, 'rand', ['1', '10'], (result) -> /\d+/.test result)
 ###
 
-exports.CheckBot = CheckBot
+exports.Check = Check

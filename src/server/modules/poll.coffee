@@ -67,22 +67,16 @@ class Poll extends Module
 
     registerHandlers: ->
         # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
-        @regCmd 'poll'    , Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdPollStart args, bot
+        @regCmd 'poll'    , @cmdPollStart
         
         # !poll end - Ends the active poll
-        @regCmd 'poll end', Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdPollEnd args, bot
+        @regCmd 'poll end', Sauce.Level.Mod, @cmdPollEnd
         
         # !vote <value> - Adds a vote to the current poll
-        @regCmd 'vote'    , Sauce.Level.User,
-            (user, args, bot) =>
-                @cmdPollVote user, args, bot
+        @regCmd 'vote'    , Sauce.Level.User, @cmdPollVote
 
 
-    cmdPollStart: (args, bot) ->
+    cmdPollStart: (user, args, bot) =>
         unless args[0]?
             return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll <name> <opt1> <opt2> ...')
             
@@ -106,7 +100,7 @@ class Poll extends Module
             bot.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
             
         
-    cmdPollEnd: (args, bot) ->
+    cmdPollEnd: (user, args, bot) =>
         unless @activePoll?
             return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll <name>')
             
@@ -133,7 +127,7 @@ class Poll extends Module
         "#{score} (#{percentage}%)"
        
         
-    cmdPollVote: (user, args, bot) ->
+    cmdPollVote: (user, args, bot) =>
         user = user.name
         return if !@activePoll? or user in @hasVoted
 

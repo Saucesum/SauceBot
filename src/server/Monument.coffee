@@ -64,12 +64,9 @@ class Monument extends Module
             
         
     registerHandlers: ->
-        @regCmd "#{@command}",        Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonument user, args, bot
-        @regCmd "#{@command} clear",  Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonumentClear user, args, bot
-        @regCmd "#{@command} remove", Sauce.Level.Mod, (user,args,bot) =>
-            @cmdMonumentRemove user, args, bot
+        @regCmd "#{@command}",        Sauce.Level.Mod, @cmdMonument
+        @regCmd "#{@command} clear",  Sauce.Level.Mod, @cmdMonumentClear
+        @regCmd "#{@command} remove", Sauce.Level.Mod, @cmdMonumentRemove
         
 
     getMonumentState: ->
@@ -83,7 +80,7 @@ class Monument extends Module
 
     # !<name> - Print monument
     # !<name> <block> - Add the block to the obtained-list
-    cmdMonument: (user, args, bot) ->
+    cmdMonument: (user, args, bot) =>
         unless args[0]?
             return bot.say @getMonumentState()
         
@@ -98,13 +95,13 @@ class Monument extends Module
 
 
     # !<name> clear - Clear the monument
-    cmdMonumentClear: (user, args, bot) ->
+    cmdMonumentClear: (user, args, bot) =>
         @obtained.clear()
         @say bot, @str('action-cleared')
 
 
     # !<name> remove <block> - Removes the block from the obtained-list
-    cmdMonumentRemove: (user, args, bot) ->
+    cmdMonumentRemove: (user, args, bot) =>
         unless args[0]?
             return @say bot, @str('err-no-block-specified') + '. ' + @str('err-usage', '!' + @command + ' remove <block>')
         

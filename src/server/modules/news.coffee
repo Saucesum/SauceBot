@@ -68,72 +68,58 @@ class News extends Module
 
     registerHandlers: ->
         # !news on - Enable auto-news
-        @regCmd "news on", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsEnable user, args, bot
+        @regCmd "news on", Sauce.Level.Mod, @cmdNewsEnable
         
         # !news off - Disable auto-news
-        @regCmd "news off", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsDisable user, args, bot
+        @regCmd "news off", Sauce.Level.Mod, @cmdNewsDisable
         
         # !news seconds <value> - Sets minimum seconds
-        @regCmd "news seconds", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsSeconds user, args, bot
+        @regCmd "news seconds", Sauce.Level.Mod, @cmdNewsSeconds
         
         # !news messages <value> - Sets minimum messages
-        @regCmd "news messages", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsMessages user, args, bot
+        @regCmd "news messages", Sauce.Level.Mod, @cmdNewsMessages
         
         # !news clear - Clears the news list
-        @regCmd "news clear", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsClear user, args, bot
+        @regCmd "news clear", Sauce.Level.Mod, @cmdNewsClear
         
         # !news add <line> - Adds a news line
-        @regCmd "news add", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsAdd user, args, bot
+        @regCmd "news add", Sauce.Level.Mod, @cmdNewsAdd
         
         # !news - Print the next news message
-        @regCmd "news", Sauce.Level.Mod,
-            (user,args,bot) =>
-                @cmdNewsNext user, args, bot
+        @regCmd "news", Sauce.Level.Mod, @cmdNewsNext
 
 
-    cmdNewsEnable: (user, args, bot) ->
+    cmdNewsEnable: (user, args, bot) =>
         @config.add 'state', 1
         bot.say '[News] ' + @str('status-enabled')
 
 
-    cmdNewsDisable: (user, args, bot) ->
+    cmdNewsDisable: (user, args, bot) =>
         @config.add 'state', 0
         bot.say '[News] ' + @str('status-disabled')
 
 
-    cmdNewsSeconds: (user, args, bot) ->
+    cmdNewsSeconds: (user, args, bot) =>
         @config.add 'seconds', parseInt(args[0], 10) if args[0]?
         bot.say '[News] ' + @str('config-secs', @config.get 'seconds')
 
 
-    cmdNewsMessages: (user, args, bot) ->
+    cmdNewsMessages: (user, args, bot) =>
         @config.add 'messages', parseInt(args[0], 10) if args[0]?
         bot.say '[News] ' + @str('config-messages', @config.get 'messages')
 
 
-    cmdNewsClear: (user, args, bot) ->
+    cmdNewsClear: (user, args, bot) =>
         @news.clear()
         bot.say '[News] ' + @str('action-cleared')
 
 
-    cmdNewsAdd: (user, args, bot) ->
+    cmdNewsAdd: (user, args, bot) =>
         @news.add args.join ' '
         bot.say '[News] ' + @str('action-added')
 
 
-    cmdNewsNext: (user, args, bot) ->
+    cmdNewsNext: (user, args, bot) =>
         @getNext user, (news) =>
             news ?= '[News] ' + @str('err-no-news', '!news add <message>')
             bot.say news

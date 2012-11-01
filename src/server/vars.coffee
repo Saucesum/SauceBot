@@ -31,7 +31,7 @@
 #
 
 
-{tz}       = require '../common/time'
+tz         = require '../common/time'
 color      = require 'colors'
 os         = require 'os'
 
@@ -92,8 +92,7 @@ class Vars
                         
             
             time      : (user, args, cb) ->
-                time = tz Date.now(), "%H:%M:%S", '',  args[0] ? 'Europe/Oslo'
-                cb time
+                cb tz.formatZone(args[0] ? 'Europe/Oslo')
 
         }
 

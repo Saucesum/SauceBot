@@ -5,7 +5,7 @@ db    = require '../saucedb'
 trig  = require '../trigger'
 
 io    = require '../ioutil'
-{tz}  = require '../../common/time'
+tz    = require '../../common/time'
 vars  = require '../vars'
 
 vm    = require 'vm'
@@ -139,7 +139,7 @@ class Base extends Module
 
     # !saucetime - Prints the time in SauceBot's timezone.
     cmdSaucetime: (user, args, bot) =>
-        bot.say "[SauceTime] #{tz Date.now(), '', '%H:%M:%S GMT %z', 'Europe/Oslo'}"
+        bot.say "[SauceTime] #{tz.formatZone 'Europe/Oslo', '%H:%M:%S UTC %z'}"
 
 
     # !help <message> - Requests help from a SauceBot admin.

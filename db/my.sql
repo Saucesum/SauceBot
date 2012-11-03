@@ -450,6 +450,22 @@ CREATE TABLE `spamlist` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `statusupdates`
+--
+
+DROP TABLE IF EXISTS `statusupdates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `statusupdates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `userid` int(11) DEFAULT NULL,
+  `body` varchar(500) DEFAULT NULL,
+  `time` int(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `strings`
 --
 
@@ -506,6 +522,7 @@ CREATE TABLE `users` (
   `password` varchar(50) DEFAULT NULL,
   `global` tinyint(1) DEFAULT '0',
   `email` varchar(100) DEFAULT NULL,
+  `verified` int(1) DEFAULT '0',
   PRIMARY KEY (`userid`),
   UNIQUE KEY `username` (`username`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
@@ -550,4 +567,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-10-24 19:48:53
+-- Dump completed on 2012-11-03 15:26:10

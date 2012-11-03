@@ -67,7 +67,7 @@ MATH = ['tan', 'atan2', 'min', 'abs', 'random',
 # * password: The encrypted password to set.
 # * code    : The request code. Must be valid.
 acceptUserCode = (username, password, code) ->
-    db.query 'UPDATE users SET password=? WHERE username=?', [password, username]
+    db.query 'UPDATE users SET password=?, verified=1 WHERE username=?', [password, username]
     db.query 'UPDATE passwordrequests SET handled=1 WHERE username=? AND code=?  AND handled=0', [username, code]
     db.query 'UPDATE passwordrequests SET handled=2 WHERE username=? AND code!=? AND handled=0', [username, code]
 

@@ -13,6 +13,7 @@ util  = require 'util'
 exports.name        = 'AutoCommercial'
 exports.version     = '1.1'
 exports.description = 'Automatic commercials for twitch.tv partners'
+exports.ignore      = true
 
 exports.strings = {
     'config-enable'    : 'Enabled'
@@ -77,14 +78,14 @@ class AutoCommercial extends Module
         num = (parseInt args[0], 10) or 0
         num = MINIMUM_DELAY if num < MINIMUM_DELAY
         @comDTO.add 'delay', num
-        bot.say "[AutoCommercial] " + @str('action-delay', num)
+        @say bot, + @str('action-delay', num)
 
 
     cmdMessages: (user, args, bot) =>
         num = (parseInt args[0], 10) or 0
         num = MINIMUM_MESSAGES if num < MINIMUM_MESSAGES
         @comDTO.add 'messages', num
-        bot.say "[AutoCommercial] " + @str('action-messages', num)
+        @say bot, @str('action-messages', num)
        
 
     varCommercial: (user, args, cb) =>
@@ -133,6 +134,9 @@ class AutoCommercial extends Module
 
         @messages = []
         @lastTime = now
+
+    say: (bot, msg) ->
+        bot.say '[AutoCommercial] ' + msg
 
         
 exports.New = (channel) -> new AutoCommercial channel

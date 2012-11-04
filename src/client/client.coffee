@@ -52,7 +52,8 @@ twitch.on 'message', (chan, from, op, message) ->
         op  : op
 
 twitch.on 'pm', (srcchan, from, message) ->
-    io.irc 'PM', srcchan + '/' + from, message
+    unless /USERCOLOR|SPECIALUSER/.test message
+        io.irc 'PM', srcchan + '/' + from, message
     pmlog.timestamp from, message
     
     sauce.emit 'pm',

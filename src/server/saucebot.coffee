@@ -138,7 +138,6 @@ class SauceBot
             # - ...
             if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.exec msg
                 [_, name, role] = m
-                io.irc chan, name, role.blue.inverse
                 specialUsers[name.toLowerCase()] = role.toLowerCase()
 
         else

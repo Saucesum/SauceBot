@@ -179,19 +179,9 @@ class Filters extends Module
         for filter in filterNames
           do (filter) =>
             # !filter <filtername> on - Enables filter
-            @regCmd "filter #{filter} on" , Sauce.Level.Mod,
+            @regCmd "filter #{filter}" , Sauce.Level.Mod,
                 (user, args, bot) =>
-                    @cmdFilterEnable  filter, bot
-                    
-            # !filter <filtername> off - Disables filter
-            @regCmd "filter #{filter} off", Sauce.Level.Mod,
-                (user, args, bot) =>
-                    @cmdFilterDisable filter, bot
-
-            # !filter <filtername> - Shows filter state
-            @regCmd "filter #{filter}"    , Sauce.Level.Mod,
-                (user, args, bot) =>
-                    @cmdFilterShow    filter, bot
+                    @cmdFilter filter, (args[0] ? ''),  bot
             
 
         # Register misc commands
@@ -227,6 +217,16 @@ class Filters extends Module
 
 
     # Filter state command handlers
+
+    cmdFilter: (filter, action, bot) ->
+        switch action
+            when 'on'
+                @cmdFilterEnable filter, bot
+            when 'off'
+                @cmdFilterDisable filter, bot
+            else
+                @cmdFilterShow filter, bot
+
 
     cmdFilterEnable: (filter, bot) ->
         @states.add filter, 1

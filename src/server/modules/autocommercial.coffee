@@ -38,7 +38,7 @@ class AutoCommercial extends Module
         @comDTO = new ConfigDTO @channel, 'autocommercial', ['state', 'delay', 'messages']
         
         @messages = []
-        @lastTime = 0
+        @lastTime = Date.now()
         
         
     load: ->
@@ -78,7 +78,7 @@ class AutoCommercial extends Module
         num = (parseInt args[0], 10) or 0
         num = MINIMUM_DELAY if num < MINIMUM_DELAY
         @comDTO.add 'delay', num
-        @say bot, + @str('action-delay', num)
+        @say bot, @str('action-delay', num)
 
 
     cmdMessages: (user, args, bot) =>

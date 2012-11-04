@@ -65,7 +65,8 @@ class TokenJar
         }
         
         request getRequest, (err, resp, body) =>
-            io.debug "[GET #{resource}] #{resp.headers.status}"
+            if resp?
+                io.debug "[GET #{resource}] #{resp.headers.status}"
             return io.error err if err?
 
             @process resp, body, callback
@@ -86,8 +87,9 @@ class TokenJar
             qs    : { oauth_token: @authToken }
         }
 
-        request postRequest, (err, rep, body) =>
-            io.debug "[POST #{resource}] #{resp.headers.status}"
+        request postRequest, (err, resp, body) =>
+            if resp?
+                io.debug "[POST #{resource}] #{resp.headers.status}"
             return io.error err if err?
 
             @process resp, body, callback

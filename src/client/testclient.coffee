@@ -20,6 +20,8 @@ term     = require 'readline'
 io     = require '../common/ioutil'
 Socket = require '../common/socket'
 
+io.setLevel(io.Level.All)
+
 conf = docopt(doc)
 
 ip   = conf['<host>']
@@ -54,6 +56,18 @@ cli.on 'error', (data) ->
 
 cli.on 'raw', (line) ->
     io.debug "\n" + line
+
+cli.on 'timeout', (data) ->
+    {chan, user, time} = data
+    io.debug "TIMEOUT #{chan}: #{user} for #{time} seconds"
+
+cli.on 'ban', (data) ->
+    {chan, user} = data
+    io.debug "BAN #{chan}: #{user}"
+
+cli.on 'unban', (data) ->
+    {chan, user} = data
+    io.debug "UNBAN #{chan}: #{user}"
 
 rl = term.createInterface process.stdin, process.stdout, (line) ->
     if (/^\/c/.test line)

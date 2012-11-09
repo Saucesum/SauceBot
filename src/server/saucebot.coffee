@@ -35,6 +35,12 @@ Type = {
     Chat: 'chat'
 }
 
+# Broadcasts a message to all clients with a certain type
+broadcastType = (type, cmd, data) ->
+    server.forAll (socket) ->
+        if socket.type is type
+            socket.emit cmd, data
+
 # Loads user data
 loadUsers = ->
     users.load (userlist) ->
@@ -62,7 +68,7 @@ updateClientChannels = (socket) ->
     if socket?
         socket.emit 'channels', data
     else
-        socket.emit 'channels', data for socket in server.sockets when (socket.getType?() is Type.Chat)
+        broadcastType Type.Chat, 'channels', data
 
 
 # Special user map for twitch admins and staff
@@ -72,16 +78,16 @@ specialUsers = { }
 class SauceBot
     
     constructor: (@socket) ->
-        @type = Type.Web
-        @name = 'Unknown'
-
-        @socket.getType = => @type
-        @socket.getName = => @name
+        @socket.type = Type.Web
+        @socket.name = 'Unknown'
 
         @socket.on 'register', (data) =>
-            {@type, @name} = data
+            {type, name} = data
 
-            if @type is Type.Chat
+            @socket.type = type
+            @socket.name = name
+
+            if type is Type.Chat
                 updateClientChannels @socket
         
         # Message handler
@@ -285,7 +291,7 @@ class SauceBot
         io.say channel, message
         message = message.replace /\s+/g, ' '
         
-        server.broadcast 'say',
+        broadcastType Type.Chat, 'say',
             chan: channel
             msg : message
 
@@ -298,7 +304,7 @@ class SauceBot
     #  * msg : [REQ] Target user to time out
     #
     timeout: (channel, user, time) ->
-        server.broadcast 'timeout',
+        broadcastType Type.Chat, 'timeout',
             chan: channel
             user: user
             time: time
@@ -312,7 +318,7 @@ class SauceBot
     #  * msg : [REQ] Target user to ban
     #
     ban: (channel, user) ->
-        server.broadcast 'ban',
+        broadcastType Type.Chat, 'ban',
             chan: channel
             user: user
 
@@ -325,7 +331,7 @@ class SauceBot
     #  * msg : [REQ] Target user to unban
     #
     unban: (channel, user) ->
-        server.broadcast 'unban',
+        broadcastType Type.Chat, 'unban',
             chan: channel
             user: user
         
@@ -337,8 +343,10 @@ class SauceBot
     #  * chan: [REQ] Target channel
     #
     commercial: (channel) ->
-        server.broadcast 'commercial',
+        broadcastType Type.Chat, 'commercial',
             chan: channel
+
+
 
 # Load data
 io.debug 'Loading users...'
@@ -354,3 +362,4 @@ server = new sio.Server Sauce.Server.Port,
         new SauceBot socket
     , (socket) ->
         io.socket "Client disconnected: #{socket.remoteAddress()}"
+

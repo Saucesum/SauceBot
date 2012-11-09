@@ -23,7 +23,7 @@ class Socket
         
         @sock.on 'connect', =>
             @addr = @sock.remoteAddress
-            @emit 'connect', @addr
+            @handlers['connect']? @addr
 
 
     close: ->

@@ -158,6 +158,16 @@ class Commands extends Module
         @commands.add cmd, data
         @addTrigger   cmd
 
+    update: (user, action, params, res) ->
+        switch action
+            when 'get'
+                cmds = @commands.get()
+                data = {}
+                data[key] = { msg: cmd.message, lvl: cmd.level } for key, cmd of cmds
+                res.send data
+            else
+                res.error 'Invalid action #{action}'
+
 
 exports.New = (channel) ->
     new Commands channel

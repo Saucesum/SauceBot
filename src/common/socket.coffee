@@ -23,11 +23,10 @@ class Socket
         
         @sock.on 'connect', =>
             @addr = @sock.remoteAddress
-            @handlers['connect']? @addr
 
 
     close: ->
-        @handleEnd()
+        @sock.end() if @sock?
 
 
     on: (cmd, handler) ->

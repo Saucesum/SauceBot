@@ -114,6 +114,14 @@ class SauceBot
             catch error
                 @sendError "#{error}"
                 io.error error
+
+        # Handle interface requests
+        @socket.on 'int', (data) =>
+            try
+                @handleInterface data
+            catch error
+                @sendResult 0, error: error
+                io.error error
         
         # Request handler
         @socket.on 'get', (data) =>
@@ -216,12 +224,43 @@ class SauceBot
             else
                 channel?.reloadModule type
                 
+
     fixUsername: (name) ->
         name = name.replace /[^a-zA-Z0-9_]+/g, ''
         name = name.substring 0, 39 if name.length > 40
         return name
-                
-        
+
+
+    # Interface (int):
+    # * cookie: [REQ] Session cookie for authentication
+    # * chan  : [REQ] Target channel
+    # * module: [REQ] Target module
+    # * action: [REQ] Action
+    #
+    handleInterface: (data) ->
+        {channel, user } = @getWebData data, true
+        {module, action} = data
+
+        if channel.id is -1 then throw new Error "Invalid channel"
+        unless module?      then throw new Error "Missing parameter: module"
+        unless action?      then throw new Error "Missing parameter: action"
+
+        channel.handleInterface user, module, action, {
+            ok   :        => @sendResult 1
+            send : (data) => @sendResult 1, data
+            error: (msg)  => @sendResult 0, error: msg
+        }
+
+
+    # Sends a result and then closes the connection.
+    sendResult: (res, data) ->
+        data = {} unless data?
+        data.result ?= res
+
+        @socket.emitRaw data
+        @socket.close()
+       
+ 
     # Requests (get):
     # * cookie: [REQ] Session cookie for authentication
     # ? chan  : [OPT] Target channel
@@ -234,7 +273,6 @@ class SauceBot
         {channel, user, type} = @getWebData json, false
                 
         io.debug "Request from #{user.id}-#{user.name}: #{channel.name}##{type}"
-        #weblog.timestamp 'REQUEST', channel.id, channel.name, type, user.id, user.name
         
         switch type
             when 'Users'

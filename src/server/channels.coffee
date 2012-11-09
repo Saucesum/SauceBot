@@ -77,6 +77,14 @@ class Channel
         @strings = new HashDTO this, 'strings', 'key', 'value'
         @strings.load()
 
+
+    # Handles an interface request.
+    handleInterface: (user, module, action, res) ->
+        if (mod = user.getMod @id) < Sauce.Level.Mod
+            return res.error "You are not authorized to perform this action"
+
+        res.ok()
+
     
     # Returns whether a module with the specified name
     # has been loaded for this channel.

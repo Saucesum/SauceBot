@@ -79,11 +79,15 @@ class Channel
 
 
     # Handles an interface request.
-    handleInterface: (user, module, action, res) ->
+    handleInterface: (user, module, action, params, res) ->
         if (mod = user.getMod @id) < Sauce.Level.Mod
             return res.error "You are not authorized to perform this action"
 
-        res.ok()
+        if (m = @getLoadedModule module)?
+            m.update? user, action, params
+            res.ok()
+        else
+            res.error "Invalid module #{module}"
 
     
     # Returns whether a module with the specified name

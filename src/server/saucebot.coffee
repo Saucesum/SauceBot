@@ -245,7 +245,7 @@ class SauceBot
         unless module?      then throw new Error "Missing parameter: module"
         unless action?      then throw new Error "Missing parameter: action"
 
-        channel.handleInterface user, module, action, {
+        channel.handleInterface user, module, action, data, {
             ok   :        => @sendResult 1
             send : (data) => @sendResult 1, data
             error: (msg)  => @sendResult 0, error: msg

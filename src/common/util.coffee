@@ -19,3 +19,8 @@ exports.CallStack = class CallStack
 exports.getPrevStack = ->
     line = new Error().stack.split("\n")[3].trim()
     line.substring(line.indexOf('bin/') + 4).replace(')', '')
+
+
+exports.getFullStack = (n) ->
+    stack = new Error().stack.split("\n")
+    return if n? then stack[..n-1] else stack

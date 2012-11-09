@@ -84,8 +84,7 @@ class Channel
             return res.error "You are not authorized to perform this action"
 
         if (m = @getLoadedModule module)?
-            m.update? user, action, params
-            res.ok()
+            m.update? user, action, params, res
         else
             res.error "Invalid module #{module}"
 

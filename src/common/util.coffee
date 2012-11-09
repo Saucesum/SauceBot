@@ -1,7 +1,7 @@
 # General language utilities
 
 # A stack of callbacks used to ensure order of multiple calls.
-class CallStack
+exports.CallStack = class CallStack
     
     constructor: (@result) ->
         @stack = []
@@ -15,4 +15,7 @@ class CallStack
         @stack.pop()()
 
 
-exports.CallStack = CallStack
+# Returns a string representing the last stack location.
+exports.getPrevStack = ->
+    line = new Error().stack.split("\n")[3].trim()
+    line.substring(line.indexOf('bin/') + 4).replace(')', '')

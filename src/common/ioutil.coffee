@@ -2,7 +2,7 @@
 
 color = require 'colors'
 util  = require 'util'
-
+sbut  = require './util'
 
 LOGGER  = null
 LEVEL   = 0
@@ -35,12 +35,6 @@ log = (level, tag, message) ->
     if LOGGER?
         LOGGER.timestamp level, tag?.stripColors, message?.stripColors
 
-# Returns the current stack trace's last location
-getPrevStack = ->
-    # I almost added a semicolon here due to its ugliness. :D
-    line = new Error().stack.split("\n")[3].trim()
-    line.substring(line.indexOf('bin/') + 4).replace(')', '')
-
 
 # Logs a message
 exports.say = (chan, message) ->
@@ -64,7 +58,7 @@ exports.socket = (message) ->
 
 # Logs an error message
 exports.error = (message) ->
-    log(Level.Error, 'ERROR', (getPrevStack().underline + "\t" + message).red.inverse)
+    log(Level.Error, 'ERROR', (sbut.getPrevStack().underline + "\t" + message).red.inverse)
 
 
 exports.irc = (chan, user, message) ->

@@ -105,7 +105,11 @@ sauce.on 'error', (data) ->
     io.error data.msg
 
 sauce.on 'connect', ->
-    sauce.emit 'get', { type: 'Channels' }
+    # Register as a chat client
+    sauce.emit 'register', {
+        type: 'chat'
+        name: 'SauceClient'
+    }
 
 # Terminal stuff
 

@@ -29,6 +29,12 @@ net   = require 'net'
 url   = require 'url'
 color = require 'colors'
 
+# Client Types
+Type = {
+    Web : 'web'
+    Chat: 'chat'
+}
+
 # Loads user data
 loadUsers = ->
     users.load (userlist) ->
@@ -56,8 +62,7 @@ updateClientChannels = (socket) ->
     if socket?
         socket.emit 'channels', data
     else
-        socket.emit 'channels', data for socket in server.sockets when socket.isClient?
-
+        socket.emit 'channels', data for socket in server.sockets when (socket.getType?() is Type.Chat)
 
 
 # Special user map for twitch admins and staff
@@ -67,6 +72,17 @@ specialUsers = { }
 class SauceBot
     
     constructor: (@socket) ->
+        @type = Type.Web
+        @name = 'Unknown'
+
+        @socket.getType = => @type
+        @socket.getName = => @name
+
+        @socket.on 'register', (data) =>
+            {@type, @name} = data
+
+            if @type is Type.Chat
+                updateClientChannels @socket
         
         # Message handler
         @socket.on 'msg', (data) =>
@@ -220,9 +236,6 @@ class SauceBot
             
             when 'Channels'
                 updateClientChannels @socket
-                
-                # Make sure the client gets channel updates
-                @socket.isClient = true
 
         
     getWebData: (json, requireLogin) ->

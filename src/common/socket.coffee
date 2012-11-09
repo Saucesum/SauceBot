@@ -62,6 +62,14 @@ class Socket
             @sock.write json + "\n"
         catch error
             @handleEnd()
+
+    emitRaw: (data) ->
+        json = JSON.stringify data
+       
+        try
+            @sock.write json + "\n"
+        catch error
+            @handleEnd()
             
     remoteAddress: ->
         @addr

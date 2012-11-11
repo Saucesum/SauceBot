@@ -190,6 +190,129 @@ class Filters extends Module
         @regCmd 'regulars remove', Sauce.Level.Mod, @cmdRemoveRegular
         @regCmd 'permit',          Sauce.Level.Mod, @cmdPermitUser
 
+        # Register web interface update handlers
+        # Common parameters:
+        # * type: [whitelist|blacklist|badwords|emotes|regulars|config]
+        @regActs {
+            'get'   : @actGet
+            'add'   : @actAdd
+            'set'   : @actSet
+            'remove': @actRemove
+            'clear' : @actClear
+        }
+
+
+    # Action handler for Filters.get(type)
+    actGet: (user, params, res) =>
+        {type} = params
+        switch type
+            when 'config'
+                res.send @states.get()
+
+            when 'regulars'
+                res.send @regulars.get()
+
+            when 'whitelist', 'blacklist', 'badwords', 'emotes'
+                res.send @lists[type].get()
+
+            else
+                res.error 'Invalid type'
+
+
+    # Action handler for Filters.add(type, val)
+    actAdd: (user, params, res) =>
+        {type, key} = params
+        unless key
+            return res.error "Missing attribute: key"
+
+        key = key.toLowerCase()
+
+        switch type
+            when 'regulars'
+                @addRegular key
+                res.ok()
+
+            when 'whitelist', 'blacklist', 'badwords', 'emotes'
+                dto = @lists[type]
+                dto.add key
+                res.ok()
+
+            else
+                res.error 'Invalid type'
+
+
+    # Action handler for Filters.set(type, key, val)
+    actSet: (user, params, res) =>
+        {type, key, val} = params
+        unless key and val
+            return res.error "Missing attributes: key, val"
+
+        key = key.toLowerCase()
+        val = val.toLowerCase()
+        
+        switch type
+            when 'regulars'
+                @removeRegular key
+                @addRegular val
+                res.ok()
+
+            when 'whitelist', 'blacklist', 'badwords', 'emotes'
+                dto = @lists[type]
+                dto.remove key
+                dto.add val
+                res.ok()
+
+            when 'config'
+                if key in filterNames
+                    val = parseInt val, 10
+                    @states.add key, (if val then 1 else 0)
+                    res.ok()
+                else
+                    res.error "No such filter type. Types: #{filterNames.join ', '}"
+
+            else
+                res.error 'Invalid Type'
+
+
+    # Action handler for Filters.remove(type, key)
+    actRemove: (user, params, res) =>
+        {type, key} = params
+        unless key
+            return res.error "Missing attribute: key"
+
+        key = key.toLowerCase()
+
+        switch type
+            when 'regulars'
+                @removeRegular key
+                res.ok()
+
+            when 'whitelist', 'blacklist', 'badwords', 'emotes'
+                dto = @lists[type]
+                dto.remove key
+                res.ok()
+
+            else
+                res.error 'Invalid Type'
+
+
+    # Action handler for Filters.clear(type)
+    actClear: (user, params, res) =>
+        {type} = params
+
+        switch type
+            when 'regulars'
+                @clearRegulars()
+                res.ok()
+
+            when 'whitelist', 'blacklist', 'badwords', 'emotes'
+                dto = @lists[type]
+                dto.clear()
+                res.ok()
+
+            else
+                res.error 'Invalid Type'
+
 
     # Filter list command handlers
 
@@ -252,28 +375,35 @@ class Filters extends Module
         unless (name = args[0])?
             return bot.say "[Filter] " + @str('err-error') + ' ' + @str('err-usage', '!regulars remove <username>')
             
-        name = name.toLowerCase()
-
-        # Remove from regulars list.
-        @regulars.remove name
-
+        @removeRegular name
         bot.say @str('regulars-removed', name)
-            
+
+
+    # Removes a user from the regulars list.
+    removeRegular: (name) ->
+        name = name.toLowerCase()
+        @regulars. remove name
+
+
+    # Adds a user to regulars and remove existing strikes.
+    addRegular: (name) ->
+        name = name.toLowerCase()
+        @regulars.add name
+        delete @warnings[name]
+
+
+    # Removes all regulars.
+    clearRegulars: ->
+        @regulars.clear()
+
 
     # !regulars add <name> - Adds a regular.
     cmdAddRegular: (user, args, bot) =>
         unless (name = args[0])?
             return bot.say @str('err-error') + ' ' + @str('err-usage', '!regulars add <username>')
             
-        name = name.toLowerCase()
-
-        # Add user to regulars and remove existing strikes.
-        @regulars.add name
-        delete @warnings[name]
-
+        @addRegular name
         bot.say @str('regulars-added', name)
-       
-
     # !permit <name> - Permits a user.
     cmdPermitUser: (user, args, bot) =>
         permitLength = 3 * 60 # 3 minutes

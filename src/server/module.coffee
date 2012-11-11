@@ -166,7 +166,7 @@ class Module
     #         { 'act1': (user, params, res) -> ...,
     #           'act2': (user, params, res) -> ...,
     #           ... }
-    regAct: (data) ->
+    regActs: (data) ->
         @updActions = data
 
 

@@ -65,7 +65,7 @@ class Commands extends Module
 
 
         # Register interface actions
-        @regAct {
+        @regActs {
             # Commands.get()
             'get': (user, params, res) =>
                 cmds = @commands.get()

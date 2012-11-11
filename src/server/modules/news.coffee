@@ -88,6 +88,75 @@ class News extends Module
         # !news - Print the next news message
         @regCmd "news", Sauce.Level.Mod, @cmdNewsNext
 
+        # Register web interface update handlers
+        @regActs {
+            # News.config([state|seconds|messages]*)
+            'config': @actConfig
+
+            # News.get()
+            'get'   : (user, params, res) =>
+                res.send @news.data
+
+            # News.set(key, val)
+            'set'   : (user, params, res) =>
+                {key, val} = params
+                if not key then return res.error "Missing attribute: key"
+                if not val then return res.error "Missing attribute: val"
+
+                id = parseInt key, 10
+                if isNaN id then return res.error "Invalid key: #{key}"
+
+                @news.add val, id
+                res.ok()
+
+            # News.add(val)
+            'add'   : (user, params, res) =>
+                {val} = params
+                if not val then return res.error "Missing attribute: val"
+
+                id = @news.add val
+                res.send id: id
+
+            # News.remove(key)
+            'remove': (user, params, res) =>
+                {key} = params
+                if not key then return res.error "Missing attribute: key"
+
+                id = parseInt key, 10
+                if isNaN id then return res.error "Invalid key: #{key}"
+
+                @news.remove id
+                res.ok()
+
+            # News.clear()
+            'clear' : (user, params, res) =>
+                @news.clear()
+                res.ok()
+        }
+
+
+    # Action handler for "config"
+    # News.config([state|delay|messages]*)
+    actConfig: (user, params, res) =>
+        {state, seconds, messages} = params
+
+        # State - 1 or 0
+        if state?.length
+            val = if (val = parseInt state, 10) then 1 else 0
+            @config.add 'state', val
+
+        # Seconds delay
+        if seconds?.length
+            val = parseInt seconds, 10
+            @config.add 'seconds', if isNaN val then 180 else val
+
+        # Messages delay
+        if messages?.length
+            val = parseInt messages, 10
+            @config.add 'messages', if isNaN val then 20 else val
+
+        res.send @config.get()
+
 
     cmdNewsEnable: (user, args, bot) =>
         @config.add 'state', 1

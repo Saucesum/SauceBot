@@ -87,6 +87,8 @@ class SauceBot
             @socket.type = type
             @socket.name = name
 
+            io.socket "Client registered as #{type}::#{name} @ #{@socket.remoteAddress()}"
+
             if type is Type.Chat
                 updateClientChannels @socket
         
@@ -389,8 +391,8 @@ loadChannels()
 # Start server
 server = new sio.Server Sauce.Server.Port,
     (socket) ->
-        io.socket "Client connected"
         new SauceBot socket
     , (socket) ->
-        io.socket "Client disconnected: #{socket.remoteAddress()}"
+        if socket.type isnt Type.Web
+            io.socket "Client disconnected: #{socket.type}::#{socket.name} @ #{socket.remoteAddress()}"
 

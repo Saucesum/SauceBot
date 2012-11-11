@@ -190,130 +190,6 @@ class Filters extends Module
         @regCmd 'regulars remove', Sauce.Level.Mod, @cmdRemoveRegular
         @regCmd 'permit',          Sauce.Level.Mod, @cmdPermitUser
 
-        # Register web interface update handlers
-        # Common parameters:
-        # * type: [whitelist|blacklist|badwords|emotes|regulars|config]
-        @regActs {
-            'get'   : @actGet
-            'add'   : @actAdd
-            'set'   : @actSet
-            'remove': @actRemove
-            'clear' : @actClear
-        }
-
-
-    # Action handler for Filters.get(type)
-    actGet: (user, params, res) =>
-        {type} = params
-        switch type
-            when 'config'
-                res.send @states.get()
-
-            when 'regulars'
-                res.send @regulars.get()
-
-            when 'whitelist', 'blacklist', 'badwords', 'emotes'
-                res.send @lists[type].get()
-
-            else
-                res.error 'Invalid type'
-
-
-    # Action handler for Filters.add(type, val)
-    actAdd: (user, params, res) =>
-        {type, key} = params
-        unless key
-            return res.error "Missing attribute: key"
-
-        key = key.toLowerCase()
-
-        switch type
-            when 'regulars'
-                @addRegular key
-                res.ok()
-
-            when 'whitelist', 'blacklist', 'badwords', 'emotes'
-                dto = @lists[type]
-                dto.add key
-                res.ok()
-
-            else
-                res.error 'Invalid type'
-
-
-    # Action handler for Filters.set(type, key, val)
-    actSet: (user, params, res) =>
-        {type, key, val} = params
-        unless key and val
-            return res.error "Missing attributes: key, val"
-
-        key = key.toLowerCase()
-        val = val.toLowerCase()
-        
-        switch type
-            when 'regulars'
-                @removeRegular key
-                @addRegular val
-                res.ok()
-
-            when 'whitelist', 'blacklist', 'badwords', 'emotes'
-                dto = @lists[type]
-                dto.remove key
-                dto.add val
-                res.ok()
-
-            when 'config'
-                if key in filterNames
-                    val = parseInt val, 10
-                    @states.add key, (if val then 1 else 0)
-                    res.ok()
-                else
-                    res.error "No such filter type. Types: #{filterNames.join ', '}"
-
-            else
-                res.error 'Invalid Type'
-
-
-    # Action handler for Filters.remove(type, key)
-    actRemove: (user, params, res) =>
-        {type, key} = params
-        unless key
-            return res.error "Missing attribute: key"
-
-        key = key.toLowerCase()
-
-        switch type
-            when 'regulars'
-                @removeRegular key
-                res.ok()
-
-            when 'whitelist', 'blacklist', 'badwords', 'emotes'
-                dto = @lists[type]
-                dto.remove key
-                res.ok()
-
-            else
-                res.error 'Invalid Type'
-
-
-    # Action handler for Filters.clear(type)
-    actClear: (user, params, res) =>
-        {type} = params
-
-        switch type
-            when 'regulars'
-                @clearRegulars()
-                res.ok()
-
-            when 'whitelist', 'blacklist', 'badwords', 'emotes'
-                dto = @lists[type]
-                dto.clear()
-                res.ok()
-
-            else
-                res.error 'Invalid Type'
-
-
     # Filter list command handlers
 
     cmdFilterAdd: (name, dto, args, bot) ->
@@ -382,7 +258,7 @@ class Filters extends Module
     # Removes a user from the regulars list.
     removeRegular: (name) ->
         name = name.toLowerCase()
-        @regulars. remove name
+        @regulars.remove name
 
 
     # Adds a user to regulars and remove existing strikes.
@@ -404,6 +280,8 @@ class Filters extends Module
             
         @addRegular name
         bot.say @str('regulars-added', name)
+
+
     # !permit <name> - Permits a user.
     cmdPermitUser: (user, args, bot) =>
         permitLength = 3 * 60 # 3 minutes
@@ -434,7 +312,80 @@ class Filters extends Module
         else
             bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')
             
+
+    # Custom update handler to avoid super messy switches.
+    update: (user, action, params, res) ->
+        {type} = params
+
+        if      type is 'config'   then @actConfig                action, params, res
+        else if type is 'regulars' then @actDTOList @regulars,    action, params, res
+        else if type in tableNames then @actDTOList @lists[type], action, params, res
+        else res.error "Invalid Type"
+            
+
+    # Handles update actions for DTO array lists.
+    # * dto   : The dto to alter.
+    # * act   : The specified action.
+    # * params: The parameter map.
+    # * res   : The result callback object.
+    actDTOList: (dto, act, params, res) ->
+        {key, val} = params
         
+        switch act
+            when 'get'
+                res.send dto.get()
+                
+            when 'add'
+                return res.error "Missing attribute: key" unless key
+                dto.add key
+                res.ok()
+                
+            when 'set'
+                return res.error "Missing attribute: key" unless key
+                return res.error "Missing attribute: val" unless val
+                dto.remove key
+                dto.add val
+                res.ok()
+                
+            when 'remove'
+                return res.error "Missing attribute: key" unless key
+                dto.remove key
+                res.ok()
+                
+            when 'clear'
+                dto.clear()
+                res.ok()
+                
+            else
+                res.error 'Invalid Action'
+                
+
+    # Handles update actions for the config states.
+    # * act   : The specified action.
+    # * params: The parameter map.
+    # * res   : The result callback object.
+    actConfig: (act, params, res) ->
+        switch act
+            when 'get'
+                res.send @states.get()
+                
+            when 'set'
+                altered = false
+                for field in filterNames when (val = params[field])?
+                    val = if (parseInt val, 10) then 1 else 0
+                    @states.set field, val
+                    altered = true
+                
+                if altered
+                    res.ok()
+                else
+                    res.error "Invalid state. States: #{filterNames.join ', '}"
+
+            else
+                res.error 'Invalid Action'
+          
+
+ 
     loadTable: (table) ->
         list = @lists[table]
         list.load ->

@@ -23,8 +23,6 @@ exports.strings = {
     'action-countdown-stopped': '@1@: stopped at @2@ remaining'
 
     'action-timer-started': 'Timer @1@ started. Stop with @2@'
-
-    # TODO: Add something for time units here... maybe.
 }
 
 # Time utility methods
@@ -129,11 +127,8 @@ class Timer extends Module
         
     registerHandlers: ->
         @regCmd "timer",          Sauce.Level.Mod, @cmdTimerStart
-                
         @regCmd "timer stop",     Sauce.Level.Mod, @cmdTimerStop
-                
         @regCmd "countdown",      Sauce.Level.Mod, @cmdCountdownStart
-                
         @regCmd "countdown stop", Sauce.Level.Mod, @cmdCountdownStop
                 
         @regVar 'countdown', (user, args, cb) =>
@@ -149,6 +144,18 @@ class Timer extends Module
             else
                 time = Date.now() - timer
                 cb @formatTime time, args[1]
+
+        # Register web update handlers
+        @regActs {
+            # Timer.timers()
+            'timers': (user, params, res) =>
+                res.send now: Date.now(), timers: @timers.get()
+
+            # Timer.countdowns()
+            'countdowns': (user, params, res) =>
+                res.send now: Date.now(), countdowns: @countdowns.get()
+        }
+
                 
     formatTime: (time, format) ->
         fmt = format ? 'short'
@@ -188,6 +195,7 @@ class Timer extends Module
         @countdowns.add name, Date.now() + target
         bot.say "[Countdown] " + @str('action-countdown-started', name, '!countdown stop ' + name)
         
+
     cmdCountdownStop: (user, args, bot) =>
         unless args? and (timer = @countdowns.get args[0])?
             return bot.say "[Countdown] " + @str('err-countdown') + '. ' + @str('err-usage', '!countdown stop <name>')

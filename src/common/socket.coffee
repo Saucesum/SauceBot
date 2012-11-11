@@ -9,6 +9,7 @@ class Socket
 
     constructor: (@sock, @endHandler) ->
         @sock.setEncoding 'utf8'
+        @queue = []
         
         @handlers = {}
         
@@ -31,6 +32,11 @@ class Socket
 
     on: (cmd, handler) ->
         @handlers[cmd] = handler
+
+        # Handle unprocessed data
+        for elem, i in @queue when elem.cmd is cmd
+            delete @queue[i]
+            handler elem.data
         
     
     handleData: (rawdata) ->
@@ -43,9 +49,11 @@ class Socket
             catch error
                 return
 
-            handler = @handlers[cmd]
-            handler(data) if handler?
-    
+            if (h = @handlers[cmd])?
+                h(data)
+            else
+                @queue.push cmd: cmd, data: data
+
 
     handleEnd: ->
         @endHandler() if @endHandler?

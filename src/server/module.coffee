@@ -191,8 +191,11 @@ class Module
         if (h = @updActions[action])?
             h user, params, res
         else
-            actList = Object.keys(@updActions).join ', '
-            res.error "Invalid action. Actions: #{actList}"
+            actList = Object.keys @updActions
+            if actList.length isnt 0
+                res.error "Invalid action. Actions: #{actList.join ', '}"
+            else
+                res.error "No actions available for this module"
 
     
     # Unimplemented methods:

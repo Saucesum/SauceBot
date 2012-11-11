@@ -64,6 +64,40 @@ class Commands extends Module
                 @addTrigger cmd
 
 
+        # Register interface actions
+        @regAct {
+            # Commands.get()
+            'get': (user, params, res) =>
+                cmds = @commands.get()
+                data = {}
+                data[key] = { msg: cmd.message, lvl: cmd.level } for key, cmd of cmds
+                res.send data
+
+            # Commands.set(key, val, lvl=0)
+            'set': (user, params, res) =>
+                {key, val, lvl} = params
+                unless key? and val?
+                    return res.error "Missing attributes: key, val"
+
+                @setCommand key, val, lvl ? Sauce.Level.User
+                res.ok()
+
+            # Commands.remove(key)
+            'remove': (user, params, res) =>
+                {key} = params
+                unless key?
+                    return res.error "Missing attribute: key"
+
+                @removeCommand key
+                res.ok()
+
+            # Commands.clear()
+            'clear': (user, params, res) =>
+                @clearCommands()
+                res.ok()
+        }
+
+
     unload:->
         @triggers = {}
         
@@ -158,15 +192,16 @@ class Commands extends Module
         @commands.add cmd, data
         @addTrigger   cmd
 
-    update: (user, action, params, res) ->
-        switch action
-            when 'get'
-                cmds = @commands.get()
-                data = {}
-                data[key] = { msg: cmd.message, lvl: cmd.level } for key, cmd of cmds
-                res.send data
-            else
-                res.error 'Invalid action #{action}'
+
+    removeCommand: (cmd) ->
+        @commands.remove cmd
+        @delTrigger      cmd
+
+    
+    clearCommands: ->
+        @commands.clear()
+        for cmd, _ of @triggers
+            @delTrigger cmd
 
 
 exports.New = (channel) ->

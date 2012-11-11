@@ -155,8 +155,7 @@ class SauceBot
             unban     : (data)       => @unban      chan, data
             clear     : (data)       => @timeout    chan, data, 2
             timeout   : (data, time) => @timeout    chan, data, time
-            commercial:              => @commercial chan
-            
+        }
 
     # Private Message (pm):
     # * user: [REQ] Source user
@@ -377,17 +376,6 @@ class SauceBot
         broadcastType Type.Chat, 'unban',
             chan: channel
             user: user
-        
-    
-    # Sends a 'commercial' message to the client
-    # - Plays a commercial for partner channels
-    #
-    # Commercial (commercial):
-    #  * chan: [REQ] Target channel
-    #
-    commercial: (channel) ->
-        broadcastType Type.Chat, 'commercial',
-            chan: channel
 
 
 

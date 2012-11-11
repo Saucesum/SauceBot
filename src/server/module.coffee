@@ -163,8 +163,8 @@ class Module
     # Registers the update actions.
     #
     # * data: The actions. It must be on the format
-    #         { 'act1': (user, params, res) -> ...,
-    #           'act2': (user, params, res) -> ...,
+    #         { 'act1': (user, params, res, bot) -> ...,
+    #           'act2': (user, params, res, bot) -> ...,
     #           ... }
     regActs: (data) ->
         @updActions = data
@@ -187,9 +187,10 @@ class Module
     #             res.ok()
     #             res.error(msg)
     #             res.send(data)
-    update: (user, action, params, res) ->
+    # * bot   : A callback to interact with the bot in the channel.
+    update: (user, action, params, res, bot) ->
         if (h = @updActions[action])?
-            h user, params, res
+            h user, params, res, bot
         else
             actList = Object.keys @updActions
             if actList.length isnt 0

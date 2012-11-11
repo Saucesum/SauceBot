@@ -253,7 +253,7 @@ class SauceBot
             ok   :        => @sendResult 1
             send : (data) => @sendResult 1, data
             error: (msg)  => @sendResult 0, error: msg
-        }, @createBot(channel)
+        }, @createBot channel.name.toLowerCase()
 
 
     # Sends a result and then closes the connection.

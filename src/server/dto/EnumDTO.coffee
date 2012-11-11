@@ -21,10 +21,9 @@ class EnumDTO extends HashDTO
      
      
         add: (value, id) ->
-            if id?
-                super id, value
-            else
-                super @getNewID(), value
+            id ?= @getNewID()
+            super id, value
+            return id
         
         
         get: ->

@@ -72,6 +72,9 @@ class AutoCommercial extends Module
             'set': (user, params, res) =>
                 {state, delay, messages} = params
 
+                unless user.isMod @channel, Sauce.Level.Admin
+                    return res.error "You are not authorized to alter AutoCommercial (admins only)"
+
                 unless state? or delay? or messages?
                     return res.error "No field specified. Fields: state, delay, messages"
 

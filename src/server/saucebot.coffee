@@ -120,7 +120,7 @@ class SauceBot
             try
                 @handleInterface data
             catch error
-                @sendResult 0, error: error
+                @sendResult 0, error: error.toString()
                 io.error error
         
         # Request handler

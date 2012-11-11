@@ -109,6 +109,7 @@ class Module
     # * channel: The parent channel object.
     constructor: (@channel) ->
         @loaded = false
+        @updActions = {}
 
 
     # Loads the module.
@@ -159,12 +160,39 @@ class Module
         @channel.vars.register this, name, fn
 
 
+    # Registers the update actions.
+    #
+    # * data: The actions. It must be on the format
+    #         { 'act1': (user, params, res) -> ...,
+    #           'act2': (user, params, res) -> ...,
+    #           ... }
+    regAct: (data) ->
+        @updActions = data
+
+
     # Returns a named string for this channel.
     #
     # * key : The key of the string. Usually "group-name"
     # * args: Optional arguments to substitute in the string.
     str: (key, args...) ->
         @channel.getString @getModuleName(), key, args...
+
+
+    # Handles a web interface update.
+    #
+    # * user  : The user object of the requestor.
+    # * action: The update action.
+    # * params: An object containing the update parameters.
+    # * res   : A result callback with the following methods:
+    #             res.ok()
+    #             res.error(msg)
+    #             res.send(data)
+    update: (user, action, params, res) ->
+        if (h = @updActions[action])?
+            h user, params, res
+        else
+            actList = Object.keys(@updActions).join ', '
+            res.error "Invalid action. Actions: #{actList}"
 
     
     # Unimplemented methods:

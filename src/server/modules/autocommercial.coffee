@@ -62,6 +62,38 @@ class AutoCommercial extends Module
         # Variables $(commercial state|delay|messages)
         @regVar "commercial", @varCommercial
 
+        # Register interface actions
+        @regActs {
+            # AutoCommercial.get()
+            'get': (user, params, res) =>
+                res.send @comDTO.get()
+
+            # AutoCommercial.set([state|delay|messages]+)
+            'set': (user, params, res) =>
+                {state, delay, messages} = params
+
+                unless state? or delay? or messages?
+                    return res.error "No field specified. Fields: state, delay, messages"
+
+                # set(state = 1 or 0)
+                if state? and state.length
+                    val = parseInt state, 10
+                    val = if val then 1 else 0
+                    @comDTO.add 'state', val
+                    @lastTime = Date.now()
+
+                # set(delay = greater than 15)
+                if delay? and delay.length
+                    val = @clampMinimums 'delay', delay
+
+                # set(messages = greater than 15)
+                if messages? and messages.length
+                    val = @clampMinimums 'messages', messages
+
+                res.send @comDTO.get()
+
+        }
+
 
     cmdEnableCommercial: (user, args, bot)  =>
         @comDTO.add 'state', 1

@@ -69,6 +69,12 @@ class Monitor extends Module
                     when 'random' then @getRandomUser()
                     else '$(error: use count or rand)'
 
+        @regActs {
+            # Monitor.get()
+            'get': (user, params, res) =>
+                res.send Object.keys @users
+        }
+
 
     cmdPickOneUser: (bot) ->
         rand  = @getRandomUser()

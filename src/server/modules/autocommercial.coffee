@@ -69,7 +69,7 @@ class AutoCommercial extends Module
 
 
     # Action handler for "config"
-    # AutoCommercial.config([url|delay|messages]*)
+    # AutoCommercial.config([state|delay|messages]*)
     actConfig: (user, params, res) =>
         {state, delay, messages} = params
 

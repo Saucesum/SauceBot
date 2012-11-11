@@ -30,6 +30,34 @@ class Quotes extends Module
             for id, {quote, list} of @quoteDTO.data
                 @quotes[list] = [] unless @quotes[list]?
                 @quotes[list].push quote
+
+        # Register web interface update handlers
+        @regActs {
+            # Quotes.get([list])
+            'get': (user, params, res) =>
+                {list} = params
+                if list?
+                    res.send @quotes[list] ? []
+                else
+                    res.send Object.keys @quotes
+
+            # Quotes.set(list, key, val)
+            'set': (user, params, res) =>
+                res.ok()
+
+            # Quotes.add(list, val)
+            'add': (user, params, res) =>
+                res.ok()
+
+            # Quotes.remove(list, val)
+            'remove': (user, params, res) =>
+                res.ok()
+
+            # Quotes.clear(list)
+            'clear': (user, params, res) =>
+                res.ok()
+
+        }
         
 
     registerHandlers: ->

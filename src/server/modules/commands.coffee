@@ -68,9 +68,10 @@ class Commands extends Module
         @regActs {
             # Commands.get()
             'get': (user, params, res) =>
-                cmds = @commands.get()
                 data = {}
-                data[key] = { msg: cmd.message, lvl: cmd.level } for key, cmd of cmds
+                for key, cmd of @commands.get()
+                    data[key]     = msg: cmd.message
+                    data[key].lvl = cmd.level if cmd.level
                 res.send data
 
             # Commands.set(key, val, lvl=0)

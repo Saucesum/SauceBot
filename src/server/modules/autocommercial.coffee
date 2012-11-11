@@ -30,7 +30,7 @@ oauth = new TokenJar Sauce.API.Twitch, Sauce.API.TwitchToken
 
 # Constants
 MINIMUM_DELAY    = 15
-MINIMUM_MESSAGES = 5
+MINIMUM_MESSAGES = 15
 
 class AutoCommercial extends Module
     constructor: (@channel) ->
@@ -75,18 +75,28 @@ class AutoCommercial extends Module
 
 
     cmdDelay: (user, args, bot) =>
-        num = (parseInt args[0], 10) or 0
-        num = MINIMUM_DELAY if num < MINIMUM_DELAY
-        @comDTO.add 'delay', num
+        num = @clampMinimums 'delay', args[0]
         @say bot, @str('action-delay', num)
 
 
     cmdMessages: (user, args, bot) =>
-        num = (parseInt args[0], 10) or 0
-        num = MINIMUM_MESSAGES if num < MINIMUM_MESSAGES
-        @comDTO.add 'messages', num
+        num = @clampMinimums 'messages', args[0]
         @say bot, @str('action-messages', num)
-       
+
+
+    clampMinimums: (field, val) ->
+        @comDTO.add field, parseInt val, 10
+
+        for key, min of {
+                'messages': MINIMUM_MESSAGES
+                'delay'   : MINIMUM_DELAY
+                }
+            value = @comDTO.get key
+            if isNaN(value) or value < min
+                @comDTO.add key, min
+
+        @comDTO.get field
+   
 
     varCommercial: (user, args, cb) =>
         arg = args[0] ? 'state'

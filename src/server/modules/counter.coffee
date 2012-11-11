@@ -59,6 +59,30 @@ class Counter extends Module
                 @addTrigger ctr
 
         @regVar 'counter', @varCounter
+
+        @regActs {
+            # Counter.get()
+            'get': (user, params, res) =>
+                res.send @counters.get()
+
+            # Counter.set(name, val)
+            'set': (user, params, res) =>
+                {name, val} = params
+                unless name? and val?
+                    return res.error "Missing attributes: name, val"
+
+                if isNaN(val = parseInt val, 10)
+                    return res.error "Value must be a number"
+
+                @counterSet name, val
+                res.ok()
+
+            # Counter.remove(name)
+            'remove': (user, params, res) =>
+                {name} = params
+                @counterUnset name
+                res.ok()
+        }
         
 
     unload:->

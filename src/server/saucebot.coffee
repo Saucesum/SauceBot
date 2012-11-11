@@ -145,7 +145,11 @@ class SauceBot
         json.op   = if json.op then 1 else null
 
         # Handle the message
-        chans.handle chan, json,
+        chans.handle chan, json, @createBot(chan)
+            
+
+    createBot: (chan) ->
+        return {
             say       : (data)       => @say        chan, data
             ban       : (data)       => @ban        chan, data
             unban     : (data)       => @unban      chan, data
@@ -246,10 +250,11 @@ class SauceBot
         unless action?      then throw new Error "Missing parameter: action"
 
         channel.handleInterface user, module, action, data, {
+            # Web callbacks (closes the connection)
             ok   :        => @sendResult 1
             send : (data) => @sendResult 1, data
             error: (msg)  => @sendResult 0, error: msg
-        }
+        }, @createBot(channel)
 
 
     # Sends a result and then closes the connection.

@@ -64,38 +64,34 @@ class AutoCommercial extends Module
 
         # Register interface actions
         @regActs {
-            # AutoCommercial.get()
-            'get': (user, params, res) =>
-                res.send @comDTO.get()
-
-            # AutoCommercial.set([state|delay|messages]+)
-            'set': (user, params, res) =>
-                {state, delay, messages} = params
-
-                unless user.isMod @channel, Sauce.Level.Admin
-                    return res.error "You are not authorized to alter AutoCommercial (admins only)"
-
-                unless state? or delay? or messages?
-                    return res.error "No field specified. Fields: state, delay, messages"
-
-                # set(state = 1 or 0)
-                if state? and state.length
-                    val = parseInt state, 10
-                    val = if val then 1 else 0
-                    @comDTO.add 'state', val
-                    @lastTime = Date.now()
-
-                # set(delay = greater than 15)
-                if delay? and delay.length
-                    val = @clampMinimums 'delay', delay
-
-                # set(messages = greater than 15)
-                if messages? and messages.length
-                    val = @clampMinimums 'messages', messages
-
-                res.send @comDTO.get()
-
+            'config': @actConfig
         }
+
+
+    # Action handler for "config"
+    # AutoCommercial.config([url|delay|messages]*)
+    actConfig: (user, params, res) =>
+        {state, delay, messages} = params
+
+        unless state? or delay? or messages?
+            return res.send @comDTO.get()
+
+        unless user.isMod @channel, Sauce.Level.Admin
+            return res.error "You are not authorized to alter AutoCommercial (admins only)"
+
+        # State - 1 or 0
+        if state?.length
+            val = if (val = parseInt state, 10) then 1 else 0
+            @comDTO.add 'state', val
+            @lastTime = Date.now()
+
+        # Delay in minutes - any number over MINIMUM_DELAY
+        if delay?.length then @clampMinimums 'delay', delay
+
+        # Messages limit - any number over MINIMUM_MESSAGES
+        if messages?.length then @clampMinimums 'messages', messages
+
+        res.send @comDTO.get()
 
 
     cmdEnableCommercial: (user, args, bot)  =>

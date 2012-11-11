@@ -20,8 +20,11 @@ class EnumDTO extends HashDTO
             id
      
      
-        add: (value) ->
-            super @getNewID(), value
+        add: (value, id) ->
+            if id?
+                super id, value
+            else
+                super @getNewID(), value
         
         
         get: ->

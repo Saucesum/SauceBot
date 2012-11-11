@@ -51,12 +51,59 @@ class Poll extends Module
                 when 'results' then (if @activePoll? then @getResults() else 'N/A')
                 else 'undefined'
 
-        
+        # Register web interface update handlers
+        @regActs {
+            # Poll.list()
+            'list': (user, params, res) =>
+                res.send @pollDTO.get()
+
+            # Poll.active()
+            'active': (user, params, res) =>
+                unless @activePoll?
+                    return res.error "No active poll"
+
+                active = @polls[@activePoll]
+                votes = {}
+                votes[active[opt]] = num for opt, num of @votes
+                res.send poll: @activePoll, votes: votes
+
+            # Poll.start(name)
+            'start': (user, params, res, bot) =>
+                {name} = params
+                unless @polls[name]?
+                    return res.error "No such poll"
+
+                @startPoll name, bot
+                res.ok()
+
+            # Poll.create(name, options, start?)
+            'create': (user, params, res, bot) =>
+                {name, options, start} = params
+
+                @createPoll name, options
+                @startPoll  name, bot     if start
+                res.ok()
+
+            # Poll.end()
+            'end': (user, params, res, bot) =>
+                unless @activePoll?
+                    return res.error "No active poll"
+
+                active = @polls[@activePoll]
+                votes = {}
+                votes[active[opt]] = num for opt, num of @votes
+                res.send poll: @activePoll, votes: votes
+                @endPoll bot
+                
+        }
+                    
+
     updatePollList: ->
         @polls = {}
         for pollName, pollOptions of @pollDTO.get()
             @polls[pollName] = pollOptions.split /\s+/
             
+
     # Clears all votes and stops any active polls in this module. This is also
     # used for initialization of the module.   
     reset: ->
@@ -86,28 +133,47 @@ class Poll extends Module
             unless @polls[pollName]?
                 return bot.say '[Poll] ' + @str('err-unknown-poll', "!poll #{pollName} <opt1> <opt2> ...")
                 
-            @reset()
-            poll = @polls[pollName]
-            @activePoll = pollName
-            @votes = (0 for opt in poll)
-            
-            bot.say '[Poll] ' + @str('action-started', pollName, '!vote <option>', poll.join ', ')
-            
+            @startPoll pollName, bot
         else
-            options = args.join ' '
-            @pollDTO.add pollName, options.toLowerCase()
-            @updatePollList()
-            bot.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
+            @createPoll pollName, args.join(' '), bot
             
+
+    # Starts a poll.
+    # * pollName: The name of the poll.
+    # * bot     : Optional bot object to send a confirmation message.
+    startPoll: (pollName, bot) ->
+        @reset()
+        poll = @polls[pollName]
+        @activePoll = pollName
+        @votes = (0 for opt in poll)
         
+        bot?.say '[Poll] ' + @str('action-started', pollName, '!vote <option>', poll.join ', ')
+
+
+    # Creates a poll.
+    # * pollName: The name of the poll.
+    # * options : A space-separated list of options.
+    # * bot     : Optional bot object to send a confirmation message.
+    createPoll: (pollName, options, bot) ->
+        @pollDTO.add pollName, options.toLowerCase()
+        @updatePollList()
+
+        bot?.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
+
+
+    # Ends the active poll.
+    # * bot: Optional bot object to send a confirmation message.
+    endPoll: (bot) ->
+        bot?.say '[Poll] ' + @str('action-results', @activePoll, @getResults())
+        @reset()
+
+ 
     cmdPollEnd: (user, args, bot) =>
         unless @activePoll?
             return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll <name>')
             
-        results = @getResults()
-        bot.say '[Poll] ' + @str('action-results', @activePoll, results)
-        @reset()
-        
+        @endPoll bot
+
         
     getResults: ->
         # Take each key (option) in @votes, then sort these keys on their

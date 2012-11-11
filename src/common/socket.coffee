@@ -54,6 +54,7 @@ class Socket
                 h(data)
             else
                 @queue.push cmd: cmd, data: data
+                @queue.shift() while @queue.length > 20
 
 
     handleEnd: ->

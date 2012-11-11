@@ -254,10 +254,10 @@ class SauceBot
 
     # Sends a result and then closes the connection.
     sendResult: (res, data) ->
-        data = {} unless data?
-        data.result ?= res
-
-        @socket.emitRaw data
+        @socket.emitRaw {
+            result: res
+            data  : data
+        }
         @socket.close()
        
  
@@ -290,7 +290,7 @@ class SauceBot
         if requireLogin
             throw new Error 'You are not logged in' unless userID?
         
-        channel = chans.getById(chan) ? {
+        channel = chans.getById(chan) ? chans.getByName(chan) ? {
             name: 'N/A'
             id  : -1
         }

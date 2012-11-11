@@ -51,14 +51,56 @@ class Monument extends Module
         
         # Load monument data
         @obtained.load()
-       
+
  
     registerHandlers: ->
         @regCmd "#{@command}",        Sauce.Level.Mod, @cmdMonument
         @regCmd "#{@command} clear",  Sauce.Level.Mod, @cmdMonumentClear
         @regCmd "#{@command} remove", Sauce.Level.Mod, @cmdMonumentRemove
         @regVar "#{@command}", @varMonument
-        
+
+        @regActs {
+            # Monument.get()
+            'get': (user, params, res) =>
+                res.send @obtained.get()
+
+            # Monument.add(block)
+            'add': (user, params, res) =>
+                {block} = params
+
+                unless block? and (block = block.toLowerCase()) in @blocksLC
+                    return res.error "Invalid block. Blocks: #{@blocksLC.join ', '}"
+                
+                @addBlock block
+                res.ok()
+
+            # Monument.remove(block)
+            'remove': (user, params, res) =>
+                {block} = params
+
+                unless block? and (block = block.toLowerCase()) in @blocksLC
+                    return res.error "Invalid block. Blocks: #{@blocksLC.join ', '}"
+
+                @removeBlock block
+                res.ok()
+
+            # Monument.clear()
+            'clear': (user, params, res) =>
+                @clearBlocks()
+                res.ok()
+        }
+
+
+    addBlock: (block) ->
+        @obtained.add block unless block in @obtained.get()
+
+
+    removeBlock: (block) ->
+        @obtained.remove block
+
+
+    clearBlocks: ->
+        @obtained.clear()
 
     getMonumentState: ->
         @str('list-blocks', @getBlockString())
@@ -81,13 +123,13 @@ class Monument extends Module
         unless (idx >= 0)
             return @say bot, @str('err-unknown-block', block) + '. ' + @str('err-usage', @usage)
         
-        @obtained.add block unless block in @obtained.get()
+        @addBlock block
         @say bot, @str('action-added', @blocks[idx])
 
 
     # !<name> clear - Clear the monument
     cmdMonumentClear: (user, args, bot) =>
-        @obtained.clear()
+        @clearBlocks()
         @say bot, @str('action-cleared')
 
 
@@ -102,7 +144,7 @@ class Monument extends Module
         unless (idx >= 0)
             return @say bot, @str('err-unknown-block', block)
         
-        @obtained.remove block
+        @removeBlock block
         @say bot, @str('action-removed', @blocks[idx])
 
 

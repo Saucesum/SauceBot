@@ -43,9 +43,10 @@ cli.on 'channels', (data) ->
         elems.push (if c.status then "#{c.name.blue.bold}##{c.id}" else "#{c.name.red}##{c.id}")
     console.log "\n[#{'Channels'.green}]:", elems.join(', ')
 
-cli.emit 'register',
-    type: 'chat'
-    name: 'TestClient'
+cli.on 'connect', ->
+    cli.emit 'register',
+        type: 'chat'
+        name: 'TestClient'
 
 cli.on 'users', (data) ->
     console.log data

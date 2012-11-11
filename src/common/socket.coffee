@@ -24,6 +24,7 @@ class Socket
         
         @sock.on 'connect', =>
             @addr = @sock.remoteAddress
+            @handleConnect()
 
 
     close: ->
@@ -58,7 +59,10 @@ class Socket
     handleEnd: ->
         @endHandler() if @endHandler?
         @sock.end() if @sock?
-        
+
+
+    handleConnect: ->
+        @handlers['connect']?()
         
     emit: (cmd, data) ->
         json = JSON.stringify

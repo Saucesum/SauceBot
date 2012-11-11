@@ -330,6 +330,9 @@ class Filters extends Module
     # * res   : The result callback object.
     actDTOList: (dto, act, params, res) ->
         {key, val} = params
+
+        key = key?.toLowerCase()
+        val = val?.toLowerCase()
         
         switch act
             when 'get'
@@ -373,11 +376,11 @@ class Filters extends Module
                 altered = false
                 for field in filterNames when (val = params[field])?
                     val = if (parseInt val, 10) then 1 else 0
-                    @states.set field, val
+                    @states.add field, val
                     altered = true
                 
                 if altered
-                    res.ok()
+                    res.send @states.get()
                 else
                     res.error "Invalid state. States: #{filterNames.join ', '}"
 

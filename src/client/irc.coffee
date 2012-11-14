@@ -74,7 +74,7 @@ class SauceIRC
         if @isCached message
             return io.debug "[IRC] Skipping: #{message}"
         
-        @sayRaw io.noise() + ' ' + message
+        @bot.say @channel, io.noise() + ' ' + message
 
 
     sayRaw: (message) ->

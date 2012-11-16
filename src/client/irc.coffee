@@ -27,6 +27,7 @@ class SauceIRC
 
         # Raw-queue
         @rawQueue = []
+        @lastRawMessage = null
         @lastRaw = 0
         @rawPoller()
 
@@ -37,12 +38,18 @@ class SauceIRC
         else
             now = Date.now()
             if @rawQueue.length and @lastRaw + RAW_DELAY < now
-                msg = @rawQueue.shift()
-                @bot?.say @channel, msg
-                @lastRaw = now
-                io.debug "Queued message sent: #{msg}"
+                @popRawQueue now
 
             setTimeout @rawPoller, POLL_DELAY
+
+
+    popRawQueue: (now) ->
+        msg = @rawQueue.shift()
+        unless msg is @lastRawMessage
+            @bot?.say @channel, msg
+            @lastRaw        = now
+            @lastRawMessage = msg
+            io.debug "Queued message sent: #{msg}"
 
     
     connect: ->

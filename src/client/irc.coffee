@@ -79,13 +79,18 @@ class SauceIRC
 
     sayRaw: (message) ->
         now = Date.now()
-        if @lastRaw + RAW_DELAY > now
+
+        unless @rawQueue.length and @lastRaw + RAW_DELAY > now
+            # Nothing in the queue.
+            @bot.say @channel, message
+            @lastRaw = now
+            return
+
+        unless message in @rawQueue
+            # Queue message for later.
             @rawQueue.push message
             @rawQueue.shift() until @rawQueue.length < MAX_QUEUE
             io.debug "Raw queued."
-        else
-            @bot.say @channel, message
-            @lastRaw = now
 
 
     send: (code, args...) ->

@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.63, for debian-linux-gnu (i686)
+-- MySQL dump 10.13  Distrib 5.1.66, for debian-linux-gnu (i686)
 --
 -- Host: localhost    Database: saucebot
 -- ------------------------------------------------------
--- Server version	5.1.63-0ubuntu0.11.10.1
+-- Server version	5.1.66-0ubuntu0.11.10.2
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -395,6 +395,7 @@ CREATE TABLE `session` (
   `userid` int(11) NOT NULL DEFAULT '0',
   `time` bigint(20) DEFAULT NULL,
   `ip` varchar(15) DEFAULT NULL,
+  `page` varchar(200) DEFAULT 'N/A',
   PRIMARY KEY (`userid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -462,7 +463,7 @@ CREATE TABLE `statusupdates` (
   `body` varchar(500) DEFAULT NULL,
   `time` int(20) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -567,4 +568,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-11-03 15:26:10
+-- Dump completed on 2012-11-17 21:22:36

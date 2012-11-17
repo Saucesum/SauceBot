@@ -70,9 +70,15 @@ class Monitor extends Module
                     else '$(error: use count or rand)'
 
         @regActs {
-            # Monitor.get()
-            'get': (user, params, res) =>
+            # Monitor.all()
+            'all': (user, params, res) =>
                 res.send Object.keys @users
+
+            # Monitor.random()
+            'random': (user, params, res) =>
+                num = Object.keys(@users).length
+                rand = @getRandomUser()
+                res.send count: num, user: rand
         }
 
 

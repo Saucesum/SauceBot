@@ -78,7 +78,17 @@ class Monitor extends Module
             'random': (user, params, res) =>
                 num = Object.keys(@users).length
                 rand = @getRandomUser()
-                res.send count: num, user: rand
+                msg  = @users[rand]
+                res.send count: num, user: rand, msg: msg
+
+            # Monitor.count()
+            'count': (user, params, res) =>
+                res.send Object.keys(@users).length
+
+            # Monitor.clear()
+            'clear': (user, params, res) =>
+                @users = {}
+                res.ok()
         }
 
 
@@ -127,7 +137,7 @@ class Monitor extends Module
 
     handle: (user, msg, bot) ->
         @writelog user, msg
-        @users[user.name] = 1
+        @users[user.name] = msg
         spam.run @channel.id, user.name, msg
 
 

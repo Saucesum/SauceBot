@@ -9,7 +9,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Poll'
-exports.version     = '1.0'
+exports.version     = '1.1'
 exports.description = 'Channel voting system'
 
 exports.strings = {
@@ -20,6 +20,7 @@ exports.strings = {
     
     'action-started': '"@1@" started! Vote with @2@. Options: @3@'
     'action-created': '"@1@" created! Start with @2@'
+    'action-removed': '"@1@" removed.'
     'action-results': '@1@ results: @2@'
 }
 
@@ -94,7 +95,15 @@ class Poll extends Module
                 votes[active[opt]] = num for opt, num of @votes
                 res.send poll: @activePoll, votes: votes
                 @endPoll bot
-                
+
+            # Poll.remove(name)
+            'remove': (user, params, res, bot) =>
+                {name} = params
+                unless @polls[name]?
+                    return res.error "No such poll"
+
+                @removePoll name
+                res.ok()
         }
                     
 
@@ -118,6 +127,9 @@ class Poll extends Module
         
         # !poll end - Ends the active poll
         @regCmd 'poll end', Sauce.Level.Mod, @cmdPollEnd
+
+        # !poll remove <name> - Removes the specified poll
+        @regCmd 'poll remove', Sauce.Level.Mod, @cmdPollRemove
         
         # !vote <value> - Adds a vote to the current poll
         @regCmd 'vote'    , Sauce.Level.User, @cmdPollVote
@@ -161,6 +173,18 @@ class Poll extends Module
         bot?.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
 
 
+    # Removes a poll-definition.
+    # * pollName: The name of the poll to remove.
+    # * bot     : Optional bot object to send a confirmation message.
+    removePoll: (pollName, bot) ->
+        if pollName is @activePoll
+            @endPoll bot
+            bot = null
+
+        @pollDTO.remove pollName
+        bot?.say '[Poll] ' + @str('action-removed', pollName)
+
+
     # Ends the active poll.
     # * bot: Optional bot object to send a confirmation message.
     endPoll: (bot) ->
@@ -174,6 +198,12 @@ class Poll extends Module
             
         @endPoll bot
 
+
+    cmdPollRemove: (user, args, bot) =>
+        unless args[0]?
+            return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll remove <name>')
+
+        @removePoll args[0], bot
         
     getResults: ->
         # Take each key (option) in @votes, then sort these keys on their

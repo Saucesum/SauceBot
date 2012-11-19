@@ -231,6 +231,12 @@ class Poll extends Module
             @hasVoted.push user
             @votes[idx]++
 
+
+    handle: (user, msg, bot) ->
+        if @activePoll?
+            if m = /^!?(?:vote)?\s*(\S+)/i.exec msg
+                @cmdPollVote user, [m[1]], bot
+
         
 exports.New = (channel) -> new Poll channel
         

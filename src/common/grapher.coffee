@@ -94,7 +94,7 @@ time = (name, value = 1) ->
 gauge = (name, value) ->
     send name, value, 'g'
 
-exports = {
+exports[k] = v for k, v of {
     # Control
     init: init
     stop: stop

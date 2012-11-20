@@ -150,6 +150,7 @@ class SauceBot
         chans.handle chan, json, @createBot(chan)
             
 
+    # Creates a bot object for the specified channel.
     createBot: (chan) ->
         return {
             say       : (data)       => @say        chan, data
@@ -158,6 +159,14 @@ class SauceBot
             clear     : (data)       => @timeout    chan, data, 2
             timeout   : (data, time) => @timeout    chan, data, time
         }
+
+
+    # Creates a web callback result object.
+    createRes: ->
+        # Web callbacks (closes the connection)
+        ok   :        => @sendResult 1
+        send : (data) => @sendResult 1, data
+        error: (msg)  => @sendResult 0, error: msg
 
     # Private Message (pm):
     # * user: [REQ] Source user
@@ -250,12 +259,11 @@ class SauceBot
         unless module?      then throw new Error "Missing parameter: module"
         unless action?      then throw new Error "Missing parameter: action"
 
-        channel.handleInterface user, module, action, data, {
-            # Web callbacks (closes the connection)
-            ok   :        => @sendResult 1
-            send : (data) => @sendResult 1, data
-            error: (msg)  => @sendResult 0, error: msg
-        }, @createBot channel.name.toLowerCase()
+        # Create request callbacks
+        res = @createRes()
+        bot = @createBot channel.name.toLowerCase()
+
+        channel.handleInterface user, module, action, data, res, bot
 
 
     # Sends a result and then closes the connection.

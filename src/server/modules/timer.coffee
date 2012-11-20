@@ -27,7 +27,7 @@ exports.strings = {
 
 # Time utility methods
 
-timeRE = /(?:(\d+)\s*[dD]\w*)?\s*(?:(\d+)\s*[hHtT]\w*)?\s*(?:(\d+)\s*[mM]\w*)?\s*(?:(\d+)\s*[sS]\w*)?\s*/
+timeRE = /(?:(\d+)\s*[dD][a-z]*)?\s*(?:(\d+)\s*[ht][a-z]*)?\s*(?:(\d+)\s*[m][a-z]*)?\s*(?:(\d+)\s*[s]\w*)?\s*/i
 
 strToTime = (str) ->
     return '' unless m = timeRE.exec str

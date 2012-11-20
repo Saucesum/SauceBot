@@ -28,6 +28,12 @@ exports.DEFAULTS = {
     Logging:
         Root: __dirname + '/../../logs/'
     
+    # Graphing (statsd/graphite) config
+    Graphing:
+        Host: 'localhost'
+        Port: 8125
+        Name: 'saucebot.'
+
     # Net settings
     Server:
         Name: 'SauceBot'

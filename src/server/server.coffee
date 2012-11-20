@@ -19,6 +19,7 @@ Options:
 """
 
 question = require '../common/question'
+graph    = require '../common/grapher'
 config   = require './config'
 Sauce    = require './sauce'
 io       = require './ioutil'
@@ -55,6 +56,10 @@ startServer = ->
     # Set up logging directories
     mkdirs()
 
+    # Set up graphing
+    graph.init Sauce.Graphing.Host, Sauce.Graphing.Port, Sauce.Graphing.Name
+    graph.count 'startup'
+
     # Set up database
     db = require './saucedb'
 
@@ -86,10 +91,14 @@ if args['--config']
 
     qs.add 'Logging', 'Root', config.Logging.Root
 
-    qs.add 'API', 'Twitch', config.API.Twitch
-    qs.add 'API', 'Twitch', config.API.TwitchToken
-    qs.add 'API', 'LastFM', config.API.LastFM
-    qs.add 'API', 'Steam',  config.API.Steam
+    qs.add 'Graphing', 'Host', config.Graphing.Host
+    qs.add 'Graphing', 'Port', config.Graphing.Port
+    qs.add 'Graphing', 'Name', config.Graphing.Name
+
+    qs.add 'API', 'Twitch',      config.API.Twitch
+    qs.add 'API', 'TwitchToken', config.API.TwitchToken
+    qs.add 'API', 'LastFM',      config.API.LastFM
+    qs.add 'API', 'Steam',       config.API.Steam
 
     qs.start 'Configuring SauceBot Server'.bold.magenta, (data) ->
 

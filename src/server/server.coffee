@@ -48,6 +48,11 @@ mkdirs = ->
     ] when not fs.existsSync dir
 
 
+initGraph = ->
+    if Sauce.Graphing.Host
+        graph.init Sauce.Graphing.Host, Sauce.Graphing.Port, Sauce.Graphing.Name
+        graph.count 'server.startup'
+
 # Starts the server with the specified config file
 startServer = ->
     Sauce.reload()
@@ -57,8 +62,7 @@ startServer = ->
     mkdirs()
 
     # Set up graphing
-    graph.init Sauce.Graphing.Host, Sauce.Graphing.Port, Sauce.Graphing.Name
-    graph.count 'startup'
+    initGraph()
 
     # Set up database
     db = require './saucedb'

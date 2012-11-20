@@ -12,6 +12,7 @@ auth  = require '../common/session'
 io    = require '../common/ioutil'
 sio   = require '../common/socket'
 log   = require '../common/logger'
+graph = require '../common/grapher'
 
 # Set up logging
 io.setLogger new log.Logger Sauce.Logging.Root, "server.log"
@@ -37,6 +38,7 @@ Type = {
 
 # Broadcasts a message to all clients with a certain type
 broadcastType = (type, cmd, data) ->
+    graph.count "output.#{cmd}"
     server.forAll (socket) ->
         if socket.type is type
             socket.emit cmd, data
@@ -89,6 +91,7 @@ class SauceEmitter
     #
     error: (message) ->
         io.say '>> '.red + message
+        graph.count 'output.error'
 
         @socket.emit 'error',
               msg  : message
@@ -182,6 +185,7 @@ class SauceBot
         
         # Message handler
         @socket.on 'msg', (data) =>
+            graph.count 'input.msg'
             try
                 @handle data
             catch error
@@ -190,6 +194,7 @@ class SauceBot
         
         # Private message handler
         @socket.on 'pm', (data) =>
+            graph.count 'input.pm'
             try
                 @handlePM data
             catch error
@@ -199,6 +204,7 @@ class SauceBot
                 
         # Update handler
         @socket.on 'upd', (data) =>
+            graph.count 'input.upd'
             try
                 @handleUpdate data
             catch error
@@ -207,6 +213,7 @@ class SauceBot
 
         # Handle interface requests
         @socket.on 'int', (data) =>
+            graph.count 'input.int'
             try
                 @handleInterface data
             catch error
@@ -215,6 +222,7 @@ class SauceBot
         
         # Request handler
         @socket.on 'get', (data) =>
+            graph.count 'input.get'
             try
                 @handleGet data
             catch error
@@ -419,7 +427,9 @@ loadChannels()
 server = new sio.Server Sauce.Server.Port,
     (socket) ->
         new SauceBot socket
+        graph.count 'server.connected'
     , (socket) ->
         if socket.type isnt Type.Web
             io.socket "Client disconnected: #{socket.type}::#{socket.name} @ #{socket.remoteAddress()}"
+        graph.count 'server.disconnected'
 

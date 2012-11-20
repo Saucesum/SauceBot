@@ -12,6 +12,7 @@ trig   = require './trigger'
 } = require './dto'
 
 
+graph = require '../common/grapher'
 io    = require './ioutil'
 mod   = require './module'
 
@@ -218,6 +219,7 @@ class Channel
         @usernames[user.name.toLowerCase()] = user.op
         
         msg = data.msg
+        graph.count "channels.input.#{@name.toLowerCase()}"
         
         for trigger in @triggers
             # Check for first match that the user is authorized to use, also

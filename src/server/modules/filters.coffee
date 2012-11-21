@@ -91,7 +91,7 @@ tableFields =
 # Strikes reset time (in ms)
 TIMEOUT = 3 * 60 * 60 * 1000
 
-URL_RE = /(?:(?:https?:\/\/[-a-zA-Z0-9\.]*)|(?:[-a-zA-Z0-9]+\.))[-a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,})\b/
+URL_RE = /(?:(?:(?:https?:\/\/[-a-zA-Z0-9\.]*)|(?:[-a-zA-Z0-9]+\.))[-a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,})\b|(?:\w+\.[a-zA-Z]{2,}\/))/
 
 reasons = new log.Logger Sauce.Logging.Root, 'reasons.log'
 

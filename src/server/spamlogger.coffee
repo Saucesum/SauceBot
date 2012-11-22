@@ -34,7 +34,7 @@ class SpamList
     constructor: (@id, @link) ->
     
     run: (channel, user, message) ->
-        if message?.indexOf @link >= 0
+        if message?.indexOf(@link) >= 0
             logSpam @id, channel, user, message
             
 

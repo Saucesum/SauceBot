@@ -32,14 +32,9 @@ runTests = (channel, user, message) ->
 
 class SpamList
     constructor: (@id, @link) ->
-        @link = @link.replace /\//g, '\\/'
-        try
-            @regex = new RegExp @link, 'i'
-        catch err
-            io.error 'Invalid regex: ' + err
     
     run: (channel, user, message) ->
-        if @regex?.test message
+        if message?.indexOf @link >= 0
             logSpam @id, channel, user, message
             
 

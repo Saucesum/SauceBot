@@ -10,7 +10,9 @@ exports.CallStack = class CallStack
         @stack.push =>
             callback @stack.pop() ? @result
             
-    start: ->
+    start: (result)->
+        @result = result if result?
+
         @stack.reverse()
         @stack.pop()()
 

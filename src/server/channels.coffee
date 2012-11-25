@@ -112,7 +112,7 @@ class Channel
             try
                 # Create a new instance of the module and then load it
                 module = mod.instance moduleName, this
-                module.loadModule()
+                module?.loadModule()
             catch error
                 console.log error.stack
                 io.error "Error loading module #{moduleName}: #{error}"
@@ -142,7 +142,8 @@ class Channel
         db.getChanDataEach @id, 'module', (result) =>
             # Load newly added
             unless result.module in oldNames
-                @modules.push @loadModule result.module
+                module = @loadModule result?.module
+                @modules.push module if module?
 
             newNames.push result.module
         , =>

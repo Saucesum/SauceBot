@@ -1,1 +1,1 @@
-mocha ./bin/test/ --recursive --require should -R spec
+mocha ./bin/test/ --recursive --require should -R spec --watch

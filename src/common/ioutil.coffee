@@ -58,7 +58,7 @@ exports.socket = (message) ->
 
 # Logs an error message
 exports.error = (message) ->
-    log(Level.Error, 'ERROR', (sbut.getPrevStack().underline + "\t" + message).red.inverse)
+    log(Level.Error, 'ERROR', (sbut.getFullStack().underline + "\t" + message).red.inverse)
 
 
 exports.irc = (chan, user, message) ->

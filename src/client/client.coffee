@@ -21,6 +21,8 @@ PORT = server.port
 
 HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 
+io.setLevel io.Level.All
+
 logger = new log.Logger logging.root, "jtv.log"
 pmlog  = new log.Logger logging.root, "pm.log"
 

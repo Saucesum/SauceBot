@@ -17,7 +17,7 @@ class HashDTO extends DTO
     
     # Loads the database data into the underlying hash
     load: (cb) ->
-        db.loadData @channel.id, @table, 
+        db.loadData @channel.id, @table,
                 key: @keyField
                 value: @valueField
             , (data) =>
@@ -61,7 +61,7 @@ class HashDTO extends DTO
     # Returns the underlying hash, or the specified element.
     # Be sure to call HashDTO.save() if you have modified it.
     get: (key) ->
-        if key? then @data[key] else @data 
+        if key? then @data[key] else @data
         
     
 exports.HashDTO = HashDTO

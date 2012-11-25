@@ -35,6 +35,9 @@ loadModule = (name) ->
         module = require "#{PATH}#{name.toLowerCase()}"
         io.debug "Loaded module #{module.name}(#{name.toLowerCase()}) v#{module.version}"
         
+        unless module?.New
+            throw new Error "Invalid module"
+
         exports.MODULES[module.name] = module
         
         {name, description, version} = module

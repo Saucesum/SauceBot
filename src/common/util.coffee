@@ -8,13 +8,12 @@ exports.CallStack = class CallStack
         
     add: (callback) ->
         @stack.push =>
-            callback @stack.pop() ? @result
+            callback @stack.shift() ? @result
             
     start: (result)->
         @result = result if result?
 
-        @stack.reverse()
-        @stack.pop()()
+        @stack.shift()()
 
 
 # Returns a string representing the last stack location.

@@ -4,7 +4,7 @@
 
 {
     CreateChannel, CreateChannels, DeleteChannels,
-    CreateUser, CreateUsers, GrantUser, GrantUsers, DeleteUsers,
+    CreateUser, CreateUsers, GrantUser, GrantUsers, DeleteUsers, Setup,
     Command, TestMultiple
 } = require '../../testing'
 
@@ -15,36 +15,8 @@ describe 'Commands', ->
     users = {}
 
     before (done) ->
-        # Create some test users, some that are registered
-        CreateUsers {
-            normal : {
-                name : 'Joe'
-            }
-            mod : {
-                name : 'CarlMod'
-                op   : 1
-            }
-            admin : {
-                name       : 'PaulAdmin'
-                op         : 1
-                registered : true
-            }
-            owner : {
-                name       : 'FrankOwner'
-                registered : true
-            }
-            global : {
-                name       : 'Uber'
-                registered : true
-                global     : 1
-            }
-        }, (result) ->
-            # Store our users
-            users = result
-            
-            # Create all of the test channels at once, to avoid the usage of a call
-            # stack or other construction.
-            CreateChannels {
+        Setup {
+            channels: {
                 loaded : {
                     modules : ['Commands']
                 }
@@ -53,26 +25,48 @@ describe 'Commands', ->
                     modules : ['Commands']
                     modonly : 1
                 }
-            }, (result) ->
-                # Store the channels
-                channels = result
-
-                # Grant the users appropriate permissions on their channels
-                all = (channel for name, channel of channels)
-                GrantUsers [
-                    {
-                        channels : all
-                        level    : Sauce.Level.Admin
-                        users    : [users.admin]
-                    }
-                    {
-                        channels : all
-                        level    : Sauce.Level.Owner
-                        users    : [users.owner]
-                    }
-                ], done
+            }
+            users: {
+                normal : {
+                    name       : 'Joe'
+                }
+                mod : {
+                    name       : 'CarlMod'
+                    op         : 1
+                }
+                admin : {
+                    name       : 'PaulAdmin'
+                    op         : 1
+                    registered : true
+                }
+                owner : {
+                    name       : 'FrankOwner'
+                    registered : true
+                }
+                global : {
+                    name       : 'Uber'
+                    registered : true
+                    global     : 1
+                }
+            }
+        }, (cs, us) ->
+            channels = cs
+            all = (channel for name, channel of channels)
+            users = us
+            
+            GrantUsers [
+                {
+                    channels : all
+                    level    : Sauce.Level.Admin
+                    users    : [users.admin]
+                }
+                {
+                    channels : all
+                    level    : Sauce.Level.Owner
+                    users    : [users.owner]
+                }
+            ], done
                 
-
     describe '!set', ->
         # Set up the testers and the expected responses
         useMessage = 'Hello World!'

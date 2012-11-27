@@ -3,6 +3,14 @@
 # 
 # Copyright 2012 by Aaron Willey. All rights reserved
 
+# TODO: Investigate if it's really necessary to have all database access wrapped
+# in the callbacks. In theory, we want to prevent the case where data has been
+# sent to be added to the database, but code that reads the database executes
+# before the data is added. There *should* be some sort of queue, either in the
+# DBMS or the module, to ensure that queries are executed in the order received,
+# but this may not be the case. Some testing seems to indicate that the
+# callbacks are necessary, at least for channel creation.
+
 # It would be nice to use custom test configurations, at least to suppress the
 # logging messages. This can be done in a hacky way.
 io          = require '../server/ioutil'
@@ -107,18 +115,14 @@ CreateChannel = (options, callback) ->
         # of anything leftover, and then fill it based on the provided options.
 
         stack.add (next) ->
-            db.clearChanData id, 'channel', ->
-                db.getData 'channel', (result) ->
-                    next()
+            db.clearChanData id, 'channel', next
         
         stack.add (next) ->
             db.addChanData id, 'channel', ['name', 'status', 'bot'], [[
                 name
                 1
                 bot
-            ]], ->
-                db.getData 'channel', (result) ->
-                    next()
+            ]], next
 
         stack.add (next) ->
             db.clearChanData id, 'channelconfig', next
@@ -208,13 +212,14 @@ CreateUser = (options, callback) ->
     return callback user unless options.registered
 
     db.getData 'users', (users) ->
+        # Avoid duplicate usernames by appending numbers
         users = (u.username for u in users)
         name = user.name
         i = 0
         name = user.name + i++ while name in users
 
         nextId 'users', 'userid', (id) ->
-            db.addData 'users', ['userid', 'username', 'global'], [[id, name.toLowerCase(), user.global]], (err, results) ->
+            db.addData 'users', ['userid', 'username', 'global'], [[id, name.toLowerCase(), user.global]], ->
                 user.id = id
                 user.remove = (cb) ->
                     db.query "DELETE FROM users WHERE userid = #{user.id}", ->
@@ -304,6 +309,39 @@ DeleteUsers = (users, callback) ->
     stack.start()
 
 
+# Performs all of the channel setup with one function call, combining channel
+# creation and user creation. Note that permissions are intentionally not
+# included, since they require that the channel and user objects already exist.
+# See the CreateChannels and CreateUsers functions for documentation on the
+# components of the definition argument.
+#
+# * definition: {
+#                   channels   : <channel definitions>
+#                   users      : <user definitions>
+#               }
+#               where the definitions are according to the functions mentioned
+#               in the summary
+# * callback  : a callback of the form (channels, users) -> ..., which is passed
+#               the newly created channel and user maps
+Setup = (definition, callback) ->
+    channels = {}
+    users = {}
+
+    stack = new CallStack ->
+        callback channels, users
+
+    stack.add (next) ->
+        CreateChannels definition.channels, (result) ->
+            channels = result
+            next()
+    stack.add (next) ->
+        CreateUsers definition.users, (result) ->
+            users = result
+            next()
+
+    stack.start()
+    
+
 # A class to facilitate concise command testing.
 class CommandTester
 
@@ -357,13 +395,13 @@ class CommandTester
     # callback only if the bot says that message, and throwing an error if it
     # says anything else.
     #
-    # * expected: the message that the bot should say
+    # * expected: the message that the bot should say, or a regex to use
     # * done    : the no-argument completion callback
     says: (expected, done) ->
         return unless @channel and @user
         bot = {
             say: (message) ->
-                throw new Error "It said #{message} (expected #{expected})" unless message is expected
+                throw new Error "It said #{message} (expected #{expected})" unless expected.test?(message) or message is expected
                 done()
         }
         @channel.handle {
@@ -403,5 +441,6 @@ exports.CreateUsers    = CreateUsers
 exports.GrantUser      = GrantUser
 exports.GrantUsers     = GrantUsers
 exports.DeleteUsers    = DeleteUsers
+exports.Setup          = Setup
 exports.Command        = Command
 exports.TestMultiple   = TestMultiple

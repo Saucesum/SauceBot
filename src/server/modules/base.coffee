@@ -125,6 +125,23 @@ class Base extends Module
         @regCmd "mode modonly", Sauce.Level.Admin, @cmdModeModonly
         @regCmd "mode quiet",   Sauce.Level.Admin, @cmdModeQuiet
 
+        @regActs {
+            'strings': (user, params, res) =>
+                res.send @channel.strings.get()
+
+            'string': (user, params, res) =>
+                unless user.isMod @channel, Sauce.Level.Admin
+                    return res.error "You are not authorized to alter channel strings (admins only)"
+
+                {key, val} = params
+                unless key? and val?
+                    return res.error "Missing parameters: key, val"
+                key = key.toLowerCase().trim()
+                val = val.trim()
+                @channel.strings.add key, val
+                res.send @channel.strings.get()
+        }
+
 
     # !<botname> - Prints bot name and version.
     cmdBot: (user, args, bot) =>

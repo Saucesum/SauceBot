@@ -3,6 +3,27 @@
 # 
 # Copyright 2012 by Aaron Willey. All rights reserved
 
+# More TODO:
+# * Determine whether the order in which tests are executed is
+# consistent, or if we need to be careful about having order-dependent tests.
+# * Should there be a method of logging the output from the test channels for
+# debugging purposes?
+# * Although foreign keys do not seem to be supported by MyISAM, they could be
+# helpful in ensuring that the database is left in a consistent state if an
+# error occurs during testing. For example, users.coffee will not load if there
+# is an entry in the `moderator` table without its corresponding entry in the
+# `users` table. Examine whether it would be worthwhile to use InnoDB instead.
+# * As mentioned elsewhere, there are some oddities with having the functions
+# passed to 'it' calls being dynamically generated, but the seem to work.
+# However, there may be a better way of doing this.
+# * There also appears to be a large problem with running multiple tests. The
+# reason seems to be that, from Mocha's perspective, each test case finishes as
+# soon as the SetupModule function is called, not when it completes. This is
+# presumably leading to many race conditions, and users.coffee is getting broken
+# again by it. FIXED - the issue was due to usernames not being properly
+# reflected in their user objects when they were changed to prevent duplicates
+# in the database.
+#
 # TODO: Investigate if it's really necessary to have all database access wrapped
 # in the callbacks. In theory, we want to prevent the case where data has been
 # sent to be added to the database, but code that reads the database executes
@@ -74,7 +95,7 @@ CreateChannel = (options, callback) ->
             strings : {}
             modules : []
         }
-
+        
         options[k] ?= v for k, v of defaults
 
         {name, bot, modonly, quiet, strings, modules} = options
@@ -205,8 +226,8 @@ DeleteChannels = (channels, callback) ->
 CreateUser = (options, callback) ->
     user = {
         name   : options.name ? 'TestUser'
-        op     : options.op and 1
-        global : options.global and 1
+        op     : options.op & 1
+        global : options.global & 1
         remove : (cb) -> cb()
     }
     return callback user unless options.registered
@@ -214,13 +235,15 @@ CreateUser = (options, callback) ->
     db.getData 'users', (users) ->
         # Avoid duplicate usernames by appending numbers
         users = (u.username for u in users)
-        name = user.name
+        username = user.name.toLowerCase()
+        name = username
         i = 0
-        name = user.name + i++ while name in users
+        name = username + i++ while name in users
 
         nextId 'users', 'userid', (id) ->
             db.addData 'users', ['userid', 'username', 'global'], [[id, name.toLowerCase(), user.global]], ->
                 user.id = id
+                user.name = name
                 user.remove = (cb) ->
                     db.query "DELETE FROM users WHERE userid = #{user.id}", ->
                         db.query "DELETE FROM moderator WHERE userid = #{user.id}", ->
@@ -309,6 +332,76 @@ DeleteUsers = (users, callback) ->
     stack.start()
 
 
+# A map of "standard" test users, which can be passed to CreateUsers in order to
+# have a consistent test platform for various tests.
+StandardUsers = {
+    User: {
+        name       : 'User'
+    }
+    Registered: {
+        name       : 'Registered'
+        registered : 1
+    }
+    Op: {
+        name       : 'Op'
+        op         : 1
+    }
+    Mod: {
+        name       : 'Mod'
+        registered : 1
+    }
+    Admin: {
+        name       : 'Admin'
+        registered : 1
+    }
+    Owner: {
+        name       : 'Owner'
+        registered : 1
+    }
+    Global: {
+        name       : 'Global'
+        registered : 1
+        global     : 1
+    }
+}
+
+
+# Generates the inferred permission levels for the users in StandardUsers, which
+# can then be passed to GrantUsers to assign these permissions.
+#
+# * users   : the list of users matching the format of StandardUsers
+# * channels: the list of channels where the users are being granted these
+#             permissions
+# = a map of permission definitions that can be passed to GrantUsers
+StandardPermissions = (users, channels) -> [
+    {
+        channels : channels
+        level    : Sauce.Level.User
+        users    : [users.Registered]
+    }
+    {
+        channels : channels
+        level    : Sauce.Level.Mod
+        users    : [users.Mod]
+    }
+    {
+        channels : channels
+        level    : Sauce.Level.Admin
+        users    : [users.Admin]
+    }
+    {
+        channels : channels
+        level    : Sauce.Level.Owner
+        users    : [users.Owner]
+    }
+    {
+        channels : channels
+        level    : Sauce.Level.Owner + 1
+        users    : [users.Global]
+    }
+]
+
+
 # Performs all of the channel setup with one function call, combining channel
 # creation and user creation. Note that permissions are intentionally not
 # included, since they require that the channel and user objects already exist.
@@ -340,7 +433,62 @@ Setup = (definition, callback) ->
             next()
 
     stack.start()
-    
+
+
+# Creates a test environment suitable for unit testing a module. It simply takes
+# the name of the module to include, and generates a channel named
+# 'Test<module name>', creates users according to StandardUsers, and assigns
+# them their appropriate permissions in the new channel.
+#
+# * module  : the name of the module to add to the setup
+# * callback: a callback that takes a testing object of the form
+#             {
+#                 Users   : <a map of user object created using StandardUsers>
+#                 Channel : <the newly created channel object>
+#             }
+SetupModule = (module, callback) ->
+    CreateChannel {
+        name    : 'Test' + module
+        modules : [module]
+    }, (channel) ->
+        CreateUsers StandardUsers, (users) ->
+            GrantUsers StandardPermissions(users, [channel]), ->
+                callback {
+                    Channel : channel
+                    Users   : users
+                }
+                
+
+# Takes an object containing a list of channels and users, and frees the
+# associated resources that it can. Note that this might not include all module
+# database entries.
+#
+# * items   : an object containing a 'channels' entry that has a list of
+#             channels to free, and a 'users' key containing a list of users
+#             to remove
+# * callback: a no-argument callback to be called when the resources have been
+#             freed
+Cleanup = (items, callback) ->
+    stack = new CallStack callback
+
+    stack.add (next) ->
+        DeleteChannels items.channels, next
+    stack.add (next) ->
+        DeleteUsers items.users, next
+
+    stack.start()
+
+# Similar to Cleanup, it takes an object produced by SetupModule and frees the
+# associated users and channels.
+#
+# * test    : an object of the form produced by SetupModule
+# * callback: a no-argument callback to invoke when the cleanup is complete
+CleanupModule = (test, callback) ->
+    Cleanup {
+        channels : [test.Channel]
+        users    : (user for name, user of test.Users)
+    }, callback
+
 
 # A class to facilitate concise command testing.
 class CommandTester
@@ -370,25 +518,27 @@ class CommandTester
     # Waits for a specified time and throws an error if the bot atttempts to say
     # anything before that time has passed.
     #
-    # * timeout: the amount of time to wait before continuing (default 500ms)
+    # * timeout: the amount of time to wait before continuing (default 100ms)
     # * done   : a no-argument callback to be called if the wait was successful
-    waits: (timeout, done) ->
+    waits: (timeout) ->
         return unless @channel and @user
-        [timeout, done] = [500, timeout] unless done?
-        bot = {
-            say: (message) ->
-                throw new Error "It said #{message} (expected nothing)"
-        }
-        @channel.handle {
-            user : @user.name.toLowerCase()
-            op   : @user.op
-            msg  : @command
-        }, bot
-        setTimeout ->
-            # Set the say method to do nothing, just in case it's called later
-            bot.say = ->
-            done()
-        , timeout
+        timeout ?= 100
+        do (channel = @channel, user = @user, command = @command) ->
+            (done) =>
+                bot = {
+                    say: (message) ->
+                        throw new Error "It said #{message} (expected nothing)"
+                }
+                channel.handle {
+                    user : user.name.toLowerCase()
+                    op   : user.op
+                    msg  : command
+                }, bot
+                setTimeout ->
+                    # Set the say method to do nothing, just in case it's called later
+                    bot.say = ->
+                    done()
+                , timeout
 
 
     # Requires that the bot say a specified message, calling a completion
@@ -397,18 +547,20 @@ class CommandTester
     #
     # * expected: the message that the bot should say, or a regex to use
     # * done    : the no-argument completion callback
-    says: (expected, done) ->
+    says: (expected) ->
         return unless @channel and @user
-        bot = {
-            say: (message) ->
-                throw new Error "It said #{message} (expected #{expected})" unless expected.test?(message) or message is expected
-                done()
-        }
-        @channel.handle {
-            user : @user.name.toLowerCase()
-            op   : @user.op
-            msg  : @command
-        }, bot
+        do (channel = @channel, user = @user, command = @command) ->
+            (done) =>
+                bot = {
+                    say: (message) ->
+                        throw new Error "It said #{message} (expected #{expected})" unless expected.test?(message) or message is expected
+                        done()
+                }
+                channel.handle {
+                    user : user.name.toLowerCase()
+                    op   : user.op
+                    msg  : command
+                }, bot
     
 
 # A simple convenience method for creating new command testers.
@@ -427,10 +579,11 @@ Command = (command) ->
 # * tests   : a list of test functions that take a function to call when they
 #             complete as an argument
 # * callback: a function to call when all of the tests have completed
-TestMultiple = (tests, callback) ->
-    stack = new CallStack callback
-    stack.add test for test in tests
-    stack.start()
+TestMultiple = (tests) ->
+    (done) ->
+        stack = new CallStack done
+        stack.add test for test in tests
+        stack.start()
 
 
 exports.CreateChannel  = CreateChannel
@@ -442,5 +595,8 @@ exports.GrantUser      = GrantUser
 exports.GrantUsers     = GrantUsers
 exports.DeleteUsers    = DeleteUsers
 exports.Setup          = Setup
+exports.SetupModule    = SetupModule
+exports.Cleanup        = Cleanup
+exports.CleanupModule  = CleanupModule
 exports.Command        = Command
 exports.TestMultiple   = TestMultiple

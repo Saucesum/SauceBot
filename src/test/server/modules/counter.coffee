@@ -3,132 +3,121 @@
 # Copyright 2012 by Aaron Willey. All rights reserved
 
 {
-    CreateChannel, CreateChannels, DeleteChannels,
-    CreateUser, CreateUsers, GrantUser, GrantUsers, DeleteUsers, Setup,
+    SetupModule, CleanupModule
     Command, TestMultiple
 } = require '../../testing'
 
 Sauce = require '../../../server/sauce'
 
-describe 'Counter', ->
-    channels = {}
-    users = {}
-
-    before (done) ->
-        Setup {
-            channels: {
-                loaded : {
-                    modules : ['Counter']
-                }
-                modonly : {
-                    modules : ['Counter']
-                    modonly : 1
-                }
-            }
-            users: {
-                normal : {
-                    name       : 'Joe'
-                }
-                mod : {
-                    name       : 'CarlMod'
-                    registered : true
-                }
-                admin : {
-                    name       : 'PaulAdmin'
-                    registered : true
-                }
-                owner : {
-                    name       : 'FrankOwner'
-                    registered : true
-                }
-                global : {
-                    name       : 'Uber'
-                    registered : true
-                    global     : 1
-                }
-            }
-        }, (cs, us) ->
-            channels = cs
-            all = (channel for name, channel of channels)
-            users = us
+it 'Created channel with Counter module', (done) ->
+    SetupModule 'Counter', (T) ->
+        describe 'Counter', ->
+            setCounter = '!counter =0'
+            addCounter = '!counter +1'
+            subtractCounter = '!counter -1'
+            viewCounter = '!counter'
+            unsetCounter = '!counter unset'
             
-            GrantUsers [
-                {
-                    channels : all
-                    level    : Sauce.Level.Mod
-                    users    : [users.mod]
-                }
-                {
-                    channels : all
-                    level    : Sauce.Level.Admin
-                    users    : [users.admin]
-                }
-                {
-                    channels : all
-                    level    : Sauce.Level.Owner
-                    users    : [users.owner]
-                }
-            ], done
+            describe setCounter, ->
+                set = Command setCounter
+                setResponse = '[Counter] counter created and set to 0.'
+                currentResponse = '[Counter] counter = 0'
 
-    describe '!<counter> ...', (done) ->
-        setCounter = Command '!counter =0'
-        setResult = '[Counter] counter created and set to 0.'
-        addCounter = Command '!counter +1'
-        subtractCounter = Command '!counter -1'
-        getCounter = Command '!counter'        
-        unsetCounter = Command '!counter unset'
-        unsetResult = '[Counter] counter removed.'
+                it 'should not do anything for normal users',
+                    TestMultiple [
+                        set.in(T.Channel).as(T.Users.User).waits()
+                        set.in(T.Channel).as(T.Users.Registered).waits()
+                    ]
+                
+                it 'should create a counter starting at 0 for privileged users',
+                    set.in(T.Channel).as(T.Users.Op).says setResponse
 
-        it 'should not create a counter for normal users', (done) ->
-            setCounter.in(channels.loaded).as(users.normal).waits done
+                it 'should set the counter if it already exists',
+                    TestMultiple [
+                        set.in(T.Channel).as(T.Users.Mod).says currentResponse
+                        set.in(T.Channel).as(T.Users.Admin).says currentResponse
+                        set.in(T.Channel).as(T.Users.Owner).says currentResponse
+                        set.in(T.Channel).as(T.Users.Global).says currentResponse
+                    ]
 
-        it 'should create a counter for moderators', (done) ->
-            TestMultiple [
-                (next) ->
-                    setCounter.in(channels.loaded).as(users.mod).says setResult, next
-                (next) ->
-                    setCounter.in(channels.modonly).as(users.admin).says setResult, next
-            ], done
+            describe addCounter, ->
+                add = Command addCounter
 
-        it 'should not be modified by normal users', (done) ->
-            addCounter.in(channels.loaded).as(users.normal).waits done
+                it 'should not affect the counter for normal users',
+                    TestMultiple [
+                        add.in(T.Channel).as(T.Users.User).waits()
+                        add.in(T.Channel).as(T.Users.Registered).waits()
+                    ]
 
-        it 'should be changed by moderators', (done) ->
-            TestMultiple [
-                (next) ->
-                    addCounter.in(channels.loaded).as(users.owner).says '[Counter] counter = 1', next
-                (next) ->
-                    addCounter.in(channels.loaded).as(users.global).says '[Counter] counter = 2', next
-                (next) ->
-                    subtractCounter.in(channels.loaded).as(users.mod).says '[Counter] counter = 1', next
-            ], done
+                it 'should increment the counter for privileged users',
+                    TestMultiple [
+                        add.in(T.Channel).as(T.Users.Op).says '[Counter] counter = 1'
+                        add.in(T.Channel).as(T.Users.Mod).says '[Counter] counter = 2'
+                        add.in(T.Channel).as(T.Users.Admin).says '[Counter] counter = 3'
+                        add.in(T.Channel).as(T.Users.Owner).says '[Counter] counter = 4'
+                        add.in(T.Channel).as(T.Users.Global).says '[Counter] counter = 5'
+                    ]
 
-        it 'should not be viewable by users', (done) ->
-            TestMultiple [
-                (next) ->
-                    getCounter.in(channels.loaded).as(users.normal).waits next
-                (next) ->
-                    getCounter.in(channels.modonly).as(users.normal).waits next
-            ], done
+            describe subtractCounter, ->
+                subtract = Command subtractCounter
 
-        it 'should be viewable by moderators', (done) ->
-            TestMultiple [
-                (next) ->
-                    getCounter.in(channels.loaded).as(users.owner).says '[Counter] counter = 1', next
-                (next) ->
-                    getCounter.in(channels.modonly).as(users.global).says '[Counter] counter = 0', next
-            ], done
-            
-        it 'should be unset by moderators', (done) ->
-            TestMultiple [
-                (next) ->
-                    unsetCounter.in(channels.loaded).as(users.admin).says unsetResult, next
-                (next) ->
-                    unsetCounter.in(channels.modonly).as(users.mod).says unsetResult, next
-            ], done
+                it 'should not affect the counter for normal users',
+                    TestMultiple [
+                        subtract.in(T.Channel).as(T.Users.User).waits()
+                        subtract.in(T.Channel).as(T.Users.Registered).waits()
+                    ]
 
+                it 'should decrement the counter for privileged users',
+                    TestMultiple [
+                        subtract.in(T.Channel).as(T.Users.Op).says '[Counter] counter = 4'
+                        subtract.in(T.Channel).as(T.Users.Mod).says '[Counter] counter = 3'
+                        subtract.in(T.Channel).as(T.Users.Admin).says '[Counter] counter = 2'
+                        subtract.in(T.Channel).as(T.Users.Owner).says '[Counter] counter = 1'
+                        subtract.in(T.Channel).as(T.Users.Global).says '[Counter] counter = 0'
+                    ]
 
-    after (done) ->
-        # Clean up the channels and users
-        DeleteChannels (channel for name, channel of channels), ->
-            DeleteUsers (user for name, user of users), done
+            describe viewCounter, ->
+                view = Command viewCounter
+                viewResponse = '[Counter] counter = 0'
+
+                it 'should not be accessible by normal users',
+                    TestMultiple [
+                        view.in(T.Channel).as(T.Users.User).waits()
+                        view.in(T.Channel).as(T.Users.Registered).waits()
+                    ]
+
+                it 'should show the current value for privileged users',
+                    TestMultiple [
+                        view.in(T.Channel).as(T.Users.Op).says viewResponse
+                        view.in(T.Channel).as(T.Users.Mod).says viewResponse
+                        view.in(T.Channel).as(T.Users.Admin).says viewResponse
+                        view.in(T.Channel).as(T.Users.Owner).says viewResponse
+                        view.in(T.Channel).as(T.Users.Global).says viewResponse
+                    ]
+
+            describe unsetCounter, ->
+                unset = Command unsetCounter
+                unsetResponse = '[Counter] counter removed.'
+                view = Command viewCounter
+
+                it 'should do nothing for normal users',
+                    TestMultiple [
+                        unset.in(T.Channel).as(T.Users.User).waits()
+                        unset.in(T.Channel).as(T.Users.Registered).waits()
+                    ]
+
+                it 'should remove the counter for privileged users',
+                    unset.in(T.Channel).as(T.Users.Op).says unsetResponse
+
+                it 'should make the counter unavailable',
+                    TestMultiple [
+                        view.in(T.Channel).as(T.Users.Mod).waits()
+                        view.in(T.Channel).as(T.Users.Admin).waits()
+                        view.in(T.Channel).as(T.Users.Owner).waits()
+                        view.in(T.Channel).as(T.Users.Global).waits()
+                    ]
+
+            after (done) ->
+                CleanupModule T, done
+
+        done()

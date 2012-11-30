@@ -1,5 +1,13 @@
 # General language utilities
 
+# Array method to fetch a random value
+Array.prototype.randomIdx = ->
+    ~~(Math.random() * @length)
+
+# Array method to fetch a random value
+Array.prototype.random = ->
+    @[@randomIdx()]
+
 # A stack of callbacks used to ensure order of multiple calls.
 exports.CallStack = class CallStack
     

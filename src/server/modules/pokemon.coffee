@@ -37,9 +37,19 @@ randUser = (list) ->
 
 randChance = (chance) -> Math.random() < chance
 
+natures = [
+    'evil', 'mean', 'crazy', 'happy', 'cute',
+    'pretty', 'beautiful', 'amazing', 'sleepy',
+    'weird', 'funny', 'boring', 'lame', 'silly',
+    'neat', 'fun', 'enjoyable', 'pleasing',
+    'appealing', 'dumb', 'awesome', 'stupid',
+    'friendly', 'freaky', 'elegant', 'rich'
+]
+
 class Mon
     constructor: (@name) ->
         @level = 0
+        @nature = ''
         @attr  = {}
 
         @setRandomLevel()
@@ -56,6 +66,7 @@ class Mon
     generateRandomAttributes: ->
         @addAttribute 'shiny' if randChance(0.05)
         @addAttribute 'rus'   if randChance(0.01)
+        @nature = natures.random()
 
 
     # Adds a special attribute to the mon
@@ -97,20 +108,6 @@ removeRandom = (team) ->
     team.pop()
 
 
-natures = [
-    'evil', 'mean', 'crazy', 'happy', 'cute',
-    'pretty', 'beautiful', 'amazing', 'sleepy',
-    'weird', 'funny', 'boring', 'lame', 'silly',
-    'neat', 'fun', 'enjoyable', 'pleasing',
-    'appealing', 'dumb', 'awesome', 'stupid',
-    'friendly', 'freaky', 'elegant', 'rich'
-]
-
-# Returns a random nature.
-getRandomNature = ->
-    natures.random()
-
-
 failures = [
     'Almost had it!'
     'Not even close.'
@@ -140,8 +137,11 @@ class Pokemon extends Module
 
         @regActs {
             'get': (user, args, res) =>
-                {user} = args
-                res.send teams[user.name.toLowerCase()] ? []
+                {name} = args
+                if name?
+                    res.send teams[name.toLowerCase()] ? []
+                else
+                    res.send Object.keys(teams)
         }
 
 
@@ -180,7 +180,7 @@ class Pokemon extends Module
                 result = "Full team! Release with !pm release [all]"
             else
                 team.push mon
-                result = "Got it! Nature: " + getRandomNature()
+                result = "Got it! Nature: " + mon.nature
         else
             result = getRandomFailure()
             

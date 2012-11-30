@@ -41,7 +41,8 @@ cli.on 'channels', (data) ->
     elems = []
     for c in data
         elems.push (if c.status then "#{c.name.blue.bold}##{c.id}" else "#{c.name.red}##{c.id}")
-    console.log "\n[#{'Channels'.green}]:", elems.join(', ')
+    console.log "\nConnected ... [#{'Channels'.green}]:", elems.join(', ')
+    rl.prompt()
 
 cli.on 'connect', ->
     cli.emit 'register',

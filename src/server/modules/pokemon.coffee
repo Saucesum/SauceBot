@@ -4,7 +4,8 @@ Sauce = require '../sauce'
 db    = require '../saucedb'
 io    = require '../ioutil'
 
-{Module} = require '../module'
+{Module}    = require '../module'
+{ConfigDTO} = require '../dto'
 
 # Module description
 exports.name        = 'Pokemon'
@@ -125,15 +126,32 @@ class Pokemon extends Module
     constructor: (@channel) ->
         super @channel
 
+        @conf = new ConfigDTO @channel, 'pokemonconf', ['modonly']
+
         
     load: (chan) ->
         @channel = chan if chan?
-        
-        @regCmd 'pm', @cmdPkmn
-        @regCmd 'pm team', @cmdTeam
-        @regCmd 'pm throw', @cmdThrow
-        @regCmd 'pm release', @cmdRelease
+
+        @conf.load()
+
+        @regCmd 'pm',             @cmdPkmn
+        @regCmd 'pm team',        @cmdTeam
+        @regCmd 'pm throw',       @cmdThrow
+        @regCmd 'pm release',     @cmdRelease
         @regCmd 'pm release all', @cmdReleaseAll
+
+        @regCmd 'pm modonly', Sauce.Level.Mod, (user, args, bot) =>
+            enable = args[0]
+
+            if enable is 'on'
+                @conf.add 'modonly', 1
+                @say bot, 'Set to moderator-only.'
+            else if enable is 'off'
+                @conf.add 'modonly', 0
+                @say bot, 'Moderator-only disabled.'
+            else
+                @say bot, 'Usage: !pm modonly on/off'
+
 
         @regActs {
             'get': (user, args, res) =>
@@ -145,13 +163,19 @@ class Pokemon extends Module
         }
 
 
+    notPermitted: (user) ->
+        return unless @conf.get('modonly')
+        return not user.op
+
     # !pm
     cmdPkmn: (user, args, bot) =>
+        return if @notPermitted user
         @say bot, "Usage: !pm <cmd>. Commands: team, throw, release"
 
 
     # !pm team
     cmdTeam: (user, args, bot) =>
+        return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])?
             return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
@@ -162,6 +186,7 @@ class Pokemon extends Module
 
     # !pm throw [user]
     cmdThrow: (user, args, bot) =>
+        return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])?
             team = teams[user.toLowerCase()] = []
@@ -189,6 +214,7 @@ class Pokemon extends Module
 
     # !pm release
     cmdRelease: (user, args, bot) =>
+        return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])? and team.length > 0
             return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
@@ -199,6 +225,7 @@ class Pokemon extends Module
 
     # !pm release all
     cmdReleaseAll: (user, args, bot) =>
+        return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])? and team.length > 0
             return @say bot, "#{user} has no team!"

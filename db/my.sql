@@ -340,6 +340,20 @@ CREATE TABLE `passwordrequests` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `pokemonconf`
+--
+
+DROP TABLE IF EXISTS `pokemonconf`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pokemonconf` (
+  `chanid` int(11) NOT NULL,
+  `modonly` tinyint(4) DEFAULT '0',
+  PRIMARY KEY (`chanid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `poll`
 --
 
@@ -568,4 +582,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-11-17 21:22:36
+-- Dump completed on 2012-12-01  1:32:08

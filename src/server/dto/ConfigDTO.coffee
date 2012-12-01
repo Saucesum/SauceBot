@@ -22,7 +22,8 @@ class ConfigDTO extends DTO
             
             
     load: (cb) ->
-        db.getChanDataEach @channel.id, @table, (data) =>
+        db.getChanData @channel.id, @table, (data) =>
+            data = if data?[0]? then data[0] else {}
             @data = data
             cb?()
 

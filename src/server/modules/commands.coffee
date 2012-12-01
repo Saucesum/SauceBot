@@ -140,11 +140,30 @@ class Commands extends Module
 
         cmd = args[0]
 
-        if @commands.data[cmd]? or @triggers[cmd]?
-            @commands.remove cmd
-            @delTrigger      cmd
+        if @removeCommand(cmd) or @removeTrigger(cmd)
             return bot.say @str('action-unset', cmd)
-        
+
+
+    # Removes a command (not case sensitive)
+    removeCommand: (cmd) ->
+        cmd = cmd.toLowerCase()
+        for k, v of @commands.get()
+            if k.toLowerCase() is cmd
+                @commands.remove k
+                return true
+        return false
+
+
+    # Removes a trigger (not case sensitive)
+    removeTrigger: (cmd) ->
+        cmd = cmd.toLowerCase()
+        for k, v of @triggers
+            if k.toLowerCase() is cmd
+                @delTrigger k
+                return true
+
+        return false
+
 
     # !set <command> <message>  - Set command
     # !set <command>            - Unset command

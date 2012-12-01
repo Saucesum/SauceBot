@@ -298,9 +298,15 @@ class Filters extends Module
             unless @channel.hasSeen target
                 msg = "[Filter] " + @str('permit-unknown', target, permitLength)
             
+
+            oldPermit = @permits[target]
+
             # Update permit time and remove strikes.
             @permits[target] = permitTime
             delete @warnings[target]
+
+            if oldPermit > time.now()
+                return
 
             bot.say msg
 

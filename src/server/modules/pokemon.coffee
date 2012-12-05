@@ -180,7 +180,7 @@ class Pokemon extends Module
     # !pm
     cmdPkmn: (user, args, bot) =>
         return if @notPermitted user
-        @say bot, "Usage: !pm <cmd>. Commands: team, throw, release"
+        @say bot, "Usage: !pm <cmd>. Commands: team, throw, release, modonly"
 
 
     # !pm team
@@ -203,7 +203,11 @@ class Pokemon extends Module
 
         mon = createPokemon @channel
         if args[0]?
-            mon.name = args[0]
+            targetName = args[0].toLowerCase()
+            if @channel.usernames[targetName]?
+                mon.name = targetName
+            else
+                return @say bot, "#{user}: I can't find #{targetName}. :-("
 
         result = ''
         

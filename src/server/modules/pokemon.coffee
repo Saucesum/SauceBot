@@ -160,6 +160,16 @@ class Pokemon extends Module
                     res.send teams[name.toLowerCase()] ? []
                 else
                     res.send Object.keys(teams)
+
+            'top': (user, args, res) =>
+                names = Object.keys teams
+                levels = {}
+                for name in names
+                    n = 0
+                    n += mon.level for mon in teams[name]
+                    levels[name] = n
+                sorted = (names.sort (a, b) -> levels[b] - levels[a])[0..4]
+                res.send ([u, levels[u]] for u in sorted)
         }
 
 

@@ -39,8 +39,13 @@ Sauce      = require './sauce'
 
 varRE  = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/
 varREg = /\$\(([-!a-zA-Z_0-9]+)(?:\s+([^)]+))?\)/g
-        
-       
+
+botStart = Date.now()
+
+getUptime = (fmt) ->
+    uptime = Date.now() - botStart
+    tz.formatTime uptime, fmt
+
 # MineCraft chat colours
 colors =
         BLACK       : '§0'
@@ -69,6 +74,7 @@ class Vars
         baseVars = {
             botname   : (user, args, cb) -> cb Sauce.Server.Name
             botversion: (user, args, cb) -> cb Sauce.Version
+            uptime    : (user, args, cb) -> cb getUptime(args[0])
             
             name      : (user, args, cb) -> cb user.name
             channel   : (user, args, cb) => cb @channel.name

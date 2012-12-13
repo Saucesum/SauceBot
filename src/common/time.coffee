@@ -43,7 +43,27 @@ exports.formatZone = (zone, fmt) ->
     zone = z while (z = ZONE_ALIASES[zone])?
     tz Date.now(), fmt, '', zone
 
+
+# Returns a formatted version of the specified time length.
+#
+# * time: The time to format, in milliseconds.
+# * fmt : The format. Available formats:
+#          short   2d5h
+#          medium  2 days 5 hours
+#          long    2 days 5 hours 7 seconds
+exports.formatTime = (time, format) ->
+    fmt = format ? 'short'
+    fmt = fmt.trim()
+    
+    if fmt is 'short'
+        return exports.timeToShortStr time
+    if fmt in ['full', 'long']
+        return exports.timeToFullStr time
+    else
+        return exports.timeToStr time
+
 # Time utility methods
+
 
 timeRE = /(?:(\d+)\s*[dD][a-z]*)?\s*(?:(\d+)\s*[ht][a-z]*)?\s*(?:(\d+)\s*[m][a-z]*)?\s*(?:(\d+)\s*[s]\w*)?\s*/i
 

@@ -52,14 +52,14 @@ class Timer extends Module
                 cb 'N/A'
             else
                 time = cdown - Date.now()
-                cb @formatTime time, args[1]
+                cb tz.formatTime time, args[1]
             
         @regVar 'timer', (user, args, cb) =>
             unless args? and (timer = @timers.get args[0])?
                 cb 'N/A'
             else
                 time = Date.now() - timer
-                cb @formatTime time, args[1]
+                cb tz.formatTime time, args[1]
 
         # Register web update handlers
         @regActs {
@@ -73,18 +73,6 @@ class Timer extends Module
         }
 
                 
-    formatTime: (time, format) ->
-        fmt = format ? 'short'
-        fmt = fmt.trim()
-        
-        if fmt is 'short'
-            return tz.timeToShortStr time
-        if fmt in ['full', 'long']
-            return tz.timeToFullStr time
-        else
-            return tz.timeToStr time
-        
-    
     cmdTimerStart: (user, args, bot) =>
         unless args? and args[0]?
             return bot.say "[Timer] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!timer <timer name>')

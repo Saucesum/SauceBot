@@ -9,7 +9,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Pokemon'
-exports.version     = '1.0'
+exports.version     = '1.1'
 exports.description = 'Pokèmon catching game.'
 exports.ignore      = true
 
@@ -27,6 +27,9 @@ MAX_LEVEL = 100
 # Maps username to Mon list.
 teams = {}
 
+# Battle data
+fights = {}
+
 
 # Returns a random user from the list.
 randUser = (list) ->
@@ -42,9 +45,13 @@ natures = [
     'evil', 'mean', 'crazy', 'happy', 'cute',
     'pretty', 'beautiful', 'amazing', 'sleepy',
     'weird', 'funny', 'boring', 'lame', 'silly',
-    'neat', 'fun', 'enjoyable', 'pleasing',
+    'neat', 'fun', 'enjoyable', 'pleasing', 'tall',
     'appealing', 'dumb', 'awesome', 'stupid',
-    'friendly', 'freaky', 'elegant', 'rich'
+    'friendly', 'freaky', 'elegant', 'rich', 'odd',
+    'lucky', 'young', 'old', 'unknown', 'confused',
+    'forgetful', 'talkative', 'mature', 'immature',
+    'strong', 'weak', 'malnourished', 'hungry',
+    'dying', 'super', '<censored>', 'naughty', 'short'
 ]
 
 class Mon
@@ -80,7 +87,7 @@ class Mon
         str = @name
         str += '?' if @attr.rus
         str += '^' if @attr.shiny
-        str += "[LV#{@level}]"
+        str += "[#{@level}]"
 
 
     # Returns a more descriptive representation of the mon.
@@ -121,6 +128,17 @@ getRandomFailure = ->
         failures.random()
 
 
+statsFor = (user) ->
+    user = user.toLowerCase()
+    return stats if (stats = fights[user])?
+
+    return fights[user] = {
+        bullied: 0
+        won    : 0
+        lost   : 0
+        draw   : 0
+    }
+
 # Pokemon module
 class Pokemon extends Module
     constructor: (@channel) ->
@@ -139,6 +157,8 @@ class Pokemon extends Module
         @regCmd 'pm throw',       @cmdThrow
         @regCmd 'pm release',     @cmdRelease
         @regCmd 'pm release all', @cmdReleaseAll
+        @regCmd 'pm stats',       @cmdStats
+        @regCmd 'pm fight',       @cmdFight
 
         @regCmd 'pm modonly', Sauce.Level.Mod, (user, args, bot) =>
             enable = args[0]
@@ -154,21 +174,27 @@ class Pokemon extends Module
 
 
         @regActs {
+            # Returns either the list of trainers or the specified trainer's team
             'get': (user, args, res) =>
                 {name} = args
                 if name?
-                    res.send teams[name.toLowerCase()] ? []
+                    name = name.toLowerCase()
+                    res.send team: (teams[name] ? []), stats: fights[name]
                 else
                     res.send Object.keys(teams)
 
+            # Returns the top ten strongest pokemon trainers
             'top': (user, args, res) =>
                 names = Object.keys teams
                 levels = {}
                 for name in names
                     n = 0
-                    n += mon.level for mon in teams[name]
+                    for mon in teams[name]
+                        n += mon.level
+                        n += 20 if mon.attr.shiny
+                        n += 35 if mon.attr.pokerus
                     levels[name] = n
-                sorted = (names.sort (a, b) -> levels[b] - levels[a])[0..4]
+                sorted = (names.sort (a, b) -> levels[b] - levels[a])[0..9]
                 res.send ([u, levels[u]] for u in sorted)
         }
 
@@ -247,6 +273,63 @@ class Pokemon extends Module
         namestr = (mon.name for mon in team).join(', ')
         delete teams[user.toLowerCase()]
         @say bot, "#{user} put #{namestr} to sleep ... You evil person."
+
+
+    # !pm stats
+    cmdStats: (user, args, bot) =>
+        return if @notPermitted user
+        user = user.name
+        stats = statsFor user
+        {won, lost, draw, bullied} = stats
+        ratio = (won / (won+lost+draw)) * 100
+        @say bot, "#{user}: #{won} won(#{ratio}%), #{draw} draws, #{bullied} users bullied."
+
+
+    # !pm fight (target)
+    cmdFight: (user, args, bot) =>
+        return if @notPermitted user
+        user = user.name.toLowerCase()
+        userStats   = statsFor user
+
+        unless (target = args[0])?
+            return @say bot, "Fight usage: !pm fight <user>"
+
+        target = target.toLowerCase()
+
+        if target is user
+            return @say bot, "#{user}: You can't play with yourself."
+
+        unless (userTeam = teams[user])? and userTeam.length > 0
+            return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
+
+        unless (targetTeam = teams[target])? and targetTeam.length > 0
+            userStats.bullied++
+            return @say bot, "#{user}: #{target} doesn't have a team! You bully!"
+
+        usermon   = userTeam.random()
+        targetmon = targetTeam.random()
+        
+        targetStats = statsFor target
+
+        diff = targetmon.level - usermon.level
+        rand =(Math.random() * 100) - (diff/2.1)
+
+        result = "It's a draw!"
+        vs = "#{user}'s #{usermon.str()} vs. #{target}'s #{targetmon.str()}!"
+
+        if rand < 52 and rand > 48
+            userStats.draw++
+            targetStats.draw++
+        else if rand > 50
+            result = "#{user} is victorious!"
+            userStats.won++
+            targetStats.lost++
+        else
+            result = "#{user} was defeated!"
+            userStats.lost++
+            targetStats.won++
+
+        @say bot, "#{vs} #{result}"
 
 
     say: (bot, msg) ->

@@ -11,6 +11,36 @@ config     = require '../common/config'
 log        = require '../common/logger'
 {Channel}  = require './saucechan'
 
+# Twitch.tv to Node.js color conversion
+# * twitch: The twitch color to convert.
+# = returns either the node.js equivalent, or undefined.
+exports.toNodeColor = (twitch) ->
+    return null unless twitch?
+    CHAT_COLORS[twitch.toLowerCase()]
+
+
+CHAT_COLORS = {
+   darkred     : 'red'
+   gray        : 'grey'
+   midnightblue: 'blue'
+   deeppink    : 'magenta'
+   black       : 'black'
+   coral       : 'cyan'
+   cadetblue   : 'blue'
+   yellowgreen : 'yellow'
+   chocolate   : 'red'
+   seagreen    : 'green'
+   goldenrod   : 'yellow'
+   springgreen : 'yellow'
+   firebrick   : 'red'
+   orangered   : 'red'
+   hotpink     : 'magenta'
+   dodgerblue  : 'blue'
+   green       : 'green'
+   blueviolet  : 'blue'
+   red         : 'red'
+   blue        : 'blue'
+}
 
 # Twitch Message Interface connection handler class
 #

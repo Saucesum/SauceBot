@@ -61,8 +61,8 @@ exports.error = (message) ->
     log(Level.Error, 'ERROR', (sbut.getFullStack().underline + "\t" + message).red.inverse)
 
 
-exports.irc = (chan, user, message) ->
-    userStr = user[hashRand user, cols]
+exports.irc = (chan, user, message, col) ->
+    userStr = user[if col? then col else hashRand user, cols]
     log(Level.Normal, '#' + chan.blue, userStr + ": " + message)
 
 

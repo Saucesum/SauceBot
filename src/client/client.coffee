@@ -10,9 +10,9 @@ fs         = require 'fs'
 io         = require '../common/ioutil'
 config     = require '../common/config'
 log        = require '../common/logger'
+twitchtv   = require './twitch'
 {Client}   = require '../common/socket'
 {Term}     = require '../common/term'
-{Twitch}   = require './twitch'
 
 {server, highlight, accounts, logging} = config.load 'jtv.json'
 
@@ -29,8 +29,12 @@ pmlog  = new log.Logger logging.root, "pm.log"
 # Connection to the SauceBot server
 sauce = new Client HOST, PORT
 
+{Twitch, toNodeColor} = twitchtv
+
 # Connection manager for Twitch chats
 twitch = new Twitch logger
+
+userColors = {}
 
 # Register all bot accounts for use
 for username, password of accounts
@@ -41,11 +45,13 @@ for username, password of accounts
 
 twitch.on 'message', (chan, from, op, message) ->
     prefix = if op then '@' else ' '
+
+    col = toNodeColor userColors[from]
    
     if HIGHLIGHT.test message
-        io.irc chan, prefix + from, message.green.inverse
+        io.irc chan, prefix + from, message.green.inverse, col
     else
-        io.irc chan, prefix + from, message
+        io.irc chan, prefix + from, message, col
        
     sauce.emit 'msg',
         chan: chan.toLowerCase()
@@ -53,15 +59,25 @@ twitch.on 'message', (chan, from, op, message) ->
         msg : message
         op  : op
 
+
+parseUserColor = (msg) ->
+    [_, name, col] = msg.split ' '
+    userColors[name.toLowerCase()] = col
+
+
 twitch.on 'pm', (srcchan, from, message) ->
-    unless /USERCOLOR|SPECIALUSER/.test message
+    if /USERCOLOR/.test message
+       parseUserColor message
+    else
         io.irc 'PM', srcchan + '/' + from, message
+
     pmlog.timestamp from, message
     
     sauce.emit 'pm',
         chan: srcchan
         user: from
         msg : message
+
 
 twitch.on 'error', (chan, message) ->
     io.error "Error in channel #{chan}: #{message}"

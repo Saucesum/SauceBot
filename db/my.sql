@@ -340,6 +340,40 @@ CREATE TABLE `passwordrequests` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `pkmn`
+--
+
+DROP TABLE IF EXISTS `pkmn`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkmn` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `owner` varchar(30) NOT NULL,
+  `name` varchar(30) NOT NULL,
+  `level` int(11) DEFAULT '0',
+  `nature` varchar(20) DEFAULT NULL,
+  `attrs` varchar(10) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `pkmntrainer`
+--
+
+DROP TABLE IF EXISTS `pkmntrainer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pkmntrainer` (
+  `name` varchar(30) NOT NULL,
+  `won` int(11) DEFAULT '0',
+  `lost` int(11) DEFAULT '0',
+  `draw` int(11) DEFAULT '0',
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `pokemonconf`
 --
 
@@ -582,4 +616,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-12-01  1:32:08
+-- Dump completed on 2012-12-23 17:20:42

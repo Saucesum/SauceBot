@@ -9,7 +9,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Pokemon'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Pokèmon catching game.'
 exports.ignore      = true
 
@@ -22,6 +22,9 @@ io.module '[Pokemon] Init'
 
 MIN_LEVEL = 1
 MAX_LEVEL = 100
+
+# Max team size
+TEAM_MAX  = 6
 
 # Mon-map for teams.
 # Maps username to Mon list.
@@ -51,17 +54,24 @@ natures = [
     'lucky', 'young', 'old', 'unknown', 'confused',
     'forgetful', 'talkative', 'mature', 'immature',
     'strong', 'weak', 'malnourished', 'hungry',
-    'dying', 'super', '<censored>', 'naughty', 'short'
+    'dying', 'super', 'naughty', 'short'
 ]
 
 class Mon
-    constructor: (@name) ->
-        @level = 0
+    constructor: (@name, data) ->
+        @id     = -1
+        @level  = 0
         @nature = ''
-        @attr  = {}
+        @attr   = {}
 
-        @setRandomLevel()
-        @generateRandomAttributes()
+        if data?
+            @id     = data.id
+            @level  = data.level
+            @nature = data.nature
+            @attr   = data.attr
+        else
+            @setRandomLevel()
+            @generateRandomAttributes()
 
 
     # Sets the mon's level to a random value.
@@ -113,7 +123,16 @@ removeRandom = (team) ->
     # Swap the last element with The Chosen One
     [team[idx], team[max]] = [team[max], team[idx]]
 
-    team.pop()
+    mon = team.pop()
+    if mon.id > -1
+        db.query "DELETE FROM pkmn WHERE id=?", [mon.id]
+    return mon
+
+
+removeAll = (name) ->
+    name = name.toLowerCase()
+    delete teams[name]
+    db.query "DELETE FROM pkmn WHERE owner=?", [name]
 
 
 failures = [
@@ -133,11 +152,86 @@ statsFor = (user) ->
     return stats if (stats = fights[user])?
 
     return fights[user] = {
-        bullied: 0
         won    : 0
         lost   : 0
         draw   : 0
     }
+
+
+# Deserializes a database attrs string to an object
+deserializeAttrs = (str) ->
+    attrs = {}
+    for i in [0..str.length-1]
+        switch str[i]
+            when 'S' then attrs.shiny = true
+            when 'R' then attrs.rus   = true
+    return attrs
+
+
+# Serializes an attrs object to a database ready string
+serializeAttrs = (attrs) ->
+    str = ''
+    str += 'S' if attrs.shiny
+    str += 'R' if attrs.rus
+    return str
+
+
+# Loads persistent data
+(loadData = ->
+    # Load trainer data
+    db.query "SELECT * FROM pkmntrainer", (err, data) ->
+        # { name, won, lost, draw }
+        fights = {}
+        for fight in data
+            fights[fight.name] = {
+                won : fight.won
+                lost: fight.lost
+                draw: fight.draw
+            }
+        io.debug "[PKMN] Loaded data for #{data.length} trainers"
+
+
+    # Load monster data
+    db.query "SELECT * FROM pkmn", (err, data) ->
+        # { id, owner, name, level, nature, attrs }
+        for mon in data
+            {id, owner, name, level, nature, attrs} = mon
+            attr = deserializeAttrs attrs
+
+            unless (team = teams[owner])?
+                team = teams[owner] = []
+
+            team.push new Mon name, {
+                id    : id
+                nature: nature
+                level : level
+                attr  : attr
+            }
+
+        io.debug "[PKMN] Loaded #{data.length} pokemons"
+)()
+
+saveStats = (name, stats) ->
+    name = name.toLowerCase()
+    data = [name, stats.won, stats.lost, stats.draw]
+    db.query "REPLACE INTO pkmntrainer (name, won, lost, draw) VALUES (?,?,?,?)", data
+
+
+addToTeam = (name, mon) ->
+    name = name.toLowerCase()
+    unless (team = teams[name])?
+        team = teams[name] = []
+
+    if team.length >= TEAM_MAX
+        return false
+
+    team.push mon
+    data = [name, mon.name, mon.level, mon.nature, serializeAttrs(mon.attr)]
+    db.query "INSERT INTO pkmn (owner, name, level, nature, attrs) VALUES (?,?,?,?,?)", data, (err, res) ->
+        if err? then throw err
+        mon.id = res.insertId
+    return true
+
 
 # Pokemon module
 class Pokemon extends Module
@@ -224,8 +318,6 @@ class Pokemon extends Module
     cmdThrow: (user, args, bot) =>
         return if @notPermitted user
         user = user.name
-        unless (team = teams[user.toLowerCase()])?
-            team = teams[user.toLowerCase()] = []
 
         mon = createPokemon @channel
         if args[0]?
@@ -241,11 +333,10 @@ class Pokemon extends Module
         rand = Math.random()
         if rand < 0.3 - (mon.level/1000.0)
             # Caught!
-            if team.length >= 6
-                result = "Full team! Release with !pm release [all]"
-            else
-                team.push mon
+            if addToTeam user, mon
                 result = "Got it! Nature: " + mon.nature
+            else
+                result = "Full team! Release with !pm release [all]"
         else
             result = getRandomFailure()
             
@@ -271,7 +362,7 @@ class Pokemon extends Module
             return @say bot, "#{user} has no team!"
 
         namestr = (mon.name for mon in team).join(', ')
-        delete teams[user.toLowerCase()]
+        removeAll user
         @say bot, "#{user} put #{namestr} to sleep ... You evil person."
 
 
@@ -280,9 +371,9 @@ class Pokemon extends Module
         return if @notPermitted user
         user = user.name
         stats = statsFor user
-        {won, lost, draw, bullied} = stats
-        ratio = (won / (won+lost+draw)) * 100
-        @say bot, "#{user}: #{won} won(#{ratio}%), #{draw} draws, #{bullied} users bullied."
+        {won, lost, draw} = stats
+        ratio = ~~((won / (won+lost+draw)) * 100)
+        @say bot, "#{user}: #{ratio}% - #{won} won - #{lost} lost - #{draw} draw."
 
 
     # !pm fight (target)
@@ -303,7 +394,6 @@ class Pokemon extends Module
             return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
 
         unless (targetTeam = teams[target])? and targetTeam.length > 0
-            userStats.bullied++
             return @say bot, "#{user}: #{target} doesn't have a team! You bully!"
 
         usermon   = userTeam.random()
@@ -328,6 +418,10 @@ class Pokemon extends Module
             result = "#{user} was defeated!"
             userStats.lost++
             targetStats.won++
+
+        # Save new fight data
+        saveStats target, targetStats
+        saveStats user,   userStats
 
         @say bot, "#{vs} #{result}"
 

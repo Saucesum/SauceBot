@@ -87,7 +87,7 @@ class SauceIRC
     sayRaw: (message) ->
         now = Date.now()
 
-        unless @rawQueue.length and @lastRaw + RAW_DELAY > now
+        if not @rawQueue.length and @lastRaw + RAW_DELAY > now
             # Nothing in the queue.
             @bot.say @channel, message
             @lastRaw = now

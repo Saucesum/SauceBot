@@ -20,8 +20,14 @@ exports.strings = {
 
 io.module '[Pokemon] Init'
 
+# Pokemon generator level-boundaries
 MIN_LEVEL = 1
 MAX_LEVEL = 100
+
+# Battle chances
+DRAW_CHANCE = 4
+WIN_MIN_PERCENTAGE  = 50 + DRAW_CHANCE/2
+LOSS_MAX_PERCENTAGE = 50 - DRAW_CHANCE/2
 
 # Max team size
 TEAM_MAX  = 6
@@ -423,16 +429,15 @@ class PokeBattle
         if userName is targetName
             throw "#{userName}: You can't play with yourself!"
 
-        @user = {
-            name : userName
-            team : teams[userName]
-            stats: statsFor userName
-        }
+        @user   = @getUserObject userName
+        @target = @getUserObject targetName
 
-        @target = {
-            name : targetName
-            team : teams[targetName]
-            stats: statsFor targetName
+
+    getUserObject: (name) ->
+        return {
+            name : name
+            team : teams[name]
+            stats: statsFor name
         }
 
 
@@ -453,9 +458,9 @@ class PokeBattle
 
         rand = @getRandomResult userMon, targetMon
 
-        result = if rand > 52
+        result = if rand > WIN_MIN_PERCENTAGE
             @handleWin()
-        else if rand < 48
+        else if rand < LOSS_MAX_PERCENTAGE
             @handleLoss()
         else
             @handleDraw()

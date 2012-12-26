@@ -68,7 +68,7 @@ parseUserColor = (msg) ->
 twitch.on 'pm', (srcchan, from, message) ->
     if /USERCOLOR/.test message
        parseUserColor message
-    else
+    else if not /SPECIALUSER/.test message
         io.irc 'PM', srcchan + '/' + from, message
 
     pmlog.timestamp from, message

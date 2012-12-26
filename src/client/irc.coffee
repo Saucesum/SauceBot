@@ -6,8 +6,8 @@ io   = require '../common/ioutil'
 time = require '../common/time'
 
 # Flood limits
-DELAY        = 3
-REPEAT_DELAY = 45
+DELAY        = 3000
+REPEAT_DELAY = 45000
 
 # Limits for the raw-queue
 RAW_DELAY  = 3000
@@ -48,6 +48,7 @@ class SauceIRC
         unless msg is @lastRawMessage
             @bot?.say @channel, msg
             @lastRaw        = now
+            @lastTime       = now
             @lastRawMessage = msg
             io.debug "Queued message sent: #{msg}"
 
@@ -87,10 +88,11 @@ class SauceIRC
     sayRaw: (message) ->
         now = Date.now()
 
-        if not @rawQueue.length and @lastRaw + RAW_DELAY > now
+        if @rawQueue.length is 0 and @lastRaw + RAW_DELAY < now
             # Nothing in the queue.
             @bot.say @channel, message
-            @lastRaw = now
+            @lastRaw  = now
+            @lastTime = now
             return
 
         unless message in @rawQueue
@@ -105,7 +107,7 @@ class SauceIRC
 
 
     isCached: (message) ->
-        now = time.now()
+        now = Date.now()
         if @sinceLast(now, DELAY) or (@sinceLast(now, REPEAT_DELAY) and (message is @lastMessage))
             return true
             

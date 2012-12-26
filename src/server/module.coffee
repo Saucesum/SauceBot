@@ -201,11 +201,19 @@ class Module
             else
                 res.error "No actions available for this module"
 
+
+    # Prints a module name prefixed string to the bot
+    say: (bot, msgs...) ->
+        name = @str('name') ? @name
+        str  = msgs.join ' '
+        bot.say "[#{name}] #{str}"
+
     
     # Unimplemented methods:
     load  : -> 0
     unload: -> 0
     handle: -> 0
+
 
 
 exports.Module = Module

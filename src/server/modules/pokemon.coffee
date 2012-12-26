@@ -15,7 +15,7 @@ exports.ignore      = true
 
 # Module strings
 exports.strings = {
-    
+    name: 'Pkmn'
 }
 
 io.module '[Pokemon] Init'
@@ -40,6 +40,21 @@ randUser = (list) ->
         list.random()
     else
         'MissingNo.'
+
+
+# Returns the sum of each element in the array
+sum = (arr) ->
+    n = 0
+    n += v for v in arr
+    return n
+
+
+getSortedTopTeams = (n) ->
+        names = Object.keys teams
+        levels = {}
+        levels[name] = sum(mon.level for mon in teams[name]) for name in names
+        sorted = (names.sort (a, b) -> levels[b] - levels[a])
+        return ([u, levels[u]] for u in sorted[0..n-1])
 
 
 randChance = (chance) -> Math.random() < chance
@@ -82,9 +97,8 @@ class Mon
 
     # Randomly adds special attributes.
     generateRandomAttributes: ->
-        @addAttribute 'shiny' if randChance(0.05)
-        @addAttribute 'rus'   if randChance(0.01)
         @nature = natures.random()
+        @addAttribute attr for attr of AttrUtil.random()
 
 
     # Adds a special attribute to the mon
@@ -129,6 +143,7 @@ removeRandom = (team) ->
     return mon
 
 
+# Removes all pokemon from the specified person's team
 removeAll = (name) ->
     name = name.toLowerCase()
     delete teams[name]
@@ -158,23 +173,32 @@ statsFor = (user) ->
     }
 
 
-# Deserializes a database attrs string to an object
-deserializeAttrs = (str) ->
-    attrs = {}
-    for i in [0..str.length-1]
-        switch str[i]
-            when 'S' then attrs.shiny = true
-            when 'R' then attrs.rus   = true
-    return attrs
+# Utility methods for pokemon attributes
+AttrUtil = {
+    # Deserializes a database attrs string to an object
+    deserialize: (str) ->
+        attrs = {}
+        for i in [0..str.length-1]
+            switch str[i]
+                when 'S' then attrs.shiny = true
+                when 'R' then attrs.rus   = true
+        return attrs
 
 
-# Serializes an attrs object to a database ready string
-serializeAttrs = (attrs) ->
-    str = ''
-    str += 'S' if attrs.shiny
-    str += 'R' if attrs.rus
-    return str
+    # Serializes an attrs object to a database ready string
+    serialize: (attrs) ->
+        str = ''
+        str += 'S' if attrs.shiny
+        str += 'R' if attrs.rus
+        return str
 
+    random: ->
+        attrs = {}
+        attrs.shiny = true if randChance(0.05)
+        attrs.rus   = true if randChance(0.01)
+        return attrs
+
+}
 
 # Loads persistent data
 (loadData = ->
@@ -196,7 +220,7 @@ serializeAttrs = (attrs) ->
         # { id, owner, name, level, nature, attrs }
         for mon in data
             {id, owner, name, level, nature, attrs} = mon
-            attr = deserializeAttrs attrs
+            attr = AttrUtil.deserialize attrs
 
             unless (team = teams[owner])?
                 team = teams[owner] = []
@@ -226,7 +250,7 @@ addToTeam = (name, mon) ->
         return false
 
     team.push mon
-    data = [name, mon.name, mon.level, mon.nature, serializeAttrs(mon.attr)]
+    data = [name, mon.name, mon.level, mon.nature, AttrUtil.serialize(mon.attr)]
     db.query "INSERT INTO pkmn (owner, name, level, nature, attrs) VALUES (?,?,?,?,?)", data, (err, res) ->
         if err? then throw err
         mon.id = res.insertId
@@ -253,6 +277,7 @@ class Pokemon extends Module
         @regCmd 'pm release all', @cmdReleaseAll
         @regCmd 'pm stats',       @cmdStats
         @regCmd 'pm fight',       @cmdFight
+        @regCmd 'pm top',         @cmdTop
 
         @regCmd 'pm modonly', Sauce.Level.Mod, (user, args, bot) =>
             enable = args[0]
@@ -277,19 +302,9 @@ class Pokemon extends Module
                 else
                     res.send Object.keys(teams)
 
-            # Returns the top ten strongest pokemon trainers
+            # Returns the top: strongest pokemon trainers
             'top': (user, args, res) =>
-                names = Object.keys teams
-                levels = {}
-                for name in names
-                    n = 0
-                    for mon in teams[name]
-                        n += mon.level
-                        n += 20 if mon.attr.shiny
-                        n += 35 if mon.attr.pokerus
-                    levels[name] = n
-                sorted = (names.sort (a, b) -> levels[b] - levels[a])[0..9]
-                res.send ([u, levels[u]] for u in sorted)
+                res.send getSortedTopTeams(10)
         }
 
 
@@ -376,59 +391,110 @@ class Pokemon extends Module
         @say bot, "#{user}: #{ratio}% - #{won} won - #{lost} lost - #{draw} draw."
 
 
+    # !pm top
+    cmdTop: (user, args, bot) =>
+        return if @notPermitted user
+        top = getSortedTopTeams(10)
+        @say bot, "Masters: " + (k[0] + "(" + k[1] + ")" for k in top).join(', ')
+   
+
     # !pm fight (target)
     cmdFight: (user, args, bot) =>
         return if @notPermitted user
-        user = user.name.toLowerCase()
-        userStats   = statsFor user
+        user = user.name
 
         unless (target = args[0])?
             return @say bot, "Fight usage: !pm fight <user>"
 
-        target = target.toLowerCase()
+        message = try
+            battle = new PokeBattle user, target
+            battle.checkTeams()
+            battle.getResult()
+        catch err then err
 
-        if target is user
-            return @say bot, "#{user}: You can't play with yourself."
-
-        unless (userTeam = teams[user])? and userTeam.length > 0
-            return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
-
-        unless (targetTeam = teams[target])? and targetTeam.length > 0
-            return @say bot, "#{user}: #{target} doesn't have a team! You bully!"
-
-        usermon   = userTeam.random()
-        targetmon = targetTeam.random()
+        @say bot, message
         
-        targetStats = statsFor target
 
-        diff = targetmon.level - usermon.level
-        rand =(Math.random() * 100) - (diff/2.1)
+class PokeBattle
+    constructor: (userName, targetName) ->
+        userName   = userName.toLowerCase()
+        targetName = targetName.toLowerCase()
 
-        result = "It's a draw!"
-        vs = "#{user}'s #{usermon.str()} vs. #{target}'s #{targetmon.str()}!"
+        if userName is targetName
+            throw "#{userName}: You can't play with yourself!"
 
-        if rand < 52 and rand > 48
-            userStats.draw++
-            targetStats.draw++
-        else if rand > 50
-            result = "#{user} is victorious!"
-            userStats.won++
-            targetStats.lost++
+        @user = {
+            name : userName
+            team : teams[userName]
+            stats: statsFor userName
+        }
+
+        @target = {
+            name : targetName
+            team : teams[targetName]
+            stats: statsFor targetName
+        }
+
+
+    checkTeams: ->
+        unless @hasTeam @user
+            throw "#{@user.name} doesn't have a team! Catch with !pm throw"
+        unless @hasTeam @target
+            throw "#{@target.name} doesn't have a team. You bully!"
+
+
+    hasTeam: (obj) ->
+        return obj.team? and obj.team.length > 0
+
+
+    getResult: ->
+        userMon   = @user.team.random()
+        targetMon = @target.team.random()
+
+        rand = @getRandomResult userMon, targetMon
+
+        result = if rand > 52
+            @handleWin()
+        else if rand < 48
+            @handleLoss()
         else
-            result = "#{user} was defeated!"
-            userStats.lost++
-            targetStats.won++
+            @handleDraw()
+        
+        @saveStatsFor @user
+        @saveStatsFor @target
 
-        # Save new fight data
-        saveStats target, targetStats
-        saveStats user,   userStats
+        vs = "#{@user.name}'s #{userMon.str()} vs. #{@target.name}'s #{targetMon.str()}!"
 
-        @say bot, "#{vs} #{result}"
+        return "#{vs} #{result}"
 
 
-    say: (bot, msg) ->
-        bot.say '[Pkmn] ' + msg
+    handleWin: ->
+        @user.stats.won++
+        @target.stats.lost++
+        return "#{@user.name} was victorious!"
 
+
+    handleLoss: ->
+        @user.stats.lost++
+        @target.stats.won++
+        return "#{@user.name} was defeated!"
+
+
+    handleDraw: ->
+        @user.stats.draw++
+        @target.stats.draw++
+        return "It's a draw!"
+
+
+    saveStatsFor: (obj) ->
+        saveStats obj.name, obj.stats
+
+
+    getRandomResult: (mon1, mon2) ->
+        diff = mon2.level - mon1.level
+        return (Math.random() * 100) - (diff/2.1)
+        
+    
 
 exports.New = (channel) ->
     new Pokemon channel

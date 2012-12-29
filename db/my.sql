@@ -304,6 +304,24 @@ CREATE TABLE `news` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `newscomments`
+--
+
+DROP TABLE IF EXISTS `newscomments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `newscomments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `newsid` int(11) DEFAULT NULL,
+  `userid` int(11) NOT NULL,
+  `time` int(20) NOT NULL,
+  `hidden` int(1) DEFAULT '0',
+  `message` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `newsconf`
 --
 
@@ -618,4 +636,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-12-27 23:34:37
+-- Dump completed on 2012-12-29 20:19:20

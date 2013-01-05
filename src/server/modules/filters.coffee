@@ -455,7 +455,7 @@ class Filters extends Module
         # Delay the response to avoid the JTV flood filter
         setTimeout ->
             bot.say response
-        , 2000
+        , 4250
     
     
     containsBadword: (msg) ->

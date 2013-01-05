@@ -299,10 +299,6 @@ class SauceBot
                 
             when 'Channels'
                 loadChannels()
-                
-            when 'Help'
-                if channel? and user.isGlobal()
-                    @say channel.name, '[Help] ' + channel.getString('Base', 'help-incoming', user.name)
 
             when 'Spam'
                 spam.reload()
@@ -404,10 +400,7 @@ class SauceBot
             id  : -1
         }
 
-        user = users.getById(userID) ? {
-            name: 'N/A'
-            id  : -1
-        }
+        user = users.getById(userID) ? users.getNullUser()
 
         {
             'channel': channel

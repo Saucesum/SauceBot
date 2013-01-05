@@ -71,6 +71,13 @@ exports.getById = (id) ->
     exports.getByName names[id]
 
 
+exports.getNullUser = ->
+    return new User {
+        userid  : -1
+        username: 'N/A'
+        global  : 0
+    }
+
 # Populates the user list from the database, calling a given function once the
 # data has been loaded.
 #

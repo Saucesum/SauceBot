@@ -75,7 +75,7 @@ natures = [
     'lucky', 'young', 'old', 'unknown', 'confused',
     'forgetful', 'talkative', 'mature', 'immature',
     'strong', 'weak', 'malnourished', 'hungry',
-    'dying', 'super', 'naughty', 'short'
+    'dying', 'super', 'naughty', 'short', 'toothless'
 ]
 
 class Mon

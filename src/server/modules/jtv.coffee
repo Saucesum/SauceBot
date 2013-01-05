@@ -78,7 +78,7 @@ class JTV extends Module
 
     # $(jtv game|viewers|views|title [, <channel>])
     varJTV: (user, args, cb) =>
-        usage = '$(jtv game|viewers|views|title [, <channel>])'
+        usage = '[jtv game|viewers|views|title [, <channel>]]'
         unless args[0]?
             cb usage
         else

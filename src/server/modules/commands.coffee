@@ -112,7 +112,11 @@ class Commands extends Module
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, level,
             (user, args, bot) =>
-                @channel.vars.parse user, @commands.get(cmd).message, (args.join ' '), (parsed) ->
+                data = @commands.get cmd
+                unless data?
+                    return io.error "No such command #{cmd}"
+
+                @channel.vars.parse user, data.message, (args.join ' '), (parsed) ->
                     bot.say parsed
 
         @channel.register @triggers[cmd]
@@ -140,8 +144,10 @@ class Commands extends Module
 
         cmd = args[0]
 
-        if @delCommandIgnoreCase(cmd) or @delTriggerIgnoreCase(cmd)
-            return bot.say @str('action-unset', cmd)
+        a = @delCommandIgnoreCase cmd
+        b = @delTriggerIgnoreCase cmd
+
+        bot.say @str('action-unset', cmd) if a or b
 
 
     # Removes a command (not case sensitive)

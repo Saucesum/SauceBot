@@ -393,7 +393,7 @@ class ChannelUpdateHandler
     # = true if the user has access. false otherwise.
     checkAccessLevel: (level) ->
         if @user.isMod @channel, level
-            retun true
+            return true
         else
             @res.send "You are not authorized to use this feature. Required level: #{Sauce.LevelStr level}"
             return false
@@ -409,18 +409,18 @@ class ChannelUpdateHandler
 
 
     # [Admin] string(key, val) -> OK
-    stringAct: (params) ->
+    stringAct: (params) =>
         return unless @checkAccessLevel Sauce.Level.Admin
         unless @user.isMod @channel, Sauce.Level.Admin
             return @res.error "You are not authorized to alter channel strings (admins only)"
 
         {key, val} = params
         unless key? and val?
-            return res.error "Missing parameters: key, val"
+            return @res.error "Missing parameters: key, val"
         key = key.toLowerCase().trim()
         val = val.trim()
         @channel.strings.add key, val
-        res.send @channel.strings.get()
+        @res.send @channel.strings.get()
 
 
     # modes() -> { "modonly": 1/0, "quiet": 1/0 }

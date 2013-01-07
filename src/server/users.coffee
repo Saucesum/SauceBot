@@ -11,6 +11,11 @@ users = {}
 # A convenience map of user IDs to their respective usernames
 names = {}
 
+# A map of channel moderators.
+# Structure: { chanId: { userId: userLevel, ... }, ... }
+permissions = {}
+
+
 # A basic data structure for storing the data associated with a single user who
 # is registered in the database.
 class User
@@ -18,8 +23,6 @@ class User
         @id     = data.userid
         @name   = data.username
         @global = data.global
-        
-        @mod = {}
     
     
     # Returns whether the user is a global administrator.
@@ -27,13 +30,7 @@ class User
     # = whether the user is a global administrator
     isGlobal: ->
         @global is 1
-        
-    # Sets the user's mod level in the specified channel.
-    #
-    # * chanid: the channel ID that the user is being checked in
-    # * level: the new level of the user
-    setMod: (chanid, level) ->
-        @mod[chanid] = level
+
         
     # Returns whether the user is a mod in the specified channel (or if they
     # are a global mod).
@@ -42,17 +39,16 @@ class User
     # * level: the minimum moderator level in the channel
     # = whether the user is a mod in the channel
     isMod: (chanid, level) ->
-        level ?= Sauce.Level.Mod
-        
-        @isGlobal() or @mod[chanid] >= level
+        @getMod(chanid) >= (level ? Sauce.Level.Mod)
     
+
     # Returns the mod level of the user in the given channel, with global mods
     # being the highest level of moderator.
     #
     # * chanid: the channel ID that the user is being checked in
     # = the mod level of the user in the channel
     getMod: (chanid) ->
-        if @isGlobal() then Sauce.Level.Owner + 1 else (@mod[chanid] or 0)
+        if @isGlobal() then Sauce.Level.Owner + 1 else getMod(chanid, @id)
 
 
 # Returns a user by their username in lowercase.
@@ -71,12 +67,35 @@ exports.getById = (id) ->
     exports.getByName names[id]
 
 
+# Returns the username associated with the specified user id.
+# * id: the userid.
+# = the username, or undefined if not found.
+exports.getName = (id) ->
+    names[id]
+
+
 exports.getNullUser = ->
     return new User {
         userid  : -1
         username: 'N/A'
         global  : 0
     }
+
+
+# Returns the moderators of the specified channel.
+# * chanid: The id of the channel to look up.
+# = a map of user id to mod level.
+exports.getMods = (chanid) ->
+    return permissions[chanid] ? {}
+
+
+# Returns the moderator level of the specified user in the specified channel.
+# * chanid: The channel.
+# * userid: The user.
+# = The moderator level.
+exports.getMod = getMod = (chanid, userid) ->
+    return permissions[chanid]?[userid] ? 0
+
 
 # Populates the user list from the database, calling a given function once the
 # data has been loaded.
@@ -106,23 +125,23 @@ exports.load = (callback) ->
         updatePermissions callback
         
         
-# Updates user permissions in any channels after the users list has been
-# populated.
+# Updates user permissions in any channels after the users list has been populated.
 #
 # * callback: the function to call after the data loads, which takes the list
 #             of users, indexed by name, as an argument
 updatePermissions = (callback) ->
     
     # Clear user permissions
-    user.mod = {} for user in users
+    permissions = {}
     
     db.getDataEach 'moderator', (m) ->
         {userid, chanid, level} = m
         
-        user = users[names[userid]]
-        
-        # Update the user's permissions
-        user.setMod chanid, level
+        # Update the permissions map
+        unless permissions[chanid]?
+            permissions[chanid] = {}
+
+        permissions[chanid][userid] = level
     , ->
         callback users if callback
          

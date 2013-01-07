@@ -84,12 +84,23 @@ class Channel
         if (user.getMod @id) < Sauce.Level.Mod
             return res.error "You are not authorized to perform this action"
 
-        if (m = @getLoadedModule module)?
+        if not module
+            @handleChannelUpdate user, action, params, res, bot
+        else if (m = @getLoadedModule module)?
             m.update? user, action, params, res, bot
         else
             res.error "Invalid module #{module}"
 
+
+    # Handles interface updates not related to a specific module.
+    handleChannelUpdate: (user, action, params, res, bot) ->
+        cuh = new ChannelUpdateHandler this, user, res, bot
+        if (handler = cuh["#{action}Act"])?
+            handler(params)
+        else
+            res.error "Invalid action: \"#{action}\". Actions: #{cuh.getHandlerNames().join ', '}"
     
+
     # Returns whether a module with the specified name
     # has been loaded for this channel.
     getLoadedModule: (moduleName) ->
@@ -225,7 +236,7 @@ class Channel
         for trigger in @triggers
             # Check for first match that the user is authorized to use, also
             # taking into account whether the channel is in mod-only mode
-            if trigger.test(msg) and (user.op >= trigger.oplevel and (!@isModOnly() or user.op >= Sauce.Level.Mod)) 
+            if trigger.test(msg) and (user.op >= trigger.oplevel and (!@isModOnly() or user.op >= Sauce.Level.Mod))
                 args = trigger.getArgs msg
                 trigger.execute user, args, bot
                 # We only want to run one trigger, so break here
@@ -369,6 +380,60 @@ class Channel
                 value = msg
 
         return value
+
+
+# Helper class to handle channel interface update requests.
+class ChannelUpdateHandler
+    constructor: (@channel, @user, @res, @bot) ->
+
+
+    # Checks the user's access level.
+    # An error will be sent if the user does not have the required access level.
+    # * level: The minimum access level which must be met.
+    # = true if the user has access. false otherwise.
+    checkAccessLevel: (level) ->
+        if @user.isMod @channel, level
+            retun true
+        else
+            @res.send "You are not authorized to use this feature. Required level: #{Sauce.LevelStr level}"
+            return false
+
+
+    # Returns all handler method names
+    getHandlerNames: ->
+        (m[1] for name of this when (m = /^(.+)Act$/.exec name))
+
+    # strings() -> { stringKey: stringValue, ... }
+    stringsAct: =>
+        @res.send @channel.strings.get()
+
+
+    # [Admin] string(key, val) -> OK
+    stringAct: (params) ->
+        return unless @checkAccessLevel Sauce.Level.Admin
+        unless @user.isMod @channel, Sauce.Level.Admin
+            return @res.error "You are not authorized to alter channel strings (admins only)"
+
+        {key, val} = params
+        unless key? and val?
+            return res.error "Missing parameters: key, val"
+        key = key.toLowerCase().trim()
+        val = val.trim()
+        @channel.strings.add key, val
+        res.send @channel.strings.get()
+
+
+    # modes() -> { "modonly": 1/0, "quiet": 1/0 }
+    modesAct: =>
+        @res.send @channel.modes.get()
+
+    # mods() -> { username: level, ... }
+    modsAct: =>
+        levels = {}
+        for id, level of users.getMods @channel.id
+            levels[users.getName(id)] = level
+        @res.send levels
+
 
 # Handles a message in the appropriate channel instance.
 #

@@ -208,6 +208,10 @@ class Commands extends Module
         
         
     setCommand: (cmd, msg, level) ->
+        # Make sure people don't accidentally set "!!ip" as a command
+        cmd = cmd.replace /^!/, ''
+        return unless cmd.length > 0
+
         data =
             message: msg
             level  : level

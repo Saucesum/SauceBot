@@ -35,7 +35,7 @@ names = {}
 # = the located channel, or undefined if it doesn't exist
 exports.getByName = (name) ->
     channels[name]
-    
+
 
 # Returns the channel with the given channel ID.
 #
@@ -43,6 +43,7 @@ exports.getByName = (name) ->
 # = the located channel, or undefined if it doesn't exist
 exports.getById = (id) ->
     exports.getByName names[id]
+
 
 # Returns all of the loaded channels, indexed by their lowercase name.
 #
@@ -59,17 +60,17 @@ class Channel
         @name   = data.name
         @status = data.status
         @bot    = data.bot
-    
+
         # 
         @usernames = {}
-    
+
         @modules = []
         @triggers = []
         @loadChannelModules()
-        
+
         # Channel specific vars
         @vars = new Vars this
-        
+
         # Channel modes configuration
         @modes = new ConfigDTO this, 'channelconfig', ['modonly', 'quiet']
         @modes.load()
@@ -95,19 +96,23 @@ class Channel
     # Handles interface updates not related to a specific module.
     handleChannelUpdate: (user, action, params, res, bot) ->
         cuh = new ChannelUpdateHandler this, user, res, bot
-        if (handler = cuh["#{action}Act"])?
-            handler(params)
-        else
+        unless (handler = cuh["#{action}Act"])?
             res.error "Invalid action: \"#{action}\". Actions: #{cuh.getHandlerNames().join ', '}"
-    
+
+        try
+            handler(params)
+        catch err
+            io.error "Interface update error (user=#{user.id}, act=#{action}, params=#{params}): " + err
+            res.error "Error"
+
 
     # Returns whether a module with the specified name
     # has been loaded for this channel.
     getLoadedModule: (moduleName) ->
         for module in @modules
             return module if module.name is moduleName
-    
-    
+
+
     # Loads a module by its name and returns the module instance. If the module
     # has already been loaded, it is just reloaded.
     #
@@ -115,7 +120,7 @@ class Channel
     # = the module that was either loaded or reloaded
     loadModule: (moduleName) ->
         module = @getLoadedModule moduleName
-        
+
         if module?
             # The module instance already exists, so just reload it 
             module.loadModule()
@@ -127,10 +132,10 @@ class Channel
             catch error
                 console.log error.stack
                 io.error "Error loading module #{moduleName}: #{error}"
-        
+
         return module
 
-        
+
     # Reloads a module with a given name. This function is pretty much
     # identical to @loadModule.
     #
@@ -138,8 +143,8 @@ class Channel
     reloadModule: (moduleName) ->
         io.debug "Attempting to reload module #{moduleName}..."
         @loadModule moduleName
-        
-    
+
+
     # Attempts to load all modules associated with this channel. Modules that
     # have already been loaded will not be reloaded, but those that were not
     # found in this load from the database will be unloaded, i.e., after a call
@@ -149,7 +154,7 @@ class Channel
     loadChannelModules: ->
         oldNames = ( module.name for module in @modules )
         newNames = []
-        
+
         db.getChanDataEach @id, 'module', (result) =>
             # Load newly added
             unless result.module in oldNames
@@ -162,8 +167,8 @@ class Channel
             for module in @modules when module? and not (module.name in newNames)
                 @unloadModule module
             io.debug "Done loading #{@modules.length} modules for #{@name}"
-            
-            
+
+
     # Unloads a module with a given name by calling the module's unload()
     # function and then removing it from the list of loaded modules.
     #
@@ -172,7 +177,7 @@ class Channel
         module.unloadModule()
         @modules.splice @modules.indexOf(module), 1
 
-            
+
     # Fetches any available data about a user given a {username, oplevel} pair.
     # The database is first checked to see if the user is registered, in which
     # case that data is returned (except that the maximum of the provided and
@@ -189,20 +194,20 @@ class Channel
     getUser: (username, op) ->
         # Set the op level to 0 if it's not a number
         op or= 0
-        
+
         chan = @id
         user = users.getByName username
-        
+
         # If the user is in the database, fetch their mod level
         if (user?)
             cmod = (user.getMod chan) ? 0
-            
+
             return {
                 name: user.name
                 op  : Math.max(op, cmod)
                 db  : true
             }
-            
+
         # If the user's name is the same as the channel's name,
         # they're the broadcaster, i.e. the owner.
         if username.toLowerCase() is @name.toLowerCase()
@@ -211,7 +216,7 @@ class Channel
                 op  : Sauce.Level.Owner
                 db  : false
             }
-            
+
         # Otherwise just return their IRC op level
         return {
             name: username
@@ -229,10 +234,10 @@ class Channel
         user = @getUser data.user, data.op
         # Cache the op level of the user from the data we get
         @usernames[user.name.toLowerCase()] = user.op
-        
+
         msg = data.msg
         graph.count "channels.input.#{@name.toLowerCase()}"
-        
+
         for trigger in @triggers
             # Check for first match that the user is authorized to use, also
             # taking into account whether the channel is in mod-only mode
@@ -298,7 +303,7 @@ class Channel
 
         # Unregister variables
         @vars.unregisterFor module
-    
+
 
     # Changes the status of quiet mode.
     #
@@ -306,7 +311,7 @@ class Channel
     setQuiet: (status) ->
         @modes.add 'quiet', status
 
-        
+
     # Returns whether quiet mode is enabled.
     #
     # = whether quiet mode is active
@@ -319,7 +324,7 @@ class Channel
     # * status: Whether to activate mod-only mode.
     setModOnly: (status) ->
         @modes.add 'modonly', status
-    
+
 
     # Returns whether mod-only mode is enabled. Because mod-only mode is a
     # subset of quiet mode, this will also return true if quiet mode is active.
@@ -327,8 +332,8 @@ class Channel
     # = whether mod-only mode or quiet mode is active
     isModOnly: ->
         @modes.get('modonly') or @isQuiet()
-        
-    
+
+
     # Returns whether a user with a given name has been "seen", i.e., they have
     # sent a message, or are registered, in this channel.
     #
@@ -366,7 +371,7 @@ class Channel
     getString: (moduleName, key, args...) ->
         key   = moduleName.toLowerCase() + "-" + key
         value = @strings.get(key) ? mod.getDefaultString(key) ? '[#' + key + ']'
-        
+
         for arg, argnum in args
             elem = "@#{argnum + 1}@"
             len  = elem.length
@@ -380,6 +385,17 @@ class Channel
                 value = msg
 
         return value
+
+
+    # Sets a channel specific string.
+    # * key: The string key.
+    # * value: The new custom string for this channel.
+    # Note: throws an error on invalid key.
+    setString: (key, value) ->
+        unless mod.getDefaultString(key)?
+            throw "No string with key \"#{key}\""
+
+        @strings.add key, value
 
 
 # Helper class to handle channel interface update requests.
@@ -403,6 +419,7 @@ class ChannelUpdateHandler
     getHandlerNames: ->
         (m[1] for name of this when (m = /^(.+)Act$/.exec name))
 
+
     # strings() -> { stringKey: stringValue, ... }
     stringsAct: =>
         @res.send @channel.strings.get()
@@ -411,15 +428,14 @@ class ChannelUpdateHandler
     # [Admin] string(key, val) -> OK
     stringAct: (params) =>
         return unless @checkAccessLevel Sauce.Level.Admin
-        unless @user.isMod @channel, Sauce.Level.Admin
-            return @res.error "You are not authorized to alter channel strings (admins only)"
 
         {key, val} = params
         unless key? and val?
             return @res.error "Missing parameters: key, val"
         key = key.toLowerCase().trim()
         val = val.trim()
-        @channel.strings.add key, val
+
+        @channel.setString key, val
         @res.send @channel.strings.get()
 
 
@@ -427,12 +443,19 @@ class ChannelUpdateHandler
     modesAct: =>
         @res.send @channel.modes.get()
 
+
     # mods() -> { username: level, ... }
     modsAct: =>
         levels = {}
         for id, level of users.getMods @channel.id
             levels[users.getName(id)] = level
         @res.send levels
+
+
+    # modules() -> [ moduleName, ... ]
+    modulesAct: =>
+        @res.send (m.name for m in @channel.modules)
+
 
 
 # Handles a message in the appropriate channel instance.
@@ -455,12 +478,12 @@ exports.handle = (chan, data, bot) ->
 exports.load = (finished) ->
     newChannels = {}
     newNames    = {}
-    
+
     db.getDataEach 'channel', (chan) ->
         id     = chan.chanid
         name   = chan.name.toLowerCase()
         status = chan.status
-        
+
         # If a channel with that ID is loaded, update it
         if oldName = names[id]
             channel = channels[oldName]
@@ -470,20 +493,20 @@ exports.load = (finished) ->
             channel.name   = chan.name
             channel.bot    = chan.bot
             channel.loadChannelModules()
-            
+
         # Otherwise, set up a new channel
         else
             channel = new Channel chan
-            
+
         # Add channel to caches
         newChannels[name] = channel
         newNames[id]      = name
-        
+
     , ->
         channels = newChannels
         names    = newNames
-        
+
         finished? channels
-            
+
 
 exports.Channel = Channel

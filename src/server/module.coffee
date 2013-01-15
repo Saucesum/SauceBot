@@ -75,9 +75,11 @@ initialize = ->
     
     # Update the default string values in case they've been modified.
     strDTO.set strings
-    
+
+
 exports.getDefaultString = (key) ->
     strDTO.get key
+
  
 # Attempts to instantiate a module of a given name for a channel by first
 # checking if the file definition part exists, then calling the New function of

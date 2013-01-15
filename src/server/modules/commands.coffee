@@ -80,6 +80,7 @@ class Commands extends Module
                 unless key? and val?
                     return res.error "Missing attributes: key, val"
 
+                @removeCommand key
                 @setCommand key, val, lvl ? Sauce.Level.User
                 res.ok()
 

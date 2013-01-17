@@ -39,7 +39,7 @@ class LastFM extends Module
 
         
     registerHandlers: ->
-        @regCmd "lastfm", @cmdLastFM
+        @regCmd "lastfm", Sauce.Level.Mod, @cmdLastFM
 
         @regVar 'lastfm', (user, args, cb) =>
             unless args[0]?

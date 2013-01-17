@@ -321,7 +321,7 @@ class Pokemon extends Module
     # !pm
     cmdPkmn: (user, args, bot) =>
         return if @notPermitted user
-        @say bot, "Usage: !pm <cmd>. Commands: team, throw, release, modonly"
+        @say bot, "Usage: !pm <cmd>. Commands: team, throw, release, fight, stats, modonly"
 
 
     # !pm team

@@ -60,6 +60,10 @@ class Counter extends Module
 
         @regVar 'counter', @varCounter
 
+        @regVar 'add', @varAdd
+        @regVar 'sub', @varSub
+        @regVar 'set', @varSet
+
         @regActs {
             # Counter.get()
             'get': (user, params, res) =>
@@ -164,7 +168,42 @@ class Counter extends Module
             cb counter
         else
             cb 'N/A'
+
+
+    handleCounterVar: (args, action) ->
+        [name, value] = args
+        value = if value? then parseInt(value) else 1
+        return 'N/A' unless name?
+
+        ctr = action @getCounterValue(name), value
+        @counters.add name, ctr
+        return ctr
+        
     
+    # $(add <name>, <value>)
+    varAdd: (user, args, cb) =>
+        cb @handleCounterVar(args, (old, val) -> old + val)
+
+
+    # $(sub <name>, <value>)
+    varSub: (user, args, cb) =>
+        cb @handleCounterVar(args, (old, val) -> old - val)
+
+
+    # $(set <name>, <value>)
+    varSet: (user, args, cb) =>
+        cb @handleCounterVar(args, (old, val) -> val)
+
+
+    getCounterValue: (name) ->
+        val = @counters.get name
+        if val?
+            return val
+        else
+            @counters.add name, 0
+            @addTrigger name
+            return 0
+
 
     counterCheck: (ctr) ->
         if @counters.get(ctr)?

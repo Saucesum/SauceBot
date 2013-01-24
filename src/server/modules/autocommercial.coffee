@@ -18,7 +18,7 @@ exports.ignore      = true
 exports.strings = {
     'config-enable'    : 'Enabled'
     'config-disable'   : 'Disabled'
-    'action-commercial': 'Commercial! Disable ad-blockers to support @1@. <3'
+    'action-commercial': 'Commercial! Thank you for supporting @1@! <3'
     'action-delay'     : 'Minimum delay set to @1@ minutes.'
     'action-messages'  : 'Minimum number of messages set to @1@.'
 }

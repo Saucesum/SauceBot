@@ -160,16 +160,17 @@ class Base extends Module
 
     # !help <message> - Requests help from a SauceBot admin.
     cmdHelp: (user, args, bot) =>
+        if args.length is 0
+            bot.say "[Help] " + @str('help-basic', '!help <message>')
+            return
+
         db.addData 'helprequests', ['chanid', 'time', 'user', 'reason'], [[
             @channel.id,
             ~~(Date.now()/1000),
             user.name.toLowerCase(),
             args.join ' '
         ]]
-        if args.length > 0
-            bot.say "[Help] " + @str('help-requested')
-        else
-            bot.say "[Help] " + @str('help-basic', '!help <message>')
+        bot.say "[Help] " + @str('help-requested')
 
 
     # !var <expr> - Prints the result of evaluating <expr> as a var string.

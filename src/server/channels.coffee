@@ -443,6 +443,22 @@ class ChannelUpdateHandler
     modesAct: =>
         @res.send @channel.modes.get()
 
+    # [Admin] mode(key, val) -> OK
+    modeAct: (params) =>
+        return unless @checkAccessLevel Sauce.Level.Admin
+
+        {key, val} = params
+        unless key? and val?
+            return @res.error "Missing parameters: key, val"
+        key = key.toLowerCase().trim()
+        val = val.toLowerCase().trim() in ['on', 'true', '1']
+        
+        switch key
+            when 'modonly' then @channel.setModOnly val
+            when 'quiet'   then @channel.setQuiet val
+            else return @res.error "Invalid mode. Modes: modonly, quiet"
+
+        @res.ok()
 
     # mods() -> { username: level, ... }
     modsAct: =>

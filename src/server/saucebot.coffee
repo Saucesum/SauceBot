@@ -341,6 +341,8 @@ class SauceBot
         if channel.id is -1 then throw new Error "Invalid channel"
         unless module?      then throw new Error "Missing parameter: module"
         unless action?      then throw new Error "Missing parameter: action"
+        
+        weblog.timestamp 'API', channel.id, channel.name, module + '/' + action, user.id, user.name
 
         # Create request callbacks
         res = @createRes()

@@ -35,6 +35,7 @@ CREATE TABLE `applications` (
   `status` int(2) DEFAULT '0',
   `handledby` int(11) DEFAULT NULL,
   `reason` text,
+  `bot` varchar(30) DEFAULT 'SauceBot',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -48,9 +49,9 @@ DROP TABLE IF EXISTS `autocommercial`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `autocommercial` (
   `chanid` int(11) NOT NULL DEFAULT '0',
-  `state` tinyint(1) DEFAULT NULL,
-  `delay` int(11) DEFAULT NULL,
-  `messages` int(11) DEFAULT NULL,
+  `state` tinyint(1) NOT NULL DEFAULT '0',
+  `delay` int(11) NOT NULL DEFAULT '15',
+  `messages` int(11) NOT NULL DEFAULT '20',
   PRIMARY KEY (`chanid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -116,6 +117,22 @@ CREATE TABLE `channelconfig` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `channelinfo`
+--
+
+DROP TABLE IF EXISTS `channelinfo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `channelinfo` (
+  `chanid` int(11) NOT NULL,
+  `updated` int(20) DEFAULT '0',
+  `userid` int(11) DEFAULT NULL,
+  `message` varchar(2000) DEFAULT NULL,
+  PRIMARY KEY (`chanid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `commands`
 --
 
@@ -175,6 +192,22 @@ CREATE TABLE `counter` (
   `value` int(11) DEFAULT '0',
   PRIMARY KEY (`chanid`,`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `donations`
+--
+
+DROP TABLE IF EXISTS `donations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `donations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) NOT NULL,
+  `amount` int(11) NOT NULL,
+  `time` int(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -636,4 +669,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2012-12-29 20:19:20
+-- Dump completed on 2013-02-02 18:19:38

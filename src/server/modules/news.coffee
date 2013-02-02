@@ -100,8 +100,8 @@ class News extends Module
             # News.set(key, val)
             'set'   : (user, params, res) =>
                 {key, val} = params
-                if not key then return res.error "Missing attribute: key"
-                if not val then return res.error "Missing attribute: val"
+                if not key? then return res.error "Missing attribute: key"
+                if not val? then return res.error "Missing attribute: val"
 
                 id = parseInt key, 10
                 if isNaN id then return res.error "Invalid key: #{key}"

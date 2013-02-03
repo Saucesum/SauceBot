@@ -411,7 +411,7 @@ class ChannelUpdateHandler
         if @user.isMod @channel, level
             return true
         else
-            @res.send "You are not authorized to use this feature. Required level: #{Sauce.LevelStr level}"
+            @res.error "You are not authorized to use this feature. Required level: #{Sauce.LevelStr level}"
             return false
 
 

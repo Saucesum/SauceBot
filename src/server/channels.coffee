@@ -408,7 +408,7 @@ class ChannelUpdateHandler
     # * level: The minimum access level which must be met.
     # = true if the user has access. false otherwise.
     checkAccessLevel: (level) ->
-        if @user.isMod @channel, level
+        if @user.isMod @channel.id, level
             return true
         else
             @res.error "You are not authorized to use this feature. Required level: #{Sauce.LevelStr level}"
@@ -443,6 +443,7 @@ class ChannelUpdateHandler
     modesAct: =>
         @res.send @channel.modes.get()
 
+
     # [Admin] mode(key, val) -> OK
     modeAct: (params) =>
         return unless @checkAccessLevel Sauce.Level.Admin
@@ -460,12 +461,18 @@ class ChannelUpdateHandler
 
         @res.ok()
 
+
     # mods() -> { username: level, ... }
     modsAct: =>
         levels = {}
         for id, level of users.getMods @channel.id
             levels[users.getName(id)] = level
         @res.send levels
+
+
+    # mod(username, level) -> OK
+    modAct: =>
+       @res.ok()
 
 
     # modules() -> [ moduleName, ... ]

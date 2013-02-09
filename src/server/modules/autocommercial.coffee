@@ -19,6 +19,7 @@ exports.strings = {
     'config-enable'    : 'Enabled'
     'config-disable'   : 'Disabled'
     'action-commercial': 'Commercial! Thank you for supporting @1@! <3'
+    'action-failed'    : 'Could not run a commercial. Please contact SauceBot support.'
     'action-delay'     : 'Minimum delay set to @1@ minutes.'
     'action-messages'  : 'Minimum number of messages set to @1@.'
 }
@@ -31,6 +32,10 @@ oauth = new TokenJar Sauce.API.Twitch, Sauce.API.TwitchToken
 # Constants
 MINIMUM_DELAY    = 15
 MINIMUM_MESSAGES = 15
+
+COMMERCIAL_DELAY = 10 * 60 * 1000
+
+DURATIONS = [30, 60, 90]
 
 class AutoCommercial extends Module
     constructor: (@channel) ->
@@ -58,6 +63,9 @@ class AutoCommercial extends Module
 
         # !commercial messages <minutes> - Set messages
         @regCmd "commercial messages", Sauce.Level.Admin, @cmdMessages
+
+        # !commercial <time> - Runs a commercial
+        @regCmd "commercial", Sauce.Level.Admin, @cmdCommercial
         
         # Variables $(commercial state|delay|messages)
         @regVar "commercial", @varCommercial
@@ -114,6 +122,22 @@ class AutoCommercial extends Module
         num = @clampMinimums 'messages', args[0]
         @say bot, @str('action-messages', num)
 
+
+    cmdCommercial: (user, args, bot) =>
+        if @lastTime < COMMERCIAL_DELAY then return
+        duration = parseInt(args[0], 10)
+        duration = DURATIONS[0] unless duration in DURATIONS
+
+        @lastTime = Date.now()
+
+        # TODO implement time
+        oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
+            # "204 No Content" if successful.
+            if resp.statusCode is 204
+                bot.say @str('action-commercial', @channel.name)
+            else
+                bot.say @str('action-failed')
+        
 
     clampMinimums: (field, val) ->
         @comDTO.add field, parseInt val, 10

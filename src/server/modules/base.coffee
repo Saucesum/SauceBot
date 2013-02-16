@@ -145,7 +145,7 @@ class Base extends Module
     # !<botname> - Prints bot name and version.
     cmdBot: (user, args, bot) =>
         botName = (@channel.bot ? 'SauceBot')
-        bot.say "[#{botName}] #{Sauce.Server.Name} v#{Sauce.Version} by @RavnTM - CoffeeScript/Node.js"
+        bot.say "[#{botName}] #{Sauce.Server.Name} v#{Sauce.Version} by @RavnTM - www.saucebot.com"
 
 
     # !test - Prints test command and user level.

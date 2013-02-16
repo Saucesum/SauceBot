@@ -398,6 +398,16 @@ class Channel
         @strings.add key, value
 
 
+    # Resets a channel specific string back to its default value.
+    # * key: The string key to reset.
+    # Note: throws an error on invalid key.
+    resetString: (key) ->
+        unless mod.getDefaultString(key)?
+            throw "No string with key \"#{key}\""
+
+        @strings.remove key
+
+
 # Helper class to handle channel interface update requests.
 class ChannelUpdateHandler
     constructor: (@channel, @user, @res, @bot) ->
@@ -425,17 +435,20 @@ class ChannelUpdateHandler
         @res.send @channel.strings.get()
 
 
-    # [Admin] string(key, val) -> OK
+    # [Admin] string(key, val?) -> OK
     stringAct: (params) =>
         return unless @checkAccessLevel Sauce.Level.Admin
 
         {key, val} = params
-        unless key? and val?
-            return @res.error "Missing parameters: key, val"
-        key = key.toLowerCase().trim()
-        val = val.trim()
+        unless key?
+            return @res.error "Missing parameters: key"
 
-        @channel.setString key, val
+        key = key.toLowerCase().trim()
+
+        if val?
+            @channel.setString key, val.trim()
+        else
+            @channel.resetString key
         @res.send @channel.strings.get()
 
 

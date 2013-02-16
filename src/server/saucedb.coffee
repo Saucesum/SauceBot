@@ -170,7 +170,7 @@ exports.clearTable = (table) ->
 # * value  : the value for comparison to the field.
 # * cb     : a no-argument callback to run after the deletion.
 exports.removeChanData = (channel, table, field, value, cb) ->
-    query "DELETE FROM #{table} WHERE #{field} = ? AND chanid = ?", [value, channel], cb
+    query "DELETE FROM `#{table}` WHERE `#{field}` = ? AND chanid = ?", [value, channel], cb
 
 
 # Generates a string of comma-separated wildcard variables of a given length

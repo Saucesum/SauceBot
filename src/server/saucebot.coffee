@@ -333,6 +333,7 @@ class SauceBot
     # * chan  : [REQ] Target channel
     # * module: [REQ] Target module
     # * action: [REQ] Action
+    # * getter: [OPT] Whether this is a getter action 
     #
     handleInterface: (data) ->
         {channel, user } = @getWebData data, true
@@ -342,7 +343,8 @@ class SauceBot
         unless module?      then throw new Error "Missing parameter: module"
         unless action?      then throw new Error "Missing parameter: action"
         
-        weblog.timestamp 'API', channel.id, channel.name, module + '/' + action, user.id, user.name
+        unless data.getter
+            weblog.timestamp 'API', channel.id, channel.name, module + '/' + action, user.id, user.name
 
         # Create request callbacks
         res = @createRes()

@@ -48,6 +48,7 @@ randUser = (list) ->
         'MissingNo.'
 
 
+
 # Returns the sum of each element in the array
 sum = (arr) ->
     n = 0
@@ -241,6 +242,36 @@ AttrUtil = {
         io.debug "[PKMN] Loaded #{data.length} pokemons"
 )()
 
+runDecayation = ->
+    io.debug "Decaying pokemon levels ..."
+    for name, team of teams
+        decay team
+
+
+decay = (team) ->
+    i = 0
+    while i < team.length
+        mon = team[i]
+        if mon.level > 1
+            mon.level = mon.level - 1
+            db.query "UPDATE pkmn SET level=? WHERE id=?", [mon.level, mon.id]
+        else
+            db.query "DELETE FROM pkmn WHERE id=?", [mon.id]
+            team.splice(i, 1)
+
+        i = i + 1
+
+
+MS_PER_DAY = 1000 * 60 * 60 * 24
+decayer = ->
+    setTimeout( ->
+        runDecayation()
+        decayer()
+    , (MS_PER_DAY / 2))
+
+
+decayer()
+
 saveStats = (name, stats) ->
     name = name.toLowerCase()
     data = [name, stats.won, stats.lost, stats.draw]
@@ -261,6 +292,7 @@ addToTeam = (name, mon) ->
         if err? then throw err
         mon.id = res.insertId
     return true
+
 
 
 # Pokemon module

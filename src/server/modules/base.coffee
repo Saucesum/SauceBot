@@ -197,7 +197,7 @@ class Base extends Module
         txt = args.join ''
         math = txt.replace(/[^()\d*\/+-=\w]/g, '')
         try
-            bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm")
+            bot.say math + "=" + (vm.runInContext math, @sandbox, "#{@channel.name}.vm").toFixed(2)
         catch error
             bot.say "[Calc] " + @str('math-invalid', math)
 

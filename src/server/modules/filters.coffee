@@ -50,6 +50,10 @@ exports.strings = {
     # Permits
     'permit-permitted': '@1@ permitted for @2@ seconds.'
     'permit-unknown'  : '@1@? Who\'s that? Either way, they\'re permitted for @2@ seconds.'
+
+    # Clearstrikes
+    'clear-cleared'   : 'Cleared strikes for @1@.'
+    'clear-no-strikes': '@1@ doesn\'t have any strikes.'
     
     # Regulars
     'regulars-added'  : 'User @1@ added to regulars list.'
@@ -91,7 +95,7 @@ tableFields =
 # Strikes reset time (in ms)
 TIMEOUT = 3 * 60 * 60 * 1000
 
-URL_RE = /(?:(?:(?:https?:\/\/[-a-zA-Z0-9\.]*)|(?:[-a-zA-Z0-9]+\.))[-a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,})\b|(?:\w+\.[a-zA-Z]{2,}\/))/
+URL_RE = /(?:(?:(?:https?:\/\/[-a-zA-Z0-9\.]*)|(?:[-a-zA-Z0-9]+\.))[-a-zA-Z-0-9]+\.(?:[a-zA-Z]{2,})\b|(?:\w+\.(?:[a-zA-Z]{2,}\/|(com|net|org|ru))))/
 
 reasons = new log.Logger Sauce.Logging.Root, 'reasons.log'
 
@@ -112,6 +116,7 @@ io.module '[Filters] Init'
 #  !emotes remove <emote>
 #  !emotes clear 
 #  !permit <user> [minutes]
+#  !clearstrikes <user>
 #  !filter <url/caps/words/emotes> <on/off>
 #  !filter <url/caps/words/emotes>
 #  !regulars add <name>
@@ -189,6 +194,7 @@ class Filters extends Module
         @regCmd 'regulars add',    Sauce.Level.Mod, @cmdAddRegular
         @regCmd 'regulars remove', Sauce.Level.Mod, @cmdRemoveRegular
         @regCmd 'permit',          Sauce.Level.Mod, @cmdPermitUser
+        @regCmd 'clearstrikes',    Sauce.Level.Mod, @cmdClearStrikes
 
     # Filter list command handlers
 
@@ -317,6 +323,22 @@ class Filters extends Module
 
         else
             bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')
+
+
+    # !clearstrikes <name> - Clears strikes from a user
+    cmdClearStrikes: (user, args, bot) =>
+        unless (target = args[0])?
+            bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!clearstrikes <username>')
+            return
+
+        target = (target.replace /[^a-zA-Z0-9_]+/g, '').toLowerCase()
+        if @warnings[target]
+            delete @warnings[target]
+            msg = @str('clear-cleared', target)
+        else
+            msg = @str('clear-no-strikes', target)
+
+        bot.say '[Filter] ' + msg
             
 
     # Custom update handler to avoid super messy switches.

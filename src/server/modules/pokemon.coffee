@@ -64,6 +64,11 @@ getSortedTopTeams = (n) ->
         return ([u, levels[u]] for u in sorted[0..n-1])
 
 
+getExpForLevel = (lvl) ->
+    return NaN if lvl > 100
+    return Math.pow(lvl, 0.75) * 10
+
+
 randChance = (chance) -> Math.random() < chance
 
 natures = [
@@ -86,6 +91,8 @@ class Mon
         @nature = ''
         @attr   = {}
 
+        @exp = 0
+
         if data?
             @id     = data.id
             @level  = data.level
@@ -98,7 +105,7 @@ class Mon
 
     # Sets the mon's level to a random value.
     setRandomLevel: ->
-        diff = MAX_LEVEL - MIN_LEVEL
+        diff = (MAX_LEVEL - MIN_LEVEL) + 1
         @level = ~~(Math.random() * diff) + MIN_LEVEL
 
 
@@ -112,6 +119,23 @@ class Mon
     addAttribute: (attr) ->
         @attr[attr] = true
 
+
+    # Gives experience to the mon, and levels up if possible.
+    # = returns the level difference
+    addExperience: (exp) ->
+        @exp += exp
+        levelStart = @level
+        while (@exp > (needed = getExpForLevel(@level + 1)))
+            @exp -= needed
+            @level += 1
+
+        return @level - levelStart
+    
+
+    # Updates the mon's level in the database
+    save: ->
+        db.query "UPDATE pkmn SET level=? WHERE id=?", [@level, @id]
+        
 
     # Returns a short string representation of the mon.
     str: ->
@@ -254,7 +278,7 @@ decay = (team) ->
         mon = team[i]
         if mon.level > 1
             mon.level = mon.level - 1
-            db.query "UPDATE pkmn SET level=? WHERE id=?", [mon.level, mon.id]
+            mon.save()
         else
             db.query "DELETE FROM pkmn WHERE id=?", [mon.id]
             team.splice(i, 1)
@@ -487,22 +511,43 @@ class PokeBattle
     getResult: ->
         userMon   = @user.team.random()
         targetMon = @target.team.random()
+        
+        vs = "#{@user.name}'s #{userMon.str()} vs. #{@target.name}'s #{targetMon.str()}!"
 
         rand = @getRandomResult userMon, targetMon
 
+        userExp   = 0
+        targetExp = 0
+
         result = if rand > WIN_MIN_PERCENTAGE
+            userExp = targetMon.level
             @handleWin()
         else if rand < LOSS_MAX_PERCENTAGE
+            targetExp = userMon.level
             @handleLoss()
         else
+            userExp   = targetMon.level / 2
+            targetExp = userMon.level / 2
             @handleDraw()
         
         @saveStatsFor @user
         @saveStatsFor @target
 
-        vs = "#{@user.name}'s #{userMon.str()} vs. #{@target.name}'s #{targetMon.str()}!"
+        dingers = []
 
-        return "#{vs} #{result}"
+        if userMon.addExperience userExp
+            dingers.push userMon.name
+            userMon.save()
+        if targetMon.addExperience targetExp
+            dingers.push targetMon.name
+            targetMon.save()
+
+
+        message = "#{vs} #{result}"
+        if dingers.length > 0
+            message += ' '  + dingers.join(', ') + ' levels up!'
+
+        return message
 
 
     handleWin: ->

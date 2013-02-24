@@ -484,6 +484,21 @@ CREATE TABLE `regulars` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `requestvotes`
+--
+
+DROP TABLE IF EXISTS `requestvotes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `requestvotes` (
+  `requestid` int(11) NOT NULL DEFAULT '0',
+  `userid` int(11) NOT NULL DEFAULT '0',
+  `vote` int(3) DEFAULT NULL,
+  PRIMARY KEY (`requestid`,`userid`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `session`
 --
 
@@ -512,6 +527,29 @@ CREATE TABLE `sitenews` (
   `userid` int(11) NOT NULL,
   `title` varchar(100) NOT NULL,
   `body` text NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `siterequests`
+--
+
+DROP TABLE IF EXISTS `siterequests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `siterequests` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `userid` int(11) DEFAULT NULL,
+  `submitted` int(11) DEFAULT '0',
+  `updated` int(11) DEFAULT '0',
+  `status` int(3) DEFAULT NULL,
+  `response` text,
+  `title` varchar(100) NOT NULL,
+  `body` text NOT NULL,
+  `benefit` text,
+  `severity` int(3) DEFAULT '0',
+  `group` int(3) DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -669,4 +707,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-02-02 18:19:38
+-- Dump completed on 2013-02-24 17:16:30

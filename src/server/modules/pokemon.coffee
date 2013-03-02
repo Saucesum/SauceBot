@@ -16,6 +16,38 @@ exports.ignore      = true
 # Module strings
 exports.strings = {
     name: 'Pkmn'
+
+    'fail-1': 'Almost had it!'
+    'fail-2': 'Not even close.'
+    'fail-3': 'It broke free!'
+    'fail-4': 'So close!'
+
+    'modonly-enabled':  'Set to moderator-only mode.'
+    'modonly-disabled': 'Moderator-only mode disabled.'
+
+    'err-usage'   : 'Usage: @1@'
+    'err-commands': 'Commands: @1@'
+
+    'err-no-team'       : '@1@ has no team!'
+    'err-catch-usage'   : 'Catch pokemon with @1@'
+    'err-unknown-user'  : 'I can\'t find @1@. :-('
+    'err-full-team'     : 'Full team! Release with @1@'
+    'err-duplicate-user': 'You have already caught that pokemon!'
+    'err-weirdo'        : '@1@: You can\'t play with yourself!'
+    'err-bully'         : 'You bully!'
+
+    'action-team'      : '@1@\'s team: @2@'
+    'action-catch'     : 'Got it! Nature: @1@'
+    'action-release'   : '@1@ released @2@'
+    'action-releaseall': '@1@ put @2@ to sleep ... You evil person.'
+    'action-stats'     : '@1@: @2@% - @3@ won - @4@ lost - @5@ draw.'
+    'action-top'       : 'Masters: @1@'
+
+    'battle-levelup'   : '@1@ levels up!'
+    'battle-win'       : '@1@ was victorious!'
+    'battle-lose'      : '@1@ was defeated!'
+    'battle-draw'      : 'It\'s a draw!'
+    
 }
 
 io.module '[Pokemon] Init'
@@ -181,12 +213,7 @@ removeAll = (name) ->
     db.query "DELETE FROM pkmn WHERE owner=?", [name]
 
 
-failures = [
-    'Almost had it!'
-    'Not even close.'
-    'It broke free!'
-    'So close!'
-]
+failures = [ 'fail-1', 'fail-2', 'fail-3', 'fail-4' ]
 
 # Returns a random failure description.
 getRandomFailure = ->
@@ -307,15 +334,11 @@ addToTeam = (name, mon) ->
     unless (team = teams[name])?
         team = teams[name] = []
 
-    if team.length >= TEAM_MAX
-        return false
-
     team.push mon
     data = [name, mon.name, mon.level, mon.nature, AttrUtil.serialize(mon.attr)]
     db.query "INSERT INTO pkmn (owner, name, level, nature, attrs) VALUES (?,?,?,?,?)", data, (err, res) ->
         if err? then throw err
         mon.id = res.insertId
-    return true
 
 
 
@@ -346,12 +369,12 @@ class Pokemon extends Module
 
             if enable is 'on'
                 @conf.add 'modonly', 1
-                @say bot, 'Set to moderator-only.'
+                @say bot, @str('modonly-enabled')
             else if enable is 'off'
                 @conf.add 'modonly', 0
-                @say bot, 'Moderator-only disabled.'
+                @say bot, @str('modonly-disabled')
             else
-                @say bot, 'Usage: !pm modonly on/off'
+                @say bot, @str('err-usage', '!pm modonly on/off')
 
 
         @regActs {
@@ -377,7 +400,7 @@ class Pokemon extends Module
     # !pm
     cmdPkmn: (user, args, bot) =>
         return if @notPermitted user
-        @say bot, "Usage: !pm <cmd>. Commands: team, throw, release, fight, stats, modonly"
+        @say bot, @str('err-usage', '!pm <cmd>. Commands: team, throw, release, fight, stats, top, modonly')
 
 
     # !pm team
@@ -385,39 +408,45 @@ class Pokemon extends Module
         return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])?
-            return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
+            return @say bot, @str('err-no-team', user) + ' ' + @str('err-catch-usage', '!pm throw')
 
         str = (mon.str() for mon in team).join (', ')
-        @say bot, "#{user}'s team: #{str}"
+        @say bot, @str('action-team', user, str)
 
 
     # !pm throw [user]
     cmdThrow: (user, args, bot) =>
         return if @notPermitted user
         user = user.name
-
-        mon = createPokemon @channel
+        mon  = createPokemon @channel
         if args[0]?
             targetName = args[0].toLowerCase()
             if @channel.usernames[targetName]?
                 mon.name = targetName
             else
-                return @say bot, "#{user}: I can't find #{targetName}. :-("
+                return @say bot, "#{user}: " + @str('err-unknown-user', targetName)
 
-        result = ''
-        
-
-        rand = Math.random()
-        if rand < 0.3 - (mon.level/1000.0)
-            # Caught!
-            if addToTeam user, mon
-                result = "Got it! Nature: " + mon.nature
-            else
-                result = "Full team! Release with !pm release [all]"
-        else
-            result = getRandomFailure()
+        result = try
+            @catchPokemon user, mon
+            @str('action-catch', mon.nature)
+        catch err then err
             
         @say bot, "#{user}: #{mon.fullStr()}! #{result}"
+
+
+    catchPokemon: (user, mon) ->
+        team = teams[user.toLowerCase()]
+        if team?
+            if team.length >= TEAM_MAX
+                throw @str('err-full-team', '!pm release [all]')
+            for teamMon in team when teamMon.name is mon.name
+                throw @str('err-duplicate-user')
+
+        if randChance(0.3 - (mon.level/1000.0))
+            # Caught!
+            addToTeam user, mon
+        else
+            throw @str(getRandomFailure())
             
 
     # !pm release
@@ -425,10 +454,10 @@ class Pokemon extends Module
         return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])? and team.length > 0
-            return @say bot, "#{user} has no team! Catch pokemon with !pm throw"
+            return @say bot, @str('err-no-team', user) + ' ' + @str('err-catch-usage', '!pm throw')
 
         mon = removeRandom team
-        @say bot, "#{user} released a #{mon.fullStr()}"
+        @say bot, @str('action-release', user, mon.fullStr())
 
 
     # !pm release all
@@ -436,11 +465,11 @@ class Pokemon extends Module
         return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])? and team.length > 0
-            return @say bot, "#{user} has no team!"
+            return @say bot, @str('err-no-team', user)
 
         namestr = (mon.name for mon in team).join(', ')
         removeAll user
-        @say bot, "#{user} put #{namestr} to sleep ... You evil person."
+        @say bot, @str('action-releaseall', user, namestr)
 
 
     # !pm stats
@@ -450,14 +479,15 @@ class Pokemon extends Module
         stats = statsFor user
         {won, lost, draw} = stats
         ratio = ~~((won / (won+lost+draw)) * 100)
-        @say bot, "#{user}: #{ratio}% - #{won} won - #{lost} lost - #{draw} draw."
+        @say bot, @str('action-stats', user, ratio, won, lost, draw)
 
 
     # !pm top
     cmdTop: (user, args, bot) =>
         return if @notPermitted user
         top = getSortedTopTeams(10)
-        @say bot, "Masters: " + (k[0] + "(" + k[1] + ")" for k in top).join(', ')
+        topStr = (k[0] + "(" + k[1] + ")" for k in top).join(', ')
+        @say bot, @str('action-top', topStr)
    
 
     # !pm fight (target)
@@ -466,10 +496,10 @@ class Pokemon extends Module
         user = user.name
 
         unless (target = args[0])?
-            return @say bot, "Fight usage: !pm fight <user>"
+            return @say bot, @str('err-usage', '!pm fight <user>')
 
         message = try
-            battle = new PokeBattle user, target
+            battle = new PokeBattle user, target, (args...) => @str(args...)
             battle.checkTeams()
             battle.getResult()
         catch err then err
@@ -478,12 +508,12 @@ class Pokemon extends Module
         
 
 class PokeBattle
-    constructor: (userName, targetName) ->
+    constructor: (userName, targetName, @str) ->
         userName   = userName.toLowerCase()
         targetName = targetName.toLowerCase()
 
         if userName is targetName
-            throw "#{userName}: You can't play with yourself!"
+            throw @str('err-weirdo', userName)
 
         @user   = @getUserObject userName
         @target = @getUserObject targetName
@@ -499,9 +529,9 @@ class PokeBattle
 
     checkTeams: ->
         unless @hasTeam @user
-            throw "#{@user.name} doesn't have a team! Catch with !pm throw"
+            throw @str('err-no-team', @user.name) + ' ' + @str('err-catch-usage', '!pm throw')
         unless @hasTeam @target
-            throw "#{@target.name} doesn't have a team. You bully!"
+            throw @str('err-no-team', @target.name) + ' ' + @str('err-bully')
 
 
     hasTeam: (obj) ->
@@ -545,7 +575,7 @@ class PokeBattle
 
         message = "#{vs} #{result}"
         if dingers.length > 0
-            message += ' '  + dingers.join(', ') + ' levels up!'
+            message += ' '  + @str('battle-levelup', dingers.join(', '))
 
         return message
 
@@ -553,19 +583,19 @@ class PokeBattle
     handleWin: ->
         @user.stats.won++
         @target.stats.lost++
-        return "#{@user.name} was victorious!"
+        return @str('battle-win', @user.name)
 
 
     handleLoss: ->
         @user.stats.lost++
         @target.stats.won++
-        return "#{@user.name} was defeated!"
+        return @str('battle-lose', @user.name)
 
 
     handleDraw: ->
         @user.stats.draw++
         @target.stats.draw++
-        return "It's a draw!"
+        return @str('battle-draw')
 
 
     saveStatsFor: (obj) ->

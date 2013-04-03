@@ -118,7 +118,8 @@ class Base extends Module
         @regCmd "verify",       Sauce.Level.User,  @cmdVerify
         @regCmd "test",         Sauce.Level.Mod,   @cmdTest
         @regCmd "help",         Sauce.Level.Mod,   @cmdHelp
-        @regCmd "var",          Sauce.Level.Mod,   @cmdVar
+        @regCmd "var",          Sauce.Level.Mod,   @cmdEval
+        @regCmd "eval",         Sauce.Level.Mod,   @cmdEval
         @regCmd "calc",         Sauce.Level.Mod,   @cmdCalc
         @regCmd "mode",         Sauce.Level.Admin, @cmdMode
         @regCmd "mode modonly", Sauce.Level.Admin, @cmdModeModonly
@@ -173,12 +174,12 @@ class Base extends Module
         bot.say "[Help] " + @str('help-requested')
 
 
-    # !var <expr> - Prints the result of evaluating <expr> as a var string.
-    cmdVar: (user, args, bot) =>
+    # !eval <expr> - Prints the result of evaluating <expr> as a var string.
+    cmdEval: (user, args, bot) =>
         return unless args
         raw = args.join ' '
         @channel.vars.parse user, raw, raw, (parsed) ->
-            bot.say "[Vars] #{parsed}"
+            bot.say "[Eval] #{parsed}"
 
 
     # !verify <code> - Attempts to verify the user.

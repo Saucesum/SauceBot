@@ -172,11 +172,7 @@ for account in accounts
     bot = new Bot botName, account.password
 
     for chan in account.channels
-        do (bot, chan) ->
-            delay++
-            setTimeout ->
-                bot.add chan
-            , (delay * 1000)
+        bot.add chan
 
     bots[botName.toLowerCase()] = bot
         

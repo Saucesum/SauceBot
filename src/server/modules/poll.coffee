@@ -9,7 +9,7 @@ io    = require '../ioutil'
 
 # Module description
 exports.name        = 'Poll'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Channel voting system'
 
 exports.strings = {
@@ -18,11 +18,13 @@ exports.strings = {
     'err-no-active-poll'   : 'No active poll. Start with @1@'
     'err-unknown-poll'     : 'Unknown poll. Create it with @1@'
     
-    'action-started': '"@1@" started! Vote with @2@. Options: @3@'
+    'action-started': '@1@ started! Vote with @2@. Options: @3@'
     'action-created': '"@1@" created! Start with @2@'
     'action-removed': '"@1@" removed.'
     'action-results': '@1@ results: @2@'
 }
+
+ANONYMOUS_POLL_NAME = 'Poll'
 
 io.module '[Poll] Init'
 
@@ -124,6 +126,9 @@ class Poll extends Module
     registerHandlers: ->
         # !poll <name> [<opt1> <opt2> ...] - Starts/creates a new poll
         @regCmd 'poll'    , Sauce.Level.Mod, @cmdPollStart
+
+        # !poll run [<opt1> <opt2> ...] - Starts an "anonymous" poll
+        @regCmd 'poll run', Sauce.Level.Mod, @cmdPollRun
         
         # !poll end - Ends the active poll
         @regCmd 'poll end', Sauce.Level.Mod, @cmdPollEnd
@@ -137,7 +142,7 @@ class Poll extends Module
 
     cmdPollStart: (user, args, bot) =>
         unless args[0]?
-            return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll <name> <opt1> <opt2> ...')
+            return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll (<name>|run) <opt1> <opt2> ...')
             
         pollName = args.shift().toLowerCase()
         
@@ -148,7 +153,20 @@ class Poll extends Module
             @startPoll pollName, bot
         else
             @createPoll pollName, args.join(' '), bot
-            
+
+
+    cmdPollRun: (user, args, bot) =>
+        # Need at least two options for a poll
+        unless args.length > 1
+            return bot.say '[Poll] ' + @str('err-usage', '!poll run <opt1> <opt2> ...')
+
+        options = args.join ' '
+        pollName = ANONYMOUS_POLL_NAME
+
+        # Surpess the default messages by making the bot callback null
+        @createPoll pollName, options, null
+        @startPoll pollName, bot
+
 
     # Starts a poll.
     # * pollName: The name of the poll.
@@ -167,7 +185,9 @@ class Poll extends Module
     # * options : A space-separated list of options.
     # * bot     : Optional bot object to send a confirmation message.
     createPoll: (pollName, options, bot) ->
-        @pollDTO.add pollName, options.toLowerCase()
+        # Remove commas to prevent accidental usage
+        options = options.toLowerCase().replace(/,/, ' ')
+        @pollDTO.add pollName, options
         @updatePollList()
 
         bot?.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)

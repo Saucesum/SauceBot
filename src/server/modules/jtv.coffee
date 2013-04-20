@@ -30,6 +30,11 @@ exports.strings = {
 oauth = new TokenJar Sauce.API.Twitch, Sauce.API.TwitchToken
 
 # Set up caches for ttv(twitch.tv) and jtv(justin.tv) API calls
+ttvstreamcache = new Cache (key, cb) ->
+    oauth.get "/streams/#{key}", (resp, body) ->
+        cb body
+
+# Set up caches for ttv(twitch.tv) and jtv(justin.tv) API calls
 ttvcache = new Cache (key, cb) ->
     oauth.get "/channels/#{key}", (resp, body) ->
         cb body
@@ -46,7 +51,6 @@ class JTV extends Module
     registerHandlers: ->
         @regCmd "game",    Sauce.Level.Mod, @cmdGame
         @regCmd "viewers", Sauce.Level.Mod, @cmdViewers
-        @regCmd "views",   Sauce.Level.Mod, @cmdViews
         @regCmd "title",   Sauce.Level.Mod, @cmdTitle
         @regCmd "sbfollow", Sauce.Level.Owner, @cmdFollow
         
@@ -64,12 +68,6 @@ class JTV extends Module
         @getViewers @channel.name, (viewers) =>
             bot.say "[Viewers] " + @str('show-viewers', viewers)
             
-
-    # !views - Print number of views.
-    cmdViews: (user, args, bot) =>
-        @getViews @channel.name, (views) =>
-            bot.say "[Views] " + @str('show-views', views)
-         
 
     # !title - Print current title.
     cmdTitle: (user, args, bot) =>
@@ -111,13 +109,8 @@ class JTV extends Module
             
             
     getViewers: (chan, cb) ->
-        @getJTVData chan, (data) ->
-            cb (data["channel_count"] ? "N/A")
-            
-            
-    getViews: (chan, cb) ->
-        @getJTVData chan, (data) ->
-            cb (data["channel_view_count"] ? "N/A")
+        @getTTVStreamData chan, (data) ->
+            cb ((data["stream"] ? {})["viewers"] ? "N/A")
             
             
     getTitle: (chan, cb) ->
@@ -125,6 +118,11 @@ class JTV extends Module
             cb (data["status"] ? "N/A")
             
             
+    getTTVStreamData: (chan, cb) ->
+        ttvstreamcache.get chan.toLowerCase(), (data) ->
+            cb data ? {}
+
+
     getTTVData: (chan, cb) ->
         ttvcache.get chan.toLowerCase(), (data) ->
             cb data ? {}

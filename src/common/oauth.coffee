@@ -8,7 +8,7 @@ util    = require 'util'
 API_ROOT = 'https://api.twitch.tv/kraken'
 
 # Redirect URL that must match the application page's redirect URL
-REDIRECT_URI = 'http://saucesum.no-ip.org/saucebot/'
+REDIRECT_URI = 'http://www.saucebot.com'
 
 # API Scopes
 exports.Scope = Scope =
@@ -17,6 +17,7 @@ exports.Scope = Scope =
         Read    : 'user_read'
         # Access to followed streams.
         Followed: 'user_followed'
+        
 
         Blocks:
             # Ability to ignore or unignore on behalf of a user.
@@ -67,6 +68,29 @@ class TokenJar
         request getRequest, (err, resp, body) =>
             if resp?
                 io.debug "[GET #{resource}] #{resp.headers.status}"
+            return io.error err if err?
+
+            @process resp, body, callback
+
+
+    # Requests a resource from the API using a HTTP PUT request. The name of
+    # the resource always begins with a '/', and the response passed to the
+    # callback is the response object and the body, which may be null.
+    #
+    # * resource: the resource being requested.
+    # * callback: a function taking the response object and body as arguments.
+    put: (resource, callback) ->
+        putRequest = {
+            url   : API_ROOT + resource
+            method: 'PUT'
+
+            form  : { oauth_token: @authToken }
+            qs    : { oauth_token: @authToken }
+        }
+
+        request putRequest, (err, resp, body) =>
+            if resp?
+                io.debug "[PUT #{resource}] #{resp.headers.status}"
             return io.error err if err?
 
             @process resp, body, callback

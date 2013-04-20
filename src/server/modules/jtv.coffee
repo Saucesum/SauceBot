@@ -48,6 +48,7 @@ class JTV extends Module
         @regCmd "viewers", Sauce.Level.Mod, @cmdViewers
         @regCmd "views",   Sauce.Level.Mod, @cmdViews
         @regCmd "title",   Sauce.Level.Mod, @cmdTitle
+        @regCmd "sbfollow", Sauce.Level.Owner, @cmdFollow
         
         @regVar 'jtv', @varJTV
 
@@ -74,6 +75,19 @@ class JTV extends Module
     cmdTitle: (user, args, bot) =>
         @getTitle @channel.name, (title) =>
             bot.say "[Title] " + @str('show-title', title)
+
+
+    # !sbfollow <username> - Follows the channel (globals only)
+    cmdFollow: (user, args, bot) =>
+        return unless user.name.toLowerCase() is 'ravn'
+        name = args[0].trim()
+        name = name.replace(/[^a-zA-Z0-9_]+/g, '')
+        unless name?
+            return bot.say "Usage: !sbfollow <channel>"
+
+        io.debug "Following #{name}"
+        oauth.put "/users/saucebot/follows/channels/#{name}", (resp, body) ->
+            bot.say "Followed #{name}"
            
 
     # $(jtv game|viewers|views|title [, <channel>])

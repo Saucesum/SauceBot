@@ -130,6 +130,9 @@ class Poll extends Module
         # !poll run [<opt1> <opt2> ...] - Starts an "anonymous" poll
         @regCmd 'poll run', Sauce.Level.Mod, @cmdPollRun
         
+        # !poll results - Shows the results for the active poll
+        @regCmd 'poll results', Sauce.Level.Mod, @cmdPollResults
+
         # !poll end - Ends the active poll
         @regCmd 'poll end', Sauce.Level.Mod, @cmdPollEnd
 
@@ -214,9 +217,14 @@ class Poll extends Module
  
     cmdPollEnd: (user, args, bot) =>
         unless @activePoll?
-            return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll <name>')
+            return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll run <opt1> <opt2> ...')
             
         @endPoll bot
+
+    cmdPollResults: (user, args, bot) =>
+        unless @activePoll?
+            return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll run <opt1> <opt2> ...')
+        bot?.say '[Poll] ' + @str('action-results', @activePoll, @getResults())
 
 
     cmdPollRemove: (user, args, bot) =>

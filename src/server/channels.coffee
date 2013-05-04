@@ -430,12 +430,34 @@ class ChannelUpdateHandler
         (m[1] for name of this when (m = /^(.+)Act$/.exec name))
 
 
+    # [Admin] say(message) -> OK
+    sayAct: (params) =>
+        return unless @checkAccessLevel Sauce.Level.Admin
+
+        # Flood control
+        last = @channel.lastSayAct ? 0
+        now = Date.now()
+        limit = 1000 * 60
+        if (last + limit > now)
+            return @res.error "You may only speak through the bot once a minute"
+
+        @channel.lastSayAct = now
+
+        {message} = params
+        unless message?
+            return @res.error "Missing parameter: key"
+
+        message = message.trim().substring(0, 200)
+        @bot.say "[#{@user.name}] #{message}"
+        @res.ok()
+
+
     # strings() -> { stringKey: stringValue, ... }
     stringsAct: =>
         @res.send @channel.strings.get()
 
 
-    # [Admin] string(key, val?) -> OK
+    # [Admin] string(key, val?) -> { stringKey: stringValue, ... }
     stringAct: (params) =>
         return unless @checkAccessLevel Sauce.Level.Admin
 

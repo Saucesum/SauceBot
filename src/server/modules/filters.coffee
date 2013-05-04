@@ -347,9 +347,20 @@ class Filters extends Module
 
         if      type is 'config'   then @actConfig                action, params, res
         else if type is 'regulars' then @actDTOList @regulars,    action, params, res
+        else if type is 'filters'  then @actAllFilters            action, params, res
         else if type in tableNames then @actDTOList @lists[type], action, params, res
         else res.error "Invalid Type"
-            
+
+
+    # Handles request for all filter lists
+    actAllFilters: (action, params, res) ->
+        res.send
+            whitelist: @lists['whitelist'].get()
+            blacklist: @lists['blacklist'].get()
+            badwords:  @lists['badwords' ].get()
+            emotes:    @lists['emotes'   ].get()
+            regulars:  @regulars.get()
+
 
     # Handles update actions for DTO array lists.
     # * dto   : The dto to alter.

@@ -270,6 +270,13 @@ class SauceBot
                 [_, name, role] = m
                 specialUsers[name.toLowerCase()] = role.toLowerCase()
 
+            else if m = /^You are banned from talking in \S+ for (\d+)/.exec msg
+                [time] = m
+                io.say chan, "Banned for #{time} seconds".red
+
+            else if /^You don't have permission to/.test msg
+                io.say chan, "Not a moderator".magenta
+
         else
             # Handle messages by normal people using IRC clients
             #  ... maybe

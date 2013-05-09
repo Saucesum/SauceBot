@@ -368,18 +368,26 @@ class Filters extends Module
     # * params: The parameter map.
     # * res   : The result callback object.
     actDTOList: (dto, act, params, res) ->
-        {key, val} = params
+        {key, keys, val} = params
 
-        key = key?.toLowerCase()
-        val = val?.toLowerCase()
+        key  = key?.toLowerCase()
+        keys = keys?.toLowerCase()
+        val  = val?.toLowerCase()
         
         switch act
             when 'get'
                 res.send dto.get()
                 
             when 'add'
-                return res.error "Missing attribute: key" unless key
-                dto.add key
+                return res.error "Missing attribute: key or keys" unless key or keys
+                if keys
+                    try
+                        data = JSON.parse keys
+                        dto.add entry for entry in data
+                    catch e
+                        return res.error "Invalid format for keys. JSON array expected."
+                else
+                    dto.add key
                 res.ok()
                 
             when 'set'

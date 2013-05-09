@@ -111,19 +111,21 @@ class Base extends Module
         botName = (@channel.bot ? 'SauceBot').toLowerCase()
 
         if botName isnt 'saucebot'
-            @regCmd botName, Sauce.Level.User, @cmdBot
+            @regCmd botName,           Sauce.Level.User, @cmdBot
+            @regCmd botName + ' join', Sauce.Level.User, @cmdBotJoin
 
-        @regCmd "saucebot",     Sauce.Level.User,  @cmdBot
-        @regCmd "saucetime",    Sauce.Level.User,  @cmdSaucetime
-        @regCmd "verify",       Sauce.Level.User,  @cmdVerify
-        @regCmd "test",         Sauce.Level.Mod,   @cmdTest
-        @regCmd "help",         Sauce.Level.Mod,   @cmdHelp
-        @regCmd "var",          Sauce.Level.Mod,   @cmdEval
-        @regCmd "eval",         Sauce.Level.Mod,   @cmdEval
-        @regCmd "calc",         Sauce.Level.Mod,   @cmdCalc
-        @regCmd "mode",         Sauce.Level.Admin, @cmdMode
-        @regCmd "mode modonly", Sauce.Level.Admin, @cmdModeModonly
-        @regCmd "mode quiet",   Sauce.Level.Admin, @cmdModeQuiet
+        @regCmd "saucebot",      Sauce.Level.User,  @cmdBot
+        @regCmd "saucebot join", Sauce.Level.User,  @cmdBotJoin
+        @regCmd "saucetime",     Sauce.Level.User,  @cmdSaucetime
+        @regCmd "verify",        Sauce.Level.User,  @cmdVerify
+        @regCmd "test",          Sauce.Level.Mod,   @cmdTest
+        @regCmd "help",          Sauce.Level.Mod,   @cmdHelp
+        @regCmd "var",           Sauce.Level.Mod,   @cmdEval
+        @regCmd "eval",          Sauce.Level.Mod,   @cmdEval
+        @regCmd "calc",          Sauce.Level.Mod,   @cmdCalc
+        @regCmd "mode",          Sauce.Level.Admin, @cmdMode
+        @regCmd "mode modonly",  Sauce.Level.Admin, @cmdModeModonly
+        @regCmd "mode quiet",    Sauce.Level.Admin, @cmdModeQuiet
 
         @regActs {
             'strings': (user, params, res) =>
@@ -147,6 +149,12 @@ class Base extends Module
     cmdBot: (user, args, bot) =>
         botName = (@channel.bot ? 'SauceBot')
         bot.say "[#{botName}] #{Sauce.Server.Name} v#{Sauce.Version} by @RavnTM - www.saucebot.com"
+
+
+    # !<botname> join - Prints info on how to get the bot
+    cmdBotJoin: (user, args, bot) =>
+        botName = (@channel.bot ? 'SauceBot')
+        bot.say "[#{botName}] #{user.name}: Visit www.saucebot.com to apply for #{botName}! Good luck! :-)"
 
 
     # !test - Prints test command and user level.

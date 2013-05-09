@@ -30,7 +30,7 @@ exports.strings = {
     # Verification messages
     'verify-syntax' : 'No code specified. Usage: @1@'
     'verify-ok'     : '@1@: Verified.'
-    'verify-err'    : '@1@: Invalid code.'
+    'verify-err'    : '@1@: Invalid code. Make sure your www.saucebot.com name matches your TwitchTV name.'
 
     # Moderator-only mode configuration
     'mod-enabled'   : 'All commands are now mod-only.'

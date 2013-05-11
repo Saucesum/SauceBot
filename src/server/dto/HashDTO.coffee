@@ -23,7 +23,6 @@ class HashDTO extends DTO
             , (data) =>
                 @data = data
                 cb?()
-                io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
 
     
     # Saves the data to the database

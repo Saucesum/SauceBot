@@ -23,7 +23,6 @@ class ArrayDTO extends DTO
         # where the row contains the matching channel ID
         db.loadData @channel.id, @table, @valueField, (data) =>
             @data = data
-            io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
             cb?(data)
             
     

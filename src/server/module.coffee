@@ -121,7 +121,6 @@ class Module
     loadModule: ->
         @unloadModule()
         @loaded = true
-        io.module "[#{@getModuleName()}] Loading for #{@channel.id}: #{@channel.name}"
         @load()
 
 
@@ -137,7 +136,6 @@ class Module
         return unless @loaded
         @loaded = false
         
-        io.module "[#{@getModuleName()}] Unloading from #{@channel.id}: #{@channel.name}"
         @channel.unregisterFor this
         @unload()
 

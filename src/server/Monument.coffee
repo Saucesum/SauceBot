@@ -40,8 +40,6 @@ class Monument extends Module
         
         
     save: ->
-        io.module "[#{@name}] Saving #{@channel.name} ..."
-       
         # Set the data to the channel's obtained blocks
         @obtained.save()
         

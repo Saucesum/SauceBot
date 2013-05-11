@@ -21,7 +21,6 @@ class BucketDTO extends DTO
         db.loadBucket @channel.id, @table, @keyField, (data) =>
                 @data = data
                 cb?(data)
-                io.module "Updated #{@table} for #{@channel.id}:#{@channel.name}"
 
     
     # Saves the data to the database

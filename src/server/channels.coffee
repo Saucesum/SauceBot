@@ -141,7 +141,6 @@ class Channel
     #
     # * moduleName: the module to reload
     reloadModule: (moduleName) ->
-        io.debug "Attempting to reload module #{moduleName}..."
         @loadModule moduleName
 
 
@@ -166,7 +165,6 @@ class Channel
             # Unload removed
             for module in @modules when module? and not (module.name in newNames)
                 @unloadModule module
-            io.debug "Done loading #{@modules.length} modules for #{@name}"
 
 
     # Unloads a module with a given name by calling the module's unload()

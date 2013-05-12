@@ -18,10 +18,14 @@ exports.ignore      = true
 exports.strings = {
     'config-enable'    : 'Enabled'
     'config-disable'   : 'Disabled'
+    'action-preparing' : 'Commercial coming in @1@ seconds!'
     'action-commercial': 'Commercial! Thank you for supporting @1@! <3'
+    'action-canceled'  : 'Commercial canceled.'
     'action-failed'    : 'Could not run a commercial. Please contact SauceBot support.'
     'action-delay'     : 'Minimum delay set to @1@ minutes.'
     'action-messages'  : 'Minimum number of messages set to @1@.'
+    'info-editor'      : 'Note: This will only work if you\'ve set SauceBot as an editor.'
+    'error-cancel'     : 'No commercial to cancel. You may only cancel ads @1@ seconds before they run.'
 }
 
 io.module '[AutoCommercial] Init'
@@ -34,6 +38,7 @@ MINIMUM_DELAY    = 15
 MINIMUM_MESSAGES = 15
 
 COMMERCIAL_DELAY = 10 * 60 * 1000
+COMMERCIAL_CANCEL_TIME = 15
 
 DURATIONS = [30, 60, 90]
 
@@ -44,7 +49,8 @@ class AutoCommercial extends Module
         
         @messages = []
         @lastTime = Date.now()
-        
+        @cancelNext = null
+
         
     load: ->
         @registerHandlers()
@@ -64,6 +70,9 @@ class AutoCommercial extends Module
         # !commercial messages <minutes> - Set messages
         @regCmd "commercial messages", Sauce.Level.Admin, @cmdMessages
 
+        # !cancelad - Cancels the next commercial
+        @regCmd "cancelad", Sauce.Level.Mod, @cmdCancel
+
         # !commercial <time> - Runs a commercial
         @regCmd "commercial", Sauce.Level.Admin, @cmdCommercial
         
@@ -73,6 +82,7 @@ class AutoCommercial extends Module
         # Register interface actions
         @regActs {
             'config': @actConfig
+            'cancel': @actCancel
         }
 
 
@@ -102,10 +112,17 @@ class AutoCommercial extends Module
         res.send @comDTO.get()
 
 
+    # Action handler for "cancel" to stop the next commercial.
+    # AutoCommercial.cancel()
+    actCancel: (user, params, res) =>
+        @cancelNext = true if @cancelNext isnt null
+        res.ok()
+
+
     cmdEnableCommercial: (user, args, bot)  =>
         @comDTO.add 'state', 1
         @lastTime = Date.now()
-        @say bot, @str('config-enable')
+        @say bot, @str('config-enable') + '. ' + @str('info-editor')
     
     
     cmdDisableCommercial: (user, args, bot) =>
@@ -121,6 +138,14 @@ class AutoCommercial extends Module
     cmdMessages: (user, args, bot) =>
         num = @clampMinimums 'messages', args[0]
         @say bot, @str('action-messages', num)
+
+
+    cmdCancel: (user, args, bot) =>
+        if @cancelNext is null
+            return bot.say @str('error-cancel', COMMERCIAL_CANCEL_TIME)
+
+        @cancelNext = true
+        bot.say @str('action-canceled')
 
 
     cmdCommercial: (user, args, bot) =>
@@ -192,13 +217,25 @@ class AutoCommercial extends Module
         delay = MINIMUM_DELAY if delay < MINIMUM_DELAY
         
         return unless @messagesSinceLast() >= msgsLimit and (now - @lastTime > (delay * 60 * 1000))
+
+        bot.say @str('action-preparing', COMMERCIAL_CANCEL_TIME)
         
-        oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
-            # "204 No Content" if successful.
-            bot.say @str('action-commercial', @channel.name) if resp.statusCode is 204
+        setTimeout =>
+            return if @cancelNext
+            @cancelNext = null
+
+            oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
+                # "204 No Content" if successful.
+                if resp.statusCode is 204
+                    bot.say @str('action-commercial', @channel.name)
+                else
+                    bot.say @str('action-failed')
+
+        , COMMERCIAL_CANCEL_TIME * 1000
 
         @messages = []
         @lastTime = now
+        @cancelNext = false
 
     say: (bot, msg) ->
         bot.say '[AutoCommercial] ' + msg

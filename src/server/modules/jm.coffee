@@ -13,6 +13,7 @@ exports.name        = 'JM'
 exports.version     = '1.0'
 exports.description = 'Jukebox Monument live tracker'
 exports.strings     = Monument.strings ? {}
+exports.ignore      = true
 
 blocks = [
         # Records:

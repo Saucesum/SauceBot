@@ -13,6 +13,7 @@ exports.name        = 'VM'
 exports.version     = '1.2'
 exports.description = 'Victory Monument live tracker'
 exports.strings     = Monument.strings ? {}
+exports.ignore      = true
 
 blocks = [
       'White', 'Orange', 'Magenta',

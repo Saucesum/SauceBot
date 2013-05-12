@@ -11,7 +11,8 @@ fs    = require 'fs'
 # Module description
 exports.name        = 'Hangman'
 exports.version     = '1.0'
-exports.description = 'Who doesn\'t like hangman?!'
+exports.description = 'Test module.'
+exports.ignore      = true
 
 # Module strings
 exports.strings = {

@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.66, for debian-linux-gnu (i686)
+-- MySQL dump 10.13  Distrib 5.1.67, for debian-linux-gnu (i686)
 --
 -- Host: localhost    Database: saucebot
 -- ------------------------------------------------------
--- Server version	5.1.66-0ubuntu0.11.10.3
+-- Server version	5.1.67-0ubuntu0.11.10.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -36,6 +36,7 @@ CREATE TABLE `applications` (
   `handledby` int(11) DEFAULT NULL,
   `reason` text,
   `bot` varchar(30) DEFAULT 'SauceBot',
+  `read` int(1) DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -52,6 +53,7 @@ CREATE TABLE `autocommercial` (
   `state` tinyint(1) NOT NULL DEFAULT '0',
   `delay` int(11) NOT NULL DEFAULT '15',
   `messages` int(11) NOT NULL DEFAULT '20',
+  `length` int(3) DEFAULT '30',
   PRIMARY KEY (`chanid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -484,6 +486,23 @@ CREATE TABLE `regulars` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `remotefields`
+--
+
+DROP TABLE IF EXISTS `remotefields`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `remotefields` (
+  `chanid` int(11) NOT NULL DEFAULT '0',
+  `key` varchar(50) NOT NULL DEFAULT '',
+  `value` varchar(400) DEFAULT NULL,
+  `updatedby` int(11) DEFAULT NULL,
+  `updatetime` int(11) DEFAULT NULL,
+  PRIMARY KEY (`chanid`,`key`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `requestvotes`
 --
 
@@ -707,4 +726,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-02-24 17:16:30
+-- Dump completed on 2013-05-20 17:01:23

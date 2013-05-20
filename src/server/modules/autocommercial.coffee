@@ -11,21 +11,25 @@ util  = require 'util'
 
 # Module description
 exports.name        = 'AutoCommercial'
-exports.version     = '1.1'
+exports.version     = '1.2'
 exports.description = 'Automatic commercials for twitch.tv partners'
 exports.ignore      = true
 
 exports.strings = {
     'config-enable'    : 'Enabled'
     'config-disable'   : 'Disabled'
+
     'action-preparing' : 'Commercial coming in @1@ seconds!'
     'action-commercial': 'Commercial! Thank you for supporting @1@! <3'
     'action-canceled'  : 'Commercial canceled.'
     'action-failed'    : 'Could not run a commercial. Please contact SauceBot support.'
     'action-delay'     : 'Minimum delay set to @1@ minutes.'
     'action-messages'  : 'Minimum number of messages set to @1@.'
+    'action-length'    : 'Commercial length set to @1@ seconds.'
+
     'info-editor'      : 'Note: This will only work if you\'ve set SauceBot as an editor.'
     'error-cancel'     : 'No commercial to cancel. You may only cancel ads @1@ seconds before they run.'
+    'error-length'     : 'Error. Supported durations: @1@'
 }
 
 io.module '[AutoCommercial] Init'
@@ -45,7 +49,7 @@ DURATIONS = [30, 60, 90]
 class AutoCommercial extends Module
     constructor: (@channel) ->
         super @channel
-        @comDTO = new ConfigDTO @channel, 'autocommercial', ['state', 'delay', 'messages']
+        @comDTO = new ConfigDTO @channel, 'autocommercial', ['state', 'delay', 'messages', 'length']
         
         @messages = []
         @lastTime = Date.now()
@@ -70,6 +74,9 @@ class AutoCommercial extends Module
         # !commercial messages <minutes> - Set messages
         @regCmd "commercial messages", Sauce.Level.Admin, @cmdMessages
 
+        # !commercial length <seconds> - Sets commercial length
+        @regCmd "commercial length", Sauce.Level.Admin, @cmdLength
+
         # !cancelad - Cancels the next commercial
         @regCmd "cancelad", Sauce.Level.Mod, @cmdCancel
 
@@ -87,9 +94,9 @@ class AutoCommercial extends Module
 
 
     # Action handler for "config"
-    # AutoCommercial.config([state|delay|messages]*)
+    # AutoCommercial.config([state|delay|messages|length]*)
     actConfig: (user, params, res) =>
-        {state, delay, messages} = params
+        {state, delay, messages, length} = params
 
         unless state? or delay? or messages?
             return res.send @comDTO.get()
@@ -108,6 +115,11 @@ class AutoCommercial extends Module
 
         # Messages limit - any number over MINIMUM_MESSAGES
         if messages?.length then @clampMinimums 'messages', messages
+
+        # Commercial length - any number in DURATIONS
+        if length?.length
+            length = parseInt(length, 10)
+            @comDTO.add 'length', length if length in DURATIONS
 
         res.send @comDTO.get()
 
@@ -140,6 +152,16 @@ class AutoCommercial extends Module
         @say bot, @str('action-messages', num)
 
 
+    cmdLength: (user, args, bot) =>
+        num = parseInt(args[0], 10)
+        if not (num in DURATIONS)
+            @say bot, @str('error-length', DURATIONS.join(', '))
+        else
+            @comDTO.add 'length', num
+            @say bot, @str('action-length', num)
+
+
+
     cmdCancel: (user, args, bot) =>
         if @cancelNext is null
             return bot.say @str('error-cancel', COMMERCIAL_CANCEL_TIME)
@@ -155,8 +177,7 @@ class AutoCommercial extends Module
 
         @lastTime = Date.now()
 
-        # TODO implement time
-        oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
+        oauth.post "/channels/#{@channel.name}/commercial", { length: duration }, (resp, body) =>
             # "204 No Content" if successful.
             if resp.statusCode is 204
                 bot.say @str('action-commercial', @channel.name)
@@ -224,7 +245,9 @@ class AutoCommercial extends Module
             return if @cancelNext
             @cancelNext = null
 
-            oauth.post "/channels/#{@channel.name}/commercial", (resp, body) =>
+            length = parseInt (@comDTO.get('length') ? DURATIONS[0]), 10
+
+            oauth.post "/channels/#{@channel.name}/commercial", { length: length }, (resp, body) =>
                 # "204 No Content" if successful.
                 if resp.statusCode is 204
                     bot.say @str('action-commercial', @channel.name)

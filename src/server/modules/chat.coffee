@@ -1,4 +1,4 @@
-# SauceBot Module: Monitor
+# SauceBot Module: Chat
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
@@ -11,7 +11,7 @@ fs    = require 'fs'
 {Module} = require '../module'
 
 # Module description
-exports.name        = 'Monitor'
+exports.name        = 'Chat'
 exports.version     = '1.1'
 exports.description = 'Chat monitoring and user listing'
 exports.locked      = true
@@ -22,7 +22,7 @@ exports.strings = {
     'users-pick-n'  : '@1@ random users: @2@'
 }
 
-io.module '[Monitor] Init'
+io.module '[Chat] Init'
 
 # Mentions to easily find references to "Ravn", "SauceBot", etc.
 mentions = new log.Logger Sauce.Logging.Root, "mentions.log"
@@ -30,7 +30,7 @@ mentions = new log.Logger Sauce.Logging.Root, "mentions.log"
 # Load the spam lists
 spam.reload()
 
-class Monitor extends Module
+class Chat extends Module
     constructor: (@channel) ->
         super @channel
 
@@ -70,22 +70,22 @@ class Monitor extends Module
                     else '$(error: use count or rand)'
 
         @regActs {
-            # Monitor.all()
+            # Chat.all()
             'all': (user, params, res) =>
                 res.send Object.keys @users
 
-            # Monitor.random()
+            # Chat.random()
             'random': (user, params, res) =>
                 num = Object.keys(@users).length
                 rand = @getRandomUser()
                 msg  = @users[rand]
                 res.send count: num, user: rand, msg: msg
 
-            # Monitor.count()
+            # Chat.count()
             'count': (user, params, res) =>
                 res.send Object.keys(@users).length
 
-            # Monitor.clear()
+            # Chat.clear()
             'clear': (user, params, res) =>
                 @users = {}
                 res.ok()
@@ -142,5 +142,5 @@ class Monitor extends Module
 
 
 exports.New = (channel) ->
-    new Monitor channel
+    new Chat channel
     

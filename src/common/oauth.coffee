@@ -78,14 +78,21 @@ class TokenJar
     # callback is the response object and the body, which may be null.
     #
     # * resource: the resource being requested.
+    # * params  : optional parameters
     # * callback: a function taking the response object and body as arguments.
-    put: (resource, callback) ->
+    put: (resource, params, callback) ->
+        if (typeof params isnt 'object')
+            callback = params
+            params = undefined
+
         putRequest = {
             url   : API_ROOT + resource
             method: 'PUT'
 
             form  : { oauth_token: @authToken }
             qs    : { oauth_token: @authToken }
+
+            json  : params
         }
 
         request putRequest, (err, resp, body) =>
@@ -101,14 +108,21 @@ class TokenJar
     # callback is the response object and the body, which may be null.
     #
     # * resource: the resource being requested.
+    # * params  : optional parameters
     # * callback: a function taking the response object and body as arguments.
-    post: (resource, callback) ->
+    post: (resource, params, callback) ->
+        if (typeof params isnt 'object')
+            callback = params
+            params = undefined
+
         postRequest = {
             url   : API_ROOT + resource
             method: 'POST'
 
             form  : { oauth_token: @authToken }
             qs    : { oauth_token: @authToken }
+
+            json  : params
         }
 
         request postRequest, (err, resp, body) =>

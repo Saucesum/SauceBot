@@ -1,4 +1,4 @@
-# SauceBot Module: JTV API
+# SauceBot Module: Twitch API
 
 Sauce = require '../sauce'
 db    = require '../saucedb'
@@ -15,9 +15,9 @@ util    = require 'util'
 
 
 # Module description
-exports.name        = 'JTV'
+exports.name        = 'TwitchAPI'
 exports.version     = '1.1'
-exports.description = 'JustinTV/TwitchTV API'
+exports.description = 'TwitchTV API'
 
 exports.strings = {
     'show-game'   : '@1@ is playing @2@'
@@ -43,7 +43,7 @@ jtvcache = new WebCache (key) -> "http://api.justin.tv/api/stream/list.json?chan
 
 strip = (msg) -> msg.replace /[^a-zA-Z0-9_]/g, ''
 
-class JTV extends Module
+class TwitchAPI extends Module
     load: ->
         @registerHandlers()
         
@@ -153,4 +153,4 @@ class JTV extends Module
             cb data
 
 
-exports.New = (channel) -> new JTV channel
+exports.New = (channel) -> new TwitchAPI channel

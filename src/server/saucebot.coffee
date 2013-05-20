@@ -29,6 +29,7 @@ spam  = require './spamlogger'
 net   = require 'net'
 url   = require 'url'
 color = require 'colors'
+repl  = require 'repl'
 
 # Client Types
 Type = {
@@ -289,7 +290,7 @@ class SauceBot
     #
     # Types:
     #  + Module name: reloads module
-    #  + Users      : reloads user data
+    #  + Users     : reloads user data
     #  + Channels   : reloads channel data
     #  + Help       : notifies channel that help is coming
     #  + Spam       : reloads spam lists
@@ -437,3 +438,15 @@ server = new sio.Server Sauce.Server.Port,
             io.socket "Client disconnected: #{socket.type}::#{socket.name} @ #{socket.remoteAddress()}"
         graph.count 'server.disconnected'
 
+
+# Start REPL
+saucerepl = repl.start input: process.stdin, output: process.stdout
+saucerepl.context[key] = val for key, val of {
+    channels: chans
+    users:    users
+    db:       db
+
+    # Utility functions
+    c: chans.getByName
+    u: users.getByName
+}

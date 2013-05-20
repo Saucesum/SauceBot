@@ -94,11 +94,11 @@ class AutoCommercial extends Module
 
 
     # Action handler for "config"
-    # AutoCommercial.config([state|delay|messages|length]*)
+    # AutoCommercial.config([state|delay|messages|duration]*)
     actConfig: (user, params, res) =>
-        {state, delay, messages, length} = params
+        {state, delay, messages, duration} = params
 
-        unless state? or delay? or messages?
+        unless state? or delay? or messages? or duration?
             return res.send @comDTO.get()
 
         unless user.isMod @channel, Sauce.Level.Admin
@@ -116,9 +116,9 @@ class AutoCommercial extends Module
         # Messages limit - any number over MINIMUM_MESSAGES
         if messages?.length then @clampMinimums 'messages', messages
 
-        # Commercial length - any number in DURATIONS
-        if length?.length
-            length = parseInt(length, 10)
+        # Commercial duration - any number in DURATIONS
+        if duration?.length
+            length = parseInt(duration, 10)
             @comDTO.add 'length', length if length in DURATIONS
 
         res.send @comDTO.get()
@@ -209,8 +209,10 @@ class AutoCommercial extends Module
                 @comDTO.get 'messages'
             when 'delay'
                 @comDTO.get 'delay'
+            when 'length'
+                @comDTO.get 'length'
             else
-                '$(commercial state|messages|delay)'
+                '$(commercial state|messages|delay|length)'
              
 
     updateMessagesList: (now) ->

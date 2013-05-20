@@ -204,6 +204,7 @@ class Channel
                 name: user.name
                 op  : Math.max(op, cmod)
                 db  : true
+                id  : user.id
             }
 
         # If the user's name is the same as the channel's name,

@@ -49,6 +49,7 @@ class Commands extends Module
     constructor: (@channel) ->
         super @channel
         @commands = new BucketDTO @channel, 'commands', 'cmdtrigger', ['message', 'level']
+        @remotes  = new BucketDTO @channel, 'remotefields', 'key', [ 'value', 'updatedby', 'updatetime' ]
 
         @triggers = {}
     
@@ -57,6 +58,9 @@ class Commands extends Module
         @regCmd "set"     , Sauce.Level.Mod, @cmdSet
         @regCmd "setmod"  , Sauce.Level.Mod, @cmdSetMod
         @regCmd "unset"   , Sauce.Level.Mod, @cmdUnset
+
+        @regCmd "remotes", Sauce.Level.Owner, @cmdRemotes
+        @regCmd "setrem", Sauce.Level.Mod, @cmdSetRem
 
         # Load custom commands
         @commands.load =>
@@ -97,6 +101,29 @@ class Commands extends Module
             'clear': (user, params, res) =>
                 @clearCommands()
                 res.ok()
+
+            # REMOTES
+
+            # Commands.setremote(key, val)
+            'setremote': (user, params, res) =>
+                {key, val} = params
+                unless key?
+                    return res.error "Missing attribute: key"
+
+                unless val?
+                    @remotes.remove key
+                else
+                    @remotes.add key, {
+                        value: val
+                        updatedby: user.id
+                        updatetime: ~~(Date.now()/1000)
+                    }
+
+                res.ok()
+
+            # Commands.getremotes()
+            'getremotes': (user, params, res) =>
+                res.send @remotes.get()
         }
 
 
@@ -207,6 +234,30 @@ class Commands extends Module
 
         return bot.say @str('action-mod-set', cmd)
         
+
+    # !remotes - Shows remote fields
+    cmdRemotes: (user, args, bot) =>
+        bot.say "[Remotes] " + JSON.stringify(@remotes.get()).substring(0, 400)
+
+
+    # !setrem <key> <message> - Sets a remote
+    cmdSetRem: (user, args, bot) =>
+        unless args.length >= 2
+            return bot.say "Remotes set usage: !setrem <key> <message>"
+
+        key = (args.splice 0, 1)[0]
+        msg = args.join ' '
+
+        unless user.id?
+            return bot.say "Only moderators registered on the web interface may set remote commands."
+
+        @remotes.add key, {
+            value: msg
+            updatedby: user.id
+            updatetime: ~~(Date.now()/1000)
+        }
+        bot.say "Remote set."
+
         
     setCommand: (cmd, msg, level) ->
         # Make sure people don't accidentally set "!!ip" as a command

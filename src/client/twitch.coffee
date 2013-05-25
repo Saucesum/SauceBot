@@ -118,6 +118,7 @@ class Twitch
         
         @connections[idx]?.part()
         delete @connections[idx]
+        return true
 
     
     # Completely shuts down this Twitch instance.

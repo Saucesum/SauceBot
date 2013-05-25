@@ -358,7 +358,11 @@ class SauceBot
         res = @createRes()
         bot = @emit.forChannel channel.name.toLowerCase()
 
-        channel.handleInterface user, module, action, data, res, bot
+        if user.global and action is 'Rejoin'
+            broadcastType Type.Chat, 'rejoin', channel.name
+            res.ok()
+        else
+            channel.handleInterface user, module, action, data, res, bot
 
 
     # Sends a result and then closes the connection.

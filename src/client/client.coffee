@@ -118,6 +118,17 @@ sauce.on 'commercial', (data) ->
 sauce.on 'channels', (channels) ->
     twitch.part chan.name, (chan.bot ? 'SauceBot') for chan in channels when not chan.status
     twitch.join chan.name, (chan.bot ? 'SauceBot') for chan in channels when chan.status
+
+sauce.on 'rejoin', (channel) ->
+    account = null
+    for bot of accounts
+        if twitch.part(channel, bot)
+            account = bot
+            break
+
+    setTimeout ->
+        twitch.join channel, account if account isnt null
+    , 5000
  
 sauce.on 'error', (data) ->
     io.error data.msg

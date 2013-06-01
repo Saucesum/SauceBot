@@ -52,7 +52,7 @@ class Twitch
         # Accounts: {username: {name, pass}}
         @accounts = {}
         
-        # Connections: {'bot::channel': Channel}
+        # Connections: {channelName: Channel}
         @connections = {}
         
         # Handlers: {handler: <callback>}
@@ -99,26 +99,40 @@ class Twitch
         unless (account = @getAccount bot)?
             return @emit 'error', 'join', 'No such bot-account!'
 
-        idx = account.name + '::' + chan.toLowerCase()
-        return if @connections[idx]
+        key = chan.toLowerCase()
+        conn = @connections[key]
+        if conn?
+            if conn.username isnt account.name
+                conn.part()
+            else
+                return
+
 
         channel = @createChannel chan, account
+        @connections[key] = channel
+
         channel.connect()
-        @connections[idx] = channel
         
         
-    # Removes a connection from the specified channel using the specified bot.
+    # Removes a connection from the specified channel.
     # * chan: Channel name to disconnect from.
-    # * bot: Bot name to use. Case-insensitive.
-    # Note: If no such connection exists, nothing happens.
-    part: (chan, bot) ->
-        return unless (account = @getAccount bot)?
+    part: (chan) ->
+        key = chan.toLowerCase()
         
-        idx = account.name + '::' + chan.toLowerCase()
-        
-        @connections[idx]?.part()
-        delete @connections[idx]
-        return true
+        @connections[key]?.part()
+        delete @connections[key]
+
+
+    # Rejoins the specified channel.
+    # * chan: The name of the channel to rejoin.
+    rejoin: (chan) ->
+        key = chan.toLowerCase()
+        return unless (conn = @connections[key])?
+        conn.part()
+        setTimeout ->
+            conn.connect()
+        , 5000
+
 
     
     # Completely shuts down this Twitch instance.
@@ -170,19 +184,19 @@ class Twitch
    
  
     say: (chan, msg) ->
-        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
-            @logger?.timestamp 'SAY', chan, msg
-            conn.say msg
-            io.irc conn.name, account.name, msg.cyan
-            return
+        return unless (conn = @connections[chan.toLowerCase()])?
+
+        @logger?.timestamp 'SAY', chan, msg
+        conn.say msg
+        io.irc conn.name, conn.username, msg.cyan
 
         
     sayRaw: (chan, msg) ->
-        for accName, account of @accounts when (conn = @connections["#{account.name}::#{chan.toLowerCase()}"])?
-            @logger?.timestamp 'RAW', chan, msg
-            conn.sayRaw msg
-            io.irc conn.name, account.name, msg.red
-            return
+        return unless (conn = @connections[chan.toLowerCase()])?
+
+        @logger?.timestamp 'RAW', chan, msg
+        conn.sayRaw msg
+        io.irc conn.name, conn.username, msg.red
         
 
 exports.Twitch = Twitch

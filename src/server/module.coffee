@@ -208,6 +208,10 @@ class Module
         str  = msgs.join ' '
         bot.say "[#{name}] #{str}"
 
+
+    logEvent: (user, action, object, oldVal, newVal) ->
+        @channel.logEvent user.id, user.name, @name, action, object, oldVal, newVal
+
     
     # Unimplemented methods:
     load  : -> 0

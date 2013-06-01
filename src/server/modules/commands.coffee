@@ -84,8 +84,11 @@ class Commands extends Module
                 unless key? and val?
                     return res.error "Missing attributes: key, val"
 
+                old = @commands.get key
+
                 @removeCommand key
                 @setCommand key, val, lvl ? Sauce.Level.User
+                @logEvent user, 'set', key, (old ? { }).message, val
                 res.ok()
 
             # Commands.remove(key)
@@ -94,11 +97,15 @@ class Commands extends Module
                 unless key?
                     return res.error "Missing attribute: key"
 
+                old = @commands.get key
+                @logEvent user, 'remove', key, (old ? { }).message
+
                 @removeCommand key
                 res.ok()
 
             # Commands.clear()
             'clear': (user, params, res) =>
+                @logEvent user, 'clear'
                 @clearCommands()
                 res.ok()
 
@@ -113,6 +120,8 @@ class Commands extends Module
                 unless val?
                     @remotes.remove key
                 else
+                    old = @remotes.get key
+                    @logEvent user, 'setremote', key, (old ? {}).value, val
                     @remotes.add key, {
                         value: val
                         updatedby: user.id

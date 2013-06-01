@@ -80,6 +80,15 @@ class Channel
         @strings.load()
 
 
+    logEvent: (userid, username, module, action, object, oldVal, newVal) ->
+        sql = 'INSERT INTO events (time, userid, username, channel, module, action, object, old, new) ' +
+              'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        
+        db.query sql, [~~(Date.now()/1000), userid, username, @name, module, action, object, oldVal, newVal]
+
+
+
+
     # Handles an interface request.
     handleInterface: (user, module, action, params, res, bot) ->
         if (user.getMod @id) < Sauce.Level.Mod

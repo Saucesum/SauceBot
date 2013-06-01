@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.67, for debian-linux-gnu (i686)
+-- MySQL dump 10.13  Distrib 5.5.31, for debian-linux-gnu (i686)
 --
 -- Host: localhost    Database: saucebot
 -- ------------------------------------------------------
--- Server version	5.1.67-0ubuntu0.11.10.1
+-- Server version	5.5.31-0ubuntu0.12.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -224,6 +224,28 @@ CREATE TABLE `emotes` (
   `emote` varchar(25) NOT NULL DEFAULT '',
   PRIMARY KEY (`chanid`,`emote`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `events`
+--
+
+DROP TABLE IF EXISTS `events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `events` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `time` int(20) DEFAULT NULL,
+  `userid` int(11) DEFAULT NULL,
+  `username` varchar(30) NOT NULL,
+  `channel` varchar(30) DEFAULT NULL,
+  `module` varchar(20) NOT NULL,
+  `action` varchar(20) NOT NULL,
+  `object` varchar(30) DEFAULT NULL,
+  `old` text,
+  `new` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -726,4 +748,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-05-20 17:01:23
+-- Dump completed on 2013-06-01 20:13:16

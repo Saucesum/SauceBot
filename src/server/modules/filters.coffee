@@ -30,10 +30,10 @@ exports.strings = {
     'warning-3': 'Strike 3'
     
     # Filter messages
-    'on-url'  : 'Bad URL'
-    'on-caps' : 'Watch the caps'
-    'on-emote': 'No single emotes'
-    'on-word' : 'Bad word'
+    'on-url'  : 'No links without permission, @1@!'
+    'on-caps' : 'Watch the caps, @1@!'
+    'on-emote': 'No single emotes, @1@!'
+    'on-word' : 'Bad word, @1@!'
     
     # Filter names
     'list-whitelist': 'Whitelist'
@@ -453,19 +453,19 @@ class Filters extends Module
         
         # Badword filter
         if @states.get('words')  and @containsBadword lower
-            return @handleStrikes name, @str('on-word'), bot, true, msg
+            return @handleStrikes name, @str('on-word', name), bot, true, msg
             
         # Single-emote filter
         if @states.get('emotes') and @isSingleEmote lower
-            return @handleStrikes name, @str('on-emote'), bot, false, msg
+            return @handleStrikes name, @str('on-emote', name), bot, false, msg
             
         # Caps filter
         if @states.get('caps')   and @isMostlyCaps msg
-            return @handleStrikes name, @str('on-caps'), bot, false, msg
+            return @handleStrikes name, @str('on-caps', name), bot, false, msg
             
         # URL filter
         if                           @containsBadURL lower
-            return @handleStrikes name, @str('on-url'),    bot, true, msg
+            return @handleStrikes name, @str('on-url', name),    bot, true, msg
             
             
         
@@ -474,7 +474,7 @@ class Filters extends Module
         
         strikemsg = @str ('warning-' + (if strikes < 0 then 0 else if strikes > 3 then 3 else strikes))
         
-        response = "#{response}, #{name}! #{strikemsg}"
+        response = "#{response} #{strikemsg}"
         
         if      strikes is 1
             # First strike: verbal warning + optional clear

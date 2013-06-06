@@ -356,7 +356,7 @@ DROP TABLE IF EXISTS `news`;
 CREATE TABLE `news` (
   `chanid` int(11) NOT NULL DEFAULT '0',
   `newsid` int(11) NOT NULL DEFAULT '0',
-  `message` varchar(250) NOT NULL,
+  `message` varchar(350) NOT NULL,
   PRIMARY KEY (`chanid`,`newsid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -749,4 +749,4 @@ CREATE TABLE `whitelist` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-06-01 20:13:16
+-- Dump completed on 2013-06-06 17:36:09

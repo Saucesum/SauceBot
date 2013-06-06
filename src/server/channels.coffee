@@ -81,10 +81,10 @@ class Channel
 
 
     logEvent: (userid, username, module, action, object, oldVal, newVal) ->
-        sql = 'INSERT INTO events (time, userid, username, channel, module, action, object, old, new) ' +
-              'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        sql = 'INSERT INTO events (time, userid, username, channel, chanid, module, action, object, old, new) ' +
+              'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         
-        db.query sql, [~~(Date.now()/1000), userid, username, @name, module, action, object, oldVal, newVal]
+        db.query sql, [~~(Date.now()/1000), userid, username, @name, @id, module, action, object, oldVal, newVal]
 
 
 

@@ -238,6 +238,7 @@ CREATE TABLE `events` (
   `time` int(20) DEFAULT NULL,
   `userid` int(11) DEFAULT NULL,
   `username` varchar(30) NOT NULL,
+  `chanid` int(11) NOT NULL,
   `channel` varchar(30) DEFAULT NULL,
   `module` varchar(20) NOT NULL,
   `action` varchar(20) NOT NULL,

@@ -1,0 +1,23 @@
+{
+    "name": "SauceBot",
+    "version": "0.1.0",
+    "author": "Ravn TM",
+    "description": "SauceBot Twitch.tv Chat Moderation Bot",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Saucesum/SauceBot.git"
+    },
+    "dependencies": {
+        "coffee-script": "1.3.x",
+        "colors": "0.6.x",
+        "date": "1.0.x",
+        "docopt": "0.4.x",
+        "groan": "0.0.1",
+        "mysql": "0.9.5",
+        "request": "2.9.x",
+        "tail": "0.2.x",
+        "timezone": "0.0.x"
+    }
+
+}
+

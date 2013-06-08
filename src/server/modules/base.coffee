@@ -132,7 +132,7 @@ class Base extends Module
                 res.send @channel.strings.get()
 
             'string': (user, params, res) =>
-                unless user.isMod @channel, Sauce.Level.Admin
+                unless user.isMod @channel.id, Sauce.Level.Admin
                     return res.error "You are not authorized to alter channel strings (admins only)"
 
                 {key, val} = params

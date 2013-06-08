@@ -101,7 +101,7 @@ class AutoCommercial extends Module
         unless state? or delay? or messages? or duration?
             return res.send @comDTO.get()
 
-        unless user.isMod @channel, Sauce.Level.Admin
+        unless user.isMod @channel.id, Sauce.Level.Admin
             return res.error "You are not authorized to alter AutoCommercial (admins only)"
 
         # State - 1 or 0

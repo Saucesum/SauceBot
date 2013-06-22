@@ -5,9 +5,10 @@ config     = require '../common/config'
 class Channel
     
     constructor: (@name, @username, @password) ->
-        @handlers = {}
-        @users    = {}
-        @server   = @name
+        @handlers   = {}
+        @users      = {}
+        @server     = @name
+        @lastActive = 0
         @irc = new SauceIRC @server, @username, @password
         
         @irc.on 'message' + @irc.channel, (from, message) =>
@@ -15,6 +16,8 @@ class Channel
                 from    : from
                 message : message
                 op      : if @isOp from then 1 else null
+
+            @lastActive = Date.now()
                 
         @irc.on 'pm', (from, message) =>
             @emit 'pm',

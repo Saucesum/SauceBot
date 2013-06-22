@@ -133,6 +133,16 @@ class Twitch
             conn.connect()
         , 5000
 
+    # Rejoins all channels
+    restart: (chan) ->
+        for _, conn in @connections
+            conn.part()
+
+        setTimeout ->
+            for _, conn in @connections
+                conn.connect()
+        , 5000
+
 
     
     # Completely shuts down this Twitch instance.

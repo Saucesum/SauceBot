@@ -37,9 +37,16 @@ twitch = new Twitch logger
 userColors = {}
 
 # Register all bot accounts for use
-for username, password of accounts
-    io.debug "Account: " + username.bold
-    twitch.addAccount username, password
+loadAccounts = (accounts) ->
+    for username, password of accounts
+        io.debug "Account: " + username.bold
+        twitch.addAccount username, password
+
+reloadAccountConfig = ->
+    {accounts} = config.load 'jtv.json'
+    loadAccounts accounts
+
+loadAccounts accounts
 
 # Add handlers for messages from Twitch
 
@@ -110,12 +117,9 @@ sauce.on 'timeout', (data) ->
     time ?= 600
     twitch.sayRaw chan, "/timeout #{user} #{time}"
 
-sauce.on 'commercial', (data) ->
-    {chan} = data
-    twitch.say chan, "Commercial incoming! Please disable ad-blockers if you want to support #{chan}. <3"
-    twitch.sayRaw chan, '/commercial'
-
 sauce.on 'channels', (channels) ->
+    reloadAccountConfig()
+
     for chan in channels when not chan.status
         twitch.part chan.name
     i = 0
@@ -127,6 +131,17 @@ sauce.on 'channels', (channels) ->
 
 sauce.on 'rejoin', (channel) ->
     twitch.rejoin channel
+
+sauce.on 'restart', (channel) ->
+    reloadAccountConfig()
+    twitch.restart()
+
+sauce.on 'activity', ->
+    last = {}
+    for name, chan in twitch.connections
+        last[name] = chan.lastActive
+    sauce.emit 'activity', last
+
  
 sauce.on 'error', (data) ->
     io.error data.msg

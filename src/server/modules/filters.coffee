@@ -18,7 +18,7 @@ log   = require '../../common/logger'
 
 # Module description
 exports.name        = 'Filters'
-exports.version     = '1.3'
+exports.version     = '1.4'
 exports.description = 'Filters URLs, caps-lock, words and emotes'
 
 # Module strings
@@ -63,6 +63,7 @@ exports.strings = {
     'action-added'    : 'Added.'
     'action-removed'  : 'Removed.'
     'action-cleared'  : 'Cleared.'
+    'action-purge'    : 'Purged @1@.'
     
     # Error messages
     'err-error'     : 'Error.'
@@ -195,6 +196,7 @@ class Filters extends Module
         @regCmd 'regulars remove', Sauce.Level.Mod, @cmdRemoveRegular
         @regCmd 'permit',          Sauce.Level.Mod, @cmdPermitUser
         @regCmd 'clearstrikes',    Sauce.Level.Mod, @cmdClearStrikes
+        @regCmd 'p',               Sauce.Level.Mod, @cmdPurge
 
     # Filter list command handlers
 
@@ -339,7 +341,20 @@ class Filters extends Module
             msg = @str('clear-no-strikes', target)
 
         bot.say '[Filter] ' + msg
-            
+    
+
+    # !p <name> - Purges (timeout for 1 second) user
+    cmdPurge: (user, args, bot) =>
+        unless (target = args[0])?
+            bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!p <username>')
+            return
+
+        target = (target.replace /[^a-zA-Z0-9_]+/g, '').toLowerCase()
+        bot.timeout target, 1
+        setTimeout =>
+            bot.say "[Filter] " + @str('action-purge', target)
+        , 4000
+
 
     # Custom update handler to avoid super messy switches.
     update: (user, action, params, res) ->

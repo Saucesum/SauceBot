@@ -137,10 +137,9 @@ sauce.on 'restart', (channel) ->
     twitch.restart()
 
 sauce.on 'activity', ->
-    last = {}
-    for name, chan in twitch.connections
-        last[name] = chan.lastActive
-    sauce.emit 'activity', last
+    sauce.emit 'activity', {
+        activity: twitch.getLastActivityTimes()
+    }
 
  
 sauce.on 'error', (data) ->

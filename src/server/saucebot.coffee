@@ -15,9 +15,12 @@ log   = require '../common/logger'
 graph = require '../common/grapher'
 
 # Set up logging
-io.setLogger new log.Logger Sauce.Logging.Root, "server.log"
+io.setLogger new log.Logger Sauce.Logging.Root, 'server.log'
 
 weblog = new log.Logger Sauce.Logging.Root, 'updates.log'
+
+activityLog = new log.Logger Sauce.Logging.Root, 'activity.json'
+
 
 # Sauce
 db    = require './saucedb'
@@ -27,6 +30,7 @@ spam  = require './spamlogger'
 
 # Node.js
 net   = require 'net'
+fs    = require 'fs'
 url   = require 'url'
 color = require 'colors'
 repl  = require 'repl'
@@ -229,7 +233,12 @@ class SauceBot
             catch error
                 @emit.error "#{error}"
                 io.error error
+
+        # Activity list
+        @socket.on 'activity', (data) =>
+            activityLog.setText JSON.stringify(data.activity)
             
+
 
     # Message (msg):
     #  * chan: [REQ] Source channel
@@ -443,6 +452,13 @@ server = new sio.Server Sauce.Server.Port,
         graph.count 'server.disconnected'
 
 
+# Start activity poller
+setInterval ->
+    broadcastType Type.Chat, 'activity'
+, 60 * 1000
+
+
+
 # Start REPL
 saucerepl = repl.start input: process.stdin, output: process.stdout
 saucerepl.context[key] = val for key, val of {
@@ -453,4 +469,6 @@ saucerepl.context[key] = val for key, val of {
     # Utility functions
     c: chans.getByName
     u: users.getByName
+    reconnect: ->
+        broadcastType Type.Chat, 'restart'
 }

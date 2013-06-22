@@ -135,20 +135,26 @@ class Twitch
 
     # Rejoins all channels
     restart: (chan) ->
-        for _, conn in @connections
+        for _, conn of @connections
             conn.part()
 
         setTimeout ->
-            for _, conn in @connections
+            for _, conn of @connections
                 conn.connect()
         , 5000
 
 
+    getLastActivityTimes: ->
+        chans = {}
+        for name, conn of @connections
+            chans[name] = conn.lastActive
+        return chans
+
     
     # Completely shuts down this Twitch instance.
     close: ->
-        conn.part() for conn in @connections
-        @connections = []
+        conn.part() for _, conn of @connections
+        @connections = {}
 
     
     # Creates a new Channel object and connects all handlers.

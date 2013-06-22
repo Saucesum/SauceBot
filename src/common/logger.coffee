@@ -18,6 +18,10 @@ class Logger
     
         log.write args.join('\t') + "\n"
         log.destroySoon()
+
+
+    setText: (text) ->
+        fs.writeFile @file, text, { encoding: 'utf8' }
         
 
     timestamp: (args...) ->

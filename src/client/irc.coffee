@@ -54,7 +54,7 @@ class SauceIRC
 
     
     connect: ->
-        @bot = new irc.Client "#{@server.toLowerCase()}.jtvirc.com", @username,
+        @bot = new irc.Client "irc.twitch.tv", @username,
             debug          : false
             channels       : [@channel]
             userName       : @username

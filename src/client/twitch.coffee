@@ -138,7 +138,7 @@ class Twitch
         for _, conn of @connections
             conn.part()
 
-        setTimeout ->
+        setTimeout =>
             for _, conn of @connections
                 conn.connect()
         , 5000

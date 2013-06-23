@@ -97,7 +97,7 @@ rl.on 'line', (line) ->
     else if m = /^\/reload\s+([a-zA-Z_0-9]+)\s+([a-zA-Z_0-9]+)/.exec(line)
         chan = m[1]
         name = m[2]
-        cli.emit 'upd'
+        cli.emit 'upd',
             cookie: '...'
             type  : name
             chan  : chan

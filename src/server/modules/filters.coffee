@@ -74,6 +74,11 @@ exports.strings = {
     # Status
     'filter-enabled' : '@1@ filter is now enabled.'
     'filter-disabled': '@1@ filter is now disabled.'
+
+    'ignore-enable-subs' : 'Now ignoring subscribers'
+    'ignore-enable-turbo': 'Now ignoring turbo users'
+    'ignore-disable-subs' : 'No longer ignoring subscribers'
+    'ignore-disable-turbo': 'No longer ignoring turbo users'
     
     'filter-is-enabled' : '@1@ filter is enabled. Disable with @2@'
     'filter-is-disabled': '@1@ filter is disabled. Enable with @2@'
@@ -128,8 +133,10 @@ class Filters extends Module
     constructor: (@channel) ->
         super @channel
 
-        # Filter states
+        # Filter config
         @states   = new ConfigDTO @channel, 'filterstate', filterNames
+        @config   = new ConfigDTO @channel, 'filterconf', ['ignoresubs', 'ignoreturbo']
+
         @regulars = new ArrayDTO  @channel, 'regulars' , 'username'
         
         # Filter lists
@@ -197,6 +204,10 @@ class Filters extends Module
         @regCmd 'permit',          Sauce.Level.Mod, @cmdPermitUser
         @regCmd 'clearstrikes',    Sauce.Level.Mod, @cmdClearStrikes
         @regCmd 'p',               Sauce.Level.Mod, @cmdPurge
+
+        @regCmd 'ignoresubs',  Sauce.Level.Mod, @cmdIgnoreSubs
+        @regCmd 'ignoreturbo', Sauce.Level.Mod, @cmdIgnoreTurbo
+
 
     # Filter list command handlers
 
@@ -354,6 +365,36 @@ class Filters extends Module
         setTimeout =>
             bot.say "[Filter] " + @str('action-purge', target)
         , 4000
+
+
+    # !ignoreturbo [on/off] - Toggles whether to ignore turbo users
+    cmdIgnoreTurbo: (user, args, bot) =>
+        @handleIgnoreCommand user, args, bot, 'turbo'
+
+
+    # !ignoresubs [on/off] - Toggles whether to ignore subscribers
+    cmdIgnoreSubs: (user, args, bot) =>
+        @handleIgnoreCommand user, args, bot, 'subs'
+
+
+    handleIgnoreCommand: (user, args, bot, key) ->
+        unless (state = args[0])?
+            if @config.get "ignore#{key}"
+                bot.say "[Filter] " + @str('filter-is-enabled', "ignore#{key}", "!ignore#{key} off")
+            else
+                bot.say "[Filter] " + @str('filter-is-disabled', "ignore#{key}", "!ignore#{key} on")
+            return
+        
+        if state is 'on'
+            @config.add "ignore#{key}", 1
+            bot.say "[Filter] " + @str('ignore-enable-' + key)
+
+        else if state is 'off'
+            @config.add "ignore#{key}", 0
+            bot.say "[Filter] " + @str('ignore-disable-' + key)
+
+        else
+            bot.say "[Filter] " + @str('err-usage', "!ignore#{key} on/off")
 
 
     # Custom update handler to avoid super messy switches.
@@ -543,7 +584,7 @@ class Filters extends Module
     handle: (user, msg, bot) ->
         {name, op} = user
         
-        if op or @isRegular(name) then return
+        if op or @isIgnored(name) then return
         lc = name.toLowerCase()
 
         if (permitTime = @permits[lc])?
@@ -552,6 +593,10 @@ class Filters extends Module
         
         @checkFilters name, msg, bot
         
+
+    isIgnored: (name) ->
+        return @isRegular(name) or (@config.get('ignoresubs')  and @channel.hasRole(name, Sauce.Role.Subscriber)) or (@config.get('ignoreturbo') and @channel.hasRole(name, Sauce.Role.Turbo))
+
 
     isRegular: (name) ->
         return name.toLowerCase() in @regulars.get()

@@ -61,8 +61,11 @@ class Channel
         @status = data.status
         @bot    = data.bot
 
-        # 
+        # All users who have spoken in the chat
         @usernames = {}
+
+        @roles = {}
+        @roles[role] = {} for key, role of Sauce.Roles
 
         @modules = []
         @triggers = []
@@ -349,6 +352,18 @@ class Channel
     # = whether the user with that name is known by this channel
     hasSeen: (name) ->
         name.toLowerCase() in Object.keys @usernames
+    
+
+    # Adds a role to the user (admin, subscriber, turbo, staff)
+    addRole: (username, role) ->
+        @roles[role]?[username.toLowerCase()] = true
+
+
+    # Returns whether the user has the specified role
+    # Roles includes twitch admin, staff and subscriber
+    hasRole: (username, role) ->
+        return @roles[role]?[username.toLowerCase()]
+
 
 
     # Returns a localized string for this channel.
@@ -378,7 +393,7 @@ class Channel
     #
     getString: (moduleName, key, args...) ->
         key   = moduleName.toLowerCase() + "-" + key
-        value = @strings.get(key) ? mod.getDefaultString(key) ? '[#' + key + ']'
+        value = @getStringValue key
 
         for arg, argnum in args
             elem = "@#{argnum + 1}@"
@@ -393,6 +408,10 @@ class Channel
                 value = msg
 
         return value
+
+
+    getStringValue: (key) ->
+        return @strings.get(key) ? mod.getDefaultString(key) ? '[#' + key + ']'
 
 
     # Sets a channel specific string.

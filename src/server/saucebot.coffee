@@ -278,6 +278,7 @@ class SauceBot
             # - ...
             if m = /^SPECIALUSER\s+(\w+)\s+(\w+)/.exec msg
                 [_, name, role] = m
+                (chans.getByName chan)?.addRole name, role
                 specialUsers[name.toLowerCase()] = role.toLowerCase()
 
             else if m = /^You are banned from talking in \S+ for (\d+)/.exec msg

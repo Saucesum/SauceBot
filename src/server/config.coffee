@@ -15,6 +15,26 @@ exports.DEFAULTS = {
         Mod  : 1
         Admin: 2
         Owner: 3
+
+    # Twitch SPECIALUSER roles
+    Role:
+        Admin: 'admin'
+        Staff: 'staff'
+        Subscriber: 'subscriber'
+        Turbo: 'turbo'
+
+    # Action types
+    Action:
+        JOIN  : 0
+        LEAVE : 1
+        REJOIN: 2
+
+        SAY    : 3
+        TIMEOUT: 4
+        UNBAN  : 5
+
+        COMMERCIAL: 6
+
     
     # -- Default values for config file data --
 

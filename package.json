@@ -16,7 +16,8 @@
         "mysql": "0.9.5",
         "request": "2.9.x",
         "tail": "0.2.x",
-        "timezone": "0.0.x"
+        "timezone": "0.0.x",
+        "irc": "0.3"
     }
 
 }

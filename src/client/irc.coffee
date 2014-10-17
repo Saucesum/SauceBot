@@ -1,6 +1,6 @@
 # SauceBot IRC Connector
 
-irc  = require '../node/irc'
+irc  = require '../../node_modules/irc'
 util = require 'util'
 io   = require '../common/ioutil'
 time = require '../common/time'

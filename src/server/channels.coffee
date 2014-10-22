@@ -65,7 +65,8 @@ class Channel
         @usernames = {}
 
         @roles = {}
-        @roles[role] = {} for key, role of Sauce.Roles
+
+        @roles[role] = {} for key, role of Sauce.Role
 
         @modules = []
         @triggers = []
@@ -188,6 +189,10 @@ class Channel
         @modules.splice @modules.indexOf(module), 1
 
 
+
+    isSub: (username) ->
+        return @hasRole(username, Sauce.Role.Subscriber)
+
     # Fetches any available data about a user given a {username, oplevel} pair.
     # The database is first checked to see if the user is registered, in which
     # case that data is returned (except that the maximum of the provided and
@@ -248,15 +253,16 @@ class Channel
 
         msg = data.msg
         graph.count "channels.input.#{@name.toLowerCase()}"
-
+        
         for trigger in @triggers
             # Check for first match that the user is authorized to use, also
             # taking into account whether the channel is in mod-only mode
             if trigger.test(msg) and (user.op >= trigger.oplevel and (!@isModOnly() or user.op >= Sauce.Level.Mod))
-                args = trigger.getArgs msg
-                trigger.execute user, args, bot
-                # We only want to run one trigger, so break here
-                break
+                if (trigger.sub and @isSub(user.name)) or !trigger.sub
+                    args = trigger.getArgs msg
+                    trigger.execute user, args, bot
+                    # We only want to run one trigger, so break here
+                    break
         
         # Now pass the message on the our modules        
         for module in @modules

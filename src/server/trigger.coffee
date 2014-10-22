@@ -19,7 +19,11 @@ escapeRegex = (string) ->
 # Returns a Trigger responding to !<name>, where name is one or more words.
 # A priority will be assigned that gives preference primarily to longer
 # commands, and then to higher op status requirements.
-exports.buildTrigger = (module, name, oplevel, callback) ->
+exports.buildTrigger = (module, name, oplevel, sub, callback) ->
+    unless callback?
+        callback = sub
+        sub = false
+
     words = name.split /\s+/
     words = (escapeRegex(word) for word in words)
  
@@ -27,7 +31,8 @@ exports.buildTrigger = (module, name, oplevel, callback) ->
 
     priority = PRI_MID + WORD_BONUS*(words.length-1) + OP_BONUS*oplevel
     
-    new Trigger module, priority, oplevel, regex, callback
+    new Trigger module, priority, oplevel, regex, callback, sub
+
 
 
 # A trigger is an object used to associate bot commands with RegExp patterns.
@@ -35,7 +40,7 @@ exports.buildTrigger = (module, name, oplevel, callback) ->
 # The pattern must be a RegExp object.  A single capturing group should be used
 #   to capture all arguments to the command.
 class Trigger
-    constructor: (@module, @priority, @oplevel, @pattern, @execute) ->
+    constructor: (@module, @priority, @oplevel, @pattern, @execute, @sub) ->
         # ...
 
     test: (msg) ->

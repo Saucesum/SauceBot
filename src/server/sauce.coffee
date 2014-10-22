@@ -10,7 +10,6 @@ io     = require './ioutil'
 exports.LevelStr = (level) ->
     switch level
         when exports.Level.User  then 'User'
-        when exports.Level.Sub   then 'Subscriber'
         when exports.Level.Mod   then 'Moderator'
         when exports.Level.Admin then 'Administrator'
         when exports.Level.Owner then 'Owner'

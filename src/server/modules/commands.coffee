@@ -49,7 +49,7 @@ io.module '[Commands] Init'
 class Commands extends Module
     constructor: (@channel) ->
         super @channel
-        @commands = new BucketDTO @channel, 'commands', 'cmdtrigger', ['message', 'level']
+        @commands = new BucketDTO @channel, 'commands', 'cmdtrigger', ['message', 'level', 'sub']
         @remotes  = new BucketDTO @channel, 'remotefields', 'key', [ 'value', 'updatedby', 'updatetime' ]
 
         @triggers = {}
@@ -58,8 +58,10 @@ class Commands extends Module
     load: ->
         @regCmd "set"     , Sauce.Level.Mod, @cmdSet
         @regCmd "setmod"  , Sauce.Level.Mod, @cmdSetMod
-        @regCmd "setsub"  , Sauce.Level.Sub, @cmdSetSub
+        @regCmd "setsub"  , Sauce.Level.Mod, @cmdSetSub
         @regCmd "unset"   , Sauce.Level.Mod, @cmdUnset
+
+        @regCmd "isSub"   , Sauce.Level.User, @cmdIsSub
 
         @regCmd "remotes", Sauce.Level.Owner, @cmdRemotes
         @regCmd "setrem", Sauce.Level.Mod, @cmdSetRem
@@ -78,9 +80,10 @@ class Commands extends Module
                 for key, cmd of @commands.get()
                     data[key]     = msg: cmd.message
                     data[key].lvl = cmd.level if cmd.level
+                    data[key].sub = cmd.sub if cmd.sub
                 res.send data
 
-            # Commands.set(key, val, lvl=0)
+            # Commands.set(key, val, lvl=0, sub=0)
             'set': (user, params, res) =>
                 {key, val, lvl} = params
                 unless key? and val?
@@ -89,7 +92,8 @@ class Commands extends Module
                 old = @commands.get key
 
                 @removeCommand key
-                @setCommand key, val, lvl ? Sauce.Level.User
+                level = lvl ? Sauce.Level.User
+                @setCommand key, val, level, sub
                 @logEvent user, 'set', key, (old ? { }).message, val
                 res.ok()
 
@@ -147,9 +151,10 @@ class Commands extends Module
         return if @triggers[cmd]?
         
         level = @commands.get(cmd).level
+        sub = @commands.get(cmd).sub
 
         # Create a simple trigger that looks up a key in @commands
-        @triggers[cmd] = trig.buildTrigger  this, cmd, level,
+        @triggers[cmd] = trig.buildTrigger  this, cmd, level, sub,
             (user, args, bot) =>
                 data = @commands.get cmd
                 unless data?
@@ -157,6 +162,7 @@ class Commands extends Module
 
                 @channel.vars.parse user, data.message, (args.join ' '), (parsed) ->
                     bot.say parsed
+
 
         @channel.register @triggers[cmd]
         
@@ -174,6 +180,10 @@ class Commands extends Module
         @channel.vars.unregister "!#{cmd.toLowerCase()}"
 
         delete @triggers[cmd]
+
+    
+    cmdIsSub: (user, args, bot) =>
+        bot.say 'user ' + user.name + ' sub = ' + @channel.isSub(user.name)
 
 
     # !(un)?set <command>  - Unset command
@@ -259,7 +269,7 @@ class Commands extends Module
 
         cmd = (args.splice 0, 1)[0]
         msg = args.join ' '
-        @setCommand cmd, msg, Sauce.Level.Subscriber
+        @setCommand cmd, msg, false, true
 
         return bot.say @str('action-sub-set', cmd)
 
@@ -287,14 +297,19 @@ class Commands extends Module
         bot.say "Remote set."
 
         
+
     setCommand: (cmd, msg, level) ->
+        @setCommand(cmd, msg, level, 0)
+
+    setCommand: (cmd, msg, level, sub) ->
         # Make sure people don't accidentally set "!!ip" as a command
         cmd = cmd.replace /^!/, ''
         return unless cmd.length > 0
-
+        
         data =
             message: msg
             level  : level
+            sub    : sub
 
         @commands.add cmd, data
         @addTrigger   cmd

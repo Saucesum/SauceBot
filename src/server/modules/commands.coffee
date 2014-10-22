@@ -31,6 +31,7 @@ exports.strings = {
     'err-to-forget'      : '@1@ or @2@ to forget a command.'
 
     # Actions
+    'action-sub-set': 'Sub-command set: @1@'
     'action-mod-set': 'Mod-command set: @1@'
     'action-set'    : 'Command set: @1@'
     'action-unset'  : 'Command unset: @1@'
@@ -57,6 +58,7 @@ class Commands extends Module
     load: ->
         @regCmd "set"     , Sauce.Level.Mod, @cmdSet
         @regCmd "setmod"  , Sauce.Level.Mod, @cmdSetMod
+        @regCmd "setsub"  , Sauce.Level.Sub, @cmdSetSub
         @regCmd "unset"   , Sauce.Level.Mod, @cmdUnset
 
         @regCmd "remotes", Sauce.Level.Owner, @cmdRemotes
@@ -242,7 +244,24 @@ class Commands extends Module
         @setCommand cmd, msg, Sauce.Level.Mod
 
         return bot.say @str('action-mod-set', cmd)
-        
+       
+    # !setsub <command> <message> - Set Sub-only command (and higher)
+    # !setsub <command> - Unset command
+    cmdSetSub: (user, args, bot) =>
+        unless args[0]?
+            return bot.say @str('err-usage', '!setsub <name> <message>') + '. ' + @str('err-to-forget', '!setsub <name>', '!unset <name>')
+
+        # !setsub <command>
+        if(args.length is 1)
+            return @cmdUnset user, args, bot
+        else
+            @cmdUnset user, args, { say: -> 0 }
+
+        cmd = (args.splice 0, 1)[0]
+        msg = args.join ' '
+        @setCommand cmd, msg, Sauce.Level.Subscriber
+
+        return bot.say @str('action-sub-set', cmd)
 
     # !remotes - Shows remote fields
     cmdRemotes: (user, args, bot) =>

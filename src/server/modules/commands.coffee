@@ -298,10 +298,7 @@ class Commands extends Module
 
         
 
-    setCommand: (cmd, msg, level) ->
-        @setCommand(cmd, msg, level, 0)
-
-    setCommand: (cmd, msg, level, sub) ->
+    setCommand: (cmd, msg, level, sub = 0) ->
         # Make sure people don't accidentally set "!!ip" as a command
         cmd = cmd.replace /^!/, ''
         return unless cmd.length > 0

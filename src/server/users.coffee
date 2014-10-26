@@ -50,6 +50,10 @@ class User
     getMod: (chanid) ->
         if @isGlobal() then Sauce.Level.Owner + 1 else getMod(chanid, @id)
 
+    #Returns if the user is subbed in the given channel
+    #isSub: (chanid) ->
+        
+
 
 # Returns a user by their username in lowercase.
 #

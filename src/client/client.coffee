@@ -14,12 +14,10 @@ twitchtv   = require './twitch'
 {Client}   = require '../common/socket'
 {Term}     = require '../common/term'
 
-{server, highlight, accounts, logging} = config.load 'jtv.json'
+{server, accounts, logging} = config.load 'jtv.json'
 
 HOST = server.host
 PORT = server.port
-
-HIGHLIGHT = new RegExp highlight.join('|'), 'i'
 
 io.setLevel io.Level.All
 
@@ -55,10 +53,7 @@ twitch.on 'message', (chan, from, op, message) ->
 
     col = toNodeColor userColors[from]
    
-    if HIGHLIGHT.test message
-        io.irc chan, prefix + from, message.green.inverse, col
-    else
-        io.irc chan, prefix + from, message, col
+    io.irc chan, prefix + from, message, col
        
     sauce.emit 'msg',
         chan: chan.toLowerCase()

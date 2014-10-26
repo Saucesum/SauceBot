@@ -32,6 +32,8 @@ exports.strings = {
     'action-cleared': 'Auto-news cleared.'
 
     'err-no-news': 'No auto-news found. Add with @1@'
+
+    'current-prefix': 'News prefix is set to @1@'
 }
 
 io.module '[News] Init'
@@ -49,7 +51,7 @@ class News extends Module
     constructor: (@channel) ->
         super @channel
         @news   = new EnumDTO   @channel, 'news'    , 'newsid', 'message'
-        @config = new ConfigDTO @channel, 'newsconf', ['state', 'seconds', 'messages']
+        @config = new ConfigDTO @channel, 'newsconf', ['state', 'seconds', 'messages', 'prefix']
 
         # News index
         @index    = 0
@@ -84,9 +86,13 @@ class News extends Module
         
         # !news add <line> - Adds a news line
         @regCmd "news add", Sauce.Level.Mod, @cmdNewsAdd
-        
+
+        # !news prefix <message> - Sets or prints the prefix
+        @regCmd "news prefix", Sauce.Level.Mod, @cmdNewsPrefix
+
         # !news - Print the next news message
         @regCmd "news", Sauce.Level.Mod, @cmdNewsNext
+
 
         # Register web interface update handlers
         @regActs {
@@ -157,6 +163,9 @@ class News extends Module
 
         res.send @config.get()
 
+    cmdNewsPrefix: (user, args, bot) =>
+        @config.add 'prefix', args[0] if args[0]?
+        bot.say '[News] ' + @str('current-prefix', @config.get 'prefix')
 
     cmdNewsEnable: (user, args, bot) =>
         @config.add 'state', 1
@@ -190,7 +199,8 @@ class News extends Module
 
     cmdNewsNext: (user, args, bot) =>
         @getNext user, (news) =>
-            news ?= '[News] ' + @str('err-no-news', '!news add <message>')
+            prefix = @config.get 'prefix'
+            news ?= prefix + ' ' + @str('err-no-news', '!news add <message>')
             bot.say news
 
     save: ->
@@ -207,9 +217,10 @@ class News extends Module
         
         # Wrap around the news list
         @index = 0 if @index >= @data.length
-        
+       
+        prefix = @config.get 'prefix'
         @channel.vars.parse user, @data[@index++], '', (news) =>
-            cb "[News] #{news}"
+            cb prefix + " #{news}"
         
         
     tickNews: (cb) ->

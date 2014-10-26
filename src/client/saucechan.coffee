@@ -29,13 +29,10 @@ class Channel
             
         @irc.on 'motd' , (motd) =>
             @irc.send 'JTVROOMS', @irc.channel
-            @irc.send 'JTVCLIENT', @irc.channel
-            setTimeout =>
-                @irc.send 'WHO', @irc.channel
-            , 3000
+            @irc.send 'TWITCHCLIENT 2', @irc.channel
 
             @emit 'connected'
-            
+
         @irc.on 'names', (channel, nicks) =>
             @addUser nick, tag for nick, tag of nicks
             

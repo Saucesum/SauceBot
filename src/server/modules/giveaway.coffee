@@ -48,7 +48,7 @@ class GiveAway extends Module
             @randomNumber = 0
             return bot.say @str('str-stop-giveaway')
         
-        num = parseInt(args[0])
+        num = parseInt(args[0], 10)
 
         if num < 2 or isNaN num
             return bot.say @str('err-too-low', num)

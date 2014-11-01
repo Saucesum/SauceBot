@@ -1,14 +1,5 @@
 # SauceBot Module: Giveaway
-
-Sauce = require '../sauce'
-db    = require '../saucedb'
-trig  = require '../trigger'
-vars  = require '../vars'
-
 io    = require '../ioutil'
-
-util = require 'util'
-
 {Module} = require '../module'
 
 # Basic information
@@ -19,7 +10,6 @@ exports.version     = '1.0'
 # Specifies that this module is always active
 exports.locked      = false
 
-# These are the custom strings that can be changed by an administrator of the channel
 exports.strings     = {
     'err-usage' : 'Usage: @1@'
     'str-max-num' : 'max number'
@@ -31,20 +21,12 @@ exports.strings     = {
 
 class GiveAway extends Module
     constructor: (@channel) ->
-        # The default constructor stores the associated Channel instance as
-        # @channel, so it is passed on to the superclass.
-        # If there is no module-specific constructor, then the channel will
-        # be automatically stored as an instance variable.
         super @channel
-        # Initialize any instance variables, etc.
+
         @randomNumber = 0
         @maxNumber = 0
         
     load: ->
-        # Handle all data loading and initialization here, bearing in mind,
-        # however, that this method may be called again to reload data,
-        # although only after unload has been called.
-        # Initialization may also include registering handlers, etc.
         @regCmd "giveaway", Sauce.Level.Mod, @cmdGiveaway
 
 
@@ -82,5 +64,4 @@ class GiveAway extends Module
 
 
 exports.New = (channel) ->
-    # Create and return a new instance of the module.
     new GiveAway channel

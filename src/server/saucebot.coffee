@@ -97,7 +97,9 @@ class SauceEmitter
     say: (message) ->
         io.say @channel, message
         message = message.replace /\s+/g, ' '
-        
+        message = message.replace /</, '&lt;'
+        message = message.replace />/, '&gt;'
+
         broadcastType Type.Chat, 'say',
             chan: @channel
             msg : message

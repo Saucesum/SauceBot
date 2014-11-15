@@ -73,7 +73,7 @@ class Timer extends Module
         }
 
                 
-    cmdTimerStart: (user, args, bot) =>
+    cmdTimerStart: (user, args) =>
         unless args? and args[0]?
             return bot.say "[Timer] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!timer <timer name>')
             
@@ -82,7 +82,7 @@ class Timer extends Module
         bot.say "[Timer] " + @str('action-timer-started', name, '!timer stop ' + name)
         
         
-    cmdTimerStop: (user, args, bot) =>
+    cmdTimerStop: (user, args) =>
         unless args? and (timer = @timers.get args[0])?
             return bot.say "[Timer] " + @str('err-timer') + '. ' + @str('err-usage', '!timer stop <timer name>')
             
@@ -90,7 +90,7 @@ class Timer extends Module
         @timers.remove args[0]
         
         
-    cmdCountdownStart: (user, args, bot) =>
+    cmdCountdownStart: (user, args) =>
         unless args? and args[0]? and args[1]?
             return bot.say "[Countdown] " + @str('err-invalid-name') + '. ' + @str('err-usage', '!countdown <name> <target>')
         
@@ -100,7 +100,7 @@ class Timer extends Module
         bot.say "[Countdown] " + @str('action-countdown-started', name, '!countdown stop ' + name)
         
 
-    cmdCountdownStop: (user, args, bot) =>
+    cmdCountdownStop: (user, args) =>
         unless args? and (timer = @countdowns.get args[0])?
             return bot.say "[Countdown] " + @str('err-countdown') + '. ' + @str('err-usage', '!countdown stop <name>')
         

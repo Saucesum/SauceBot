@@ -114,6 +114,7 @@ class Module
     # * channel: The parent channel object.
     constructor: (@channel) ->
         @loaded = false
+        @bot    = @channel.bot
         @updActions = {}
 
 

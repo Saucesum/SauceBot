@@ -46,17 +46,17 @@ class Chat extends Module
             mentions.write new Date(), @channel.name, user.name, msg
 
     load:->
-        userpicker = (user, args, bot) =>
+        userpicker = (user, args) =>
             if args[0]?
-                @cmdPickNUsers bot, args[0]
+                @cmdPickNUsers args[0]
             else
-                @cmdPickOneUser bot
+                @cmdPickOneUser()
 
         @regCmd "pickuser" , Sauce.Level.Mod, userpicker
         @regCmd "pickusers", Sauce.Level.Mod, userpicker
 
         @regCmd "users clear", Sauce.Level.Mod,
-            (user, args, bot) =>
+            (user, args) =>
                 @users = {}
                 bot.say "[Users] " + @str('users-cleared')
 
@@ -92,16 +92,16 @@ class Chat extends Module
         }
 
 
-    cmdPickOneUser: (bot) ->
+    cmdPickOneUser: ->
         rand  = @getRandomUser()
         bot.say "[Users] " + @str('users-pick-one', rand)
 
 
-    cmdPickNUsers: (bot, num) ->
+    cmdPickNUsers: (num) ->
         num = parseInt(num)
 
         if num < 2 or isNaN num
-            return @cmdPickOneUser bot
+            return @cmdPickOneUser()
 
         names  = @getShuffledUserList()
 
@@ -135,7 +135,7 @@ class Chat extends Module
         return list
         
 
-    handle: (user, msg, bot) ->
+    handle: (user, msg) ->
         @writelog user, msg
         @users[user.name] = msg
         spam.run @channel.id, user.name, msg

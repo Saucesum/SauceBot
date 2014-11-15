@@ -6,6 +6,7 @@ db     = require './saucedb'
 users  = require './users'
 trig   = require './trigger'
 {Vars} = require './vars'
+{SauceEmitter} = require './saucebot'
 {
     ConfigDTO,
     HashDTO
@@ -56,10 +57,12 @@ exports.getAll = -> channels
 # Localization can also be done on a per-channel basis. 
 class Channel
     constructor: (data) ->
-        @id     = data.chanid
-        @name   = data.name
-        @status = data.status
-        @bot    = data.bot
+        @id      = data.chanid
+        @name    = data.name
+        @status  = data.status
+        @botName = data.bot
+
+        @bot = new SauceEmitter @name.toLowerCase()
 
         # All users who have spoken in the chat
         @usernames = {}
@@ -93,21 +96,21 @@ class Channel
 
 
     # Handles an interface request.
-    handleInterface: (user, module, action, params, res, bot) ->
+    handleInterface: (user, module, action, params, res) ->
         if (user.getMod @id) < Sauce.Level.Mod
             return res.error "You are not authorized to perform this action"
 
         if not module
-            @handleChannelUpdate user, action, params, res, bot
+            @handleChannelUpdate user, action, params, res
         else if (m = @getLoadedModule module)?
-            m.update? user, action, params, res, bot
+            m.update? user, action, params, res
         else
             res.error "Invalid module #{module}"
 
 
     # Handles interface updates not related to a specific module.
-    handleChannelUpdate: (user, action, params, res, bot) ->
-        cuh = new ChannelUpdateHandler this, user, res, bot
+    handleChannelUpdate: (user, action, params, res) ->
+        cuh = new ChannelUpdateHandler this, user, res
         unless (handler = cuh["#{action}Act"])?
             res.error "Invalid action: \"#{action}\". Actions: #{cuh.getHandlerNames().join ', '}"
 
@@ -240,8 +243,7 @@ class Channel
     # Handles a message by passing it on to all loaded modules and tirggers.
     # 
     # * data: the contents of the message
-    # * bot: the bot delivering the message
-    handle: (data, bot) ->
+    handle: (data) ->
         user = @getUser data.user, data.op
         # Cache the op level of the user from the data we get
         @usernames[user.name.toLowerCase()] = user.op
@@ -254,13 +256,13 @@ class Channel
             # taking into account whether the channel is in mod-only mode
             if trigger.test(msg) and (user.op >= trigger.oplevel and (!@isModOnly() or user.op >= Sauce.Level.Mod))
                 args = trigger.getArgs msg
-                trigger.execute user, args, bot
+                trigger.execute user, args, @bot
                 # We only want to run one trigger, so break here
                 break
         
         # Now pass the message on the our modules        
         for module in @modules
-            module.handle user, msg, bot
+            module.handle user, msg
 
 
     # register(trigger)   - Registers a Trigger
@@ -437,7 +439,7 @@ class Channel
 
 # Helper class to handle channel interface update requests.
 class ChannelUpdateHandler
-    constructor: (@channel, @user, @res, @bot) ->
+    constructor: (@channel, @user, @res) ->
 
 
     # Checks the user's access level.
@@ -548,10 +550,10 @@ class ChannelUpdateHandler
 # * chan: the name of the channel receiving the message
 # * data: the data of the message
 # * bot: the bot instance responsible for delivering the message
-exports.handle = (chan, data, bot) ->
+exports.handle = (chan, data) ->
     channel = channels[chan]
     if channel?
-        channel.handle data, bot
+        channel.handle data
     else
         io.debug "No such channel: #{chan}"
 
@@ -574,9 +576,9 @@ exports.load = (finished) ->
             channel = channels[oldName]
 
             # Update channel name, status, botname and modules
-            channel.status = status
-            channel.name   = chan.name
-            channel.bot    = chan.bot
+            channel.status  = status
+            channel.name    = chan.name
+            channel.botName = chan.bot
             channel.loadChannelModules()
 
         # Otherwise, set up a new channel

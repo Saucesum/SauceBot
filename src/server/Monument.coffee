@@ -111,39 +111,39 @@ class Monument extends Module
 
     # !<name> - Print monument
     # !<name> <block> - Add the block to the obtained-list
-    cmdMonument: (user, args, bot) =>
+    cmdMonument: (user, args) =>
         unless args[0]?
-            return bot.say @getMonumentState()
+            return @bot.say @getMonumentState()
         
         block = args[0].toLowerCase()
         idx   = @blocksLC.indexOf block
         
         unless (idx >= 0)
-            return @say bot, @str('err-unknown-block', block) + '. ' + @str('err-usage', @usage)
+            return @say @str('err-unknown-block', block) + '. ' + @str('err-usage', @usage)
         
         @addBlock block
-        @say bot, @str('action-added', @blocks[idx])
+        @say @str('action-added', @blocks[idx])
 
 
     # !<name> clear - Clear the monument
-    cmdMonumentClear: (user, args, bot) =>
+    cmdMonumentClear: (user, args) =>
         @clearBlocks()
-        @say bot, @str('action-cleared')
+        @say @str('action-cleared')
 
 
     # !<name> remove <block> - Removes the block from the obtained-list
-    cmdMonumentRemove: (user, args, bot) =>
+    cmdMonumentRemove: (user, args) =>
         unless args[0]?
-            return @say bot, @str('err-no-block-specified') + '. ' + @str('err-usage', '!' + @command + ' remove <block>')
+            return @say @str('err-no-block-specified') + '. ' + @str('err-usage', '!' + @command + ' remove <block>')
         
         block = args[0].toLowerCase()
         idx   = @blocksLC.indexOf block
         
         unless (idx >= 0)
-            return @say bot, @str('err-unknown-block', block)
+            return @say @str('err-unknown-block', block)
         
         @removeBlock block
-        @say bot, @str('action-removed', @blocks[idx])
+        @say @str('action-removed', @blocks[idx])
 
 
     # $(<name> list|count|total|remaining)
@@ -158,8 +158,8 @@ class Monument extends Module
             else  'undefined'
 
 
-    say: (bot, msg) ->
-        bot.say "[#{@name}] #{msg}"
+    say: (msg) ->
+        @bot.say "[#{@name}] #{msg}"
 
 
 exports.Monument = Monument

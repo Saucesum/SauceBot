@@ -131,38 +131,38 @@ class AutoCommercial extends Module
         res.ok()
 
 
-    cmdEnableCommercial: (user, args, bot)  =>
+    cmdEnableCommercial: (user, args)  =>
         @comDTO.add 'state', 1
         @lastTime = Date.now()
-        @say bot, @str('config-enable') + '. ' + @str('info-editor')
+        @say @str('config-enable') + '. ' + @str('info-editor')
     
     
-    cmdDisableCommercial: (user, args, bot) =>
+    cmdDisableCommercial: (user, args) =>
         @comDTO.add 'state', 0
-        @say bot, @str('config-disable')
+        @say @str('config-disable')
 
 
-    cmdDelay: (user, args, bot) =>
+    cmdDelay: (user, args) =>
         num = @clampMinimums 'delay', args[0]
-        @say bot, @str('action-delay', num)
+        @say @str('action-delay', num)
 
 
-    cmdMessages: (user, args, bot) =>
+    cmdMessages: (user, args) =>
         num = @clampMinimums 'messages', args[0]
-        @say bot, @str('action-messages', num)
+        @say @str('action-messages', num)
 
 
-    cmdLength: (user, args, bot) =>
+    cmdLength: (user, args) =>
         num = parseInt(args[0], 10)
         if not (num in DURATIONS)
-            @say bot, @str('error-length', DURATIONS.join(', '))
+            @say @str('error-length', DURATIONS.join(', '))
         else
             @comDTO.add 'length', num
-            @say bot, @str('action-length', num)
+            @say @str('action-length', num)
 
 
 
-    cmdCancel: (user, args, bot) =>
+    cmdCancel: (user, args) =>
         if @cancelNext is null
             return bot.say @str('error-cancel', COMMERCIAL_CANCEL_TIME)
 
@@ -170,7 +170,7 @@ class AutoCommercial extends Module
         bot.say @str('action-canceled')
 
 
-    cmdCommercial: (user, args, bot) =>
+    cmdCommercial: (user, args) =>
         if @lastTime < COMMERCIAL_DELAY then return
         duration = parseInt(args[0], 10)
         duration = DURATIONS[0] unless duration in DURATIONS
@@ -228,7 +228,7 @@ class AutoCommercial extends Module
         @messages.length
 
 
-    handle: (user, msg, bot) ->
+    handle: (user, msg) ->
         return unless @comDTO.get 'state'
         now = Date.now()
         
@@ -261,9 +261,6 @@ class AutoCommercial extends Module
         @messages = []
         @lastTime = now
         @cancelNext = false
-
-    say: (bot, msg) ->
-        bot.say '[AutoCommercial] ' + msg
 
         
 exports.New = (channel) -> new AutoCommercial channel

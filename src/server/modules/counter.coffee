@@ -98,8 +98,8 @@ class Counter extends Module
 
         # Create a trigger that manages a counter
         @triggers[ctr] = trig.buildTrigger  this, ctr, Sauce.Level.Mod,
-            (user, args, bot) =>
-                @cmdCounter ctr, user, args, bot
+            (user, args) =>
+                @cmdCounter ctr, user, args
 
         @channel.register @triggers[ctr]
 
@@ -110,7 +110,7 @@ class Counter extends Module
     #  !<counter> -<value>
     #  !<counter> =<value>
     #  !<counter> unset
-    cmdCounter: (ctr, user, args, bot) ->
+    cmdCounter: (ctr, user, args) ->
         arg = args[0] ? ''
 
         if arg is 'unset'
@@ -142,7 +142,7 @@ class Counter extends Module
 
     # Handles:
     #  !<not-a-counter> =<value>
-    cmdNewCounter: (user, args, bot) =>
+    cmdNewCounter: (user, args) =>
         [ctr,arg] = args[0..1]
 
         value = parseInt(arg.slice(1), 10)
@@ -156,7 +156,7 @@ class Counter extends Module
     # Handles:
     #  !<not-a-counter> +<value>
     #  !<not-a-counter> -<value>
-    cmdBadCounter: (user, args, bot) =>
+    cmdBadCounter: (user, args) =>
         ctr = args[0]
 
         bot.say "[Counter] " + @str('err-unknown-counter', ctr, '!' + ctr + ' =0')

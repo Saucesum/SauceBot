@@ -174,18 +174,18 @@ class Filters extends Module
           do (filterName, filterList) =>
             # !<filterlist> add <value> - Adds value to filter list
             @regCmd "#{filterName} add"   , Sauce.Level.Mod,
-                (user, args, bot) =>
-                    @cmdFilterAdd    filterName, filterList, args, bot
+                (user, args) =>
+                    @cmdFilterAdd    filterName, filterList, args
                     
             # !<filterlist> remove <value> - Removes value from filter list
             @regCmd "#{filterName} remove", Sauce.Level.Mod,
-                (user, args, bot) =>
-                    @cmdFilterRemove filterName, filterList, args, bot
+                (user, args) =>
+                    @cmdFilterRemove filterName, filterList, args
 
             # !<filterlist> clear - Clears the filter list
             @regCmd "#{filterName} clear" , Sauce.Level.Mod,
-                (user, args, bot) =>
-                    @cmdFilterClear  filterName, filterList, args, bot
+                (user, args) =>
+                    @cmdFilterClear  filterName, filterList, args
                     
 
         # Register filter state commands
@@ -193,8 +193,8 @@ class Filters extends Module
           do (filter) =>
             # !filter <filtername> on - Enables filter
             @regCmd "filter #{filter}" , Sauce.Level.Mod,
-                (user, args, bot) =>
-                    @cmdFilter filter, (args[0] ? ''),  bot
+                (user, args) =>
+                    @cmdFilter filter, (args[0] ? '')
             
 
         # Register misc commands
@@ -211,7 +211,7 @@ class Filters extends Module
 
     # Filter list command handlers
 
-    cmdFilterAdd: (name, dto, args, bot) ->
+    cmdFilterAdd: (name, dto, args) ->
         value = args[0] if args[0]?
         if value?
             dto.add value.toLowerCase()
@@ -220,7 +220,7 @@ class Filters extends Module
             bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " add <value>")
     
     
-    cmdFilterRemove: (name, dto, args, bot) ->
+    cmdFilterRemove: (name, dto, args) ->
         value = args[0] if args[0]?
         if value?
             dto.remove value.toLowerCase()
@@ -229,34 +229,34 @@ class Filters extends Module
             bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " remove <value>")
             
             
-    cmdFilterClear: (name, dto, args, bot) ->
+    cmdFilterClear: (name, dto, args) ->
         dto.clear()
         bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-cleared')
 
 
     # Filter state command handlers
 
-    cmdFilter: (filter, action, bot) ->
+    cmdFilter: (filter, action) ->
         switch action
             when 'on'
-                @cmdFilterEnable filter, bot
+                @cmdFilterEnable filter
             when 'off'
-                @cmdFilterDisable filter, bot
+                @cmdFilterDisable filter
             else
-                @cmdFilterShow filter, bot
+                @cmdFilterShow filter
 
 
-    cmdFilterEnable: (filter, bot) ->
+    cmdFilterEnable: (filter) ->
         @states.add filter, 1
         bot.say "[Filter] " + @str('filter-enabled', @str('filter-' + filter))
 
     
-    cmdFilterDisable: (filter, bot) ->
+    cmdFilterDisable: (filter) ->
         @states.add filter, 0
         bot.say "[Filter] " + @str('filter-disabled', @str('filter-' + filter))
 
 
-    cmdFilterShow: (filter, bot) ->
+    cmdFilterShow: (filter) ->
         if @states.get filter
             bot.say "[Filter] " + @str('filter-is-enabled', @str('filter-' + filter), '!filter ' + filter + ' off')
         else
@@ -266,7 +266,7 @@ class Filters extends Module
     # Misc command handlers
     
     # !regulars remove <name> - Removes a regular.
-    cmdRemoveRegular: (user, args, bot) =>
+    cmdRemoveRegular: (user, args) =>
         unless (name = args[0])?
             return bot.say "[Filter] " + @str('err-error') + ' ' + @str('err-usage', '!regulars remove <username>')
             
@@ -293,7 +293,7 @@ class Filters extends Module
 
 
     # !regulars add <name> - Adds a regular.
-    cmdAddRegular: (user, args, bot) =>
+    cmdAddRegular: (user, args) =>
         unless (name = args[0])?
             return bot.say @str('err-error') + ' ' + @str('err-usage', '!regulars add <username>')
             
@@ -302,7 +302,7 @@ class Filters extends Module
 
 
     # !permit <name> - Permits a user.
-    cmdPermitUser: (user, args, bot) =>
+    cmdPermitUser: (user, args) =>
         permitLength = 3 * 60 # 3 minutes
         permitTime   = time.now() + permitLength
         
@@ -339,7 +339,7 @@ class Filters extends Module
 
 
     # !clearstrikes <name> - Clears strikes from a user
-    cmdClearStrikes: (user, args, bot) =>
+    cmdClearStrikes: (user, args) =>
         unless (target = args[0])?
             bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!clearstrikes <username>')
             return
@@ -355,7 +355,7 @@ class Filters extends Module
     
 
     # !p <name> - Purges (timeout for 1 second) user
-    cmdPurge: (user, args, bot) =>
+    cmdPurge: (user, args) =>
         unless (target = args[0])?
             bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!p <username>')
             return
@@ -368,16 +368,16 @@ class Filters extends Module
 
 
     # !ignoreturbo [on/off] - Toggles whether to ignore turbo users
-    cmdIgnoreTurbo: (user, args, bot) =>
-        @handleIgnoreCommand user, args, bot, 'turbo'
+    cmdIgnoreTurbo: (user, args) =>
+        @handleIgnoreCommand user, args, 'turbo'
 
 
     # !ignoresubs [on/off] - Toggles whether to ignore subscribers
-    cmdIgnoreSubs: (user, args, bot) =>
-        @handleIgnoreCommand user, args, bot, 'subs'
+    cmdIgnoreSubs: (user, args) =>
+        @handleIgnoreCommand user, args, 'subs'
 
 
-    handleIgnoreCommand: (user, args, bot, key) ->
+    handleIgnoreCommand: (user, args, key) ->
         unless (state = args[0])?
             if @config.get "ignore#{key}"
                 bot.say "[Filter] " + @str('filter-is-enabled', "ignore#{key}", "!ignore#{key} off")
@@ -503,29 +503,29 @@ class Filters extends Module
         @states.load()
         
 
-    checkFilters: (name, msg, bot) ->
+    checkFilters: (name, msg) ->
         msg = msg.trim()
         lower = msg.toLowerCase()
         
         # Badword filter
         if @states.get('words')  and @containsBadword lower
-            return @handleStrikes name, @str('on-word', name), bot, true, msg
+            return @handleStrikes name, @str('on-word', name), true, msg
             
         # Single-emote filter
         if @states.get('emotes') and @isSingleEmote lower
-            return @handleStrikes name, @str('on-emote', name), bot, false, msg
+            return @handleStrikes name, @str('on-emote', name), false, msg
             
         # Caps filter
         if @states.get('caps')   and @isMostlyCaps msg
-            return @handleStrikes name, @str('on-caps', name), bot, false, msg
+            return @handleStrikes name, @str('on-caps', name), false, msg
             
         # URL filter
         if                           @containsBadURL lower
-            return @handleStrikes name, @str('on-url', name),    bot, true, msg
+            return @handleStrikes name, @str('on-url', name), true, msg
             
             
         
-    handleStrikes: (name, response, bot, clear, msg) ->
+    handleStrikes: (name, response, clear, msg) ->
         strikes = @updateStrikes(name)
         
         strikemsg = @str ('warning-' + (if strikes < 0 then 0 else if strikes > 3 then 3 else strikes))
@@ -581,7 +581,7 @@ class Filters extends Module
             return false
         
     
-    handle: (user, msg, bot) ->
+    handle: (user, msg) ->
         {name, op} = user
         
         if op or @isIgnored(name) then return
@@ -591,7 +591,7 @@ class Filters extends Module
             if time.now() > permitTime then delete @permits[lc] else return
             
         
-        @checkFilters name, msg, bot
+        @checkFilters name, msg
         
 
     isIgnored: (name) ->

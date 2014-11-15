@@ -71,24 +71,24 @@ class Poll extends Module
                 res.send poll: @activePoll, votes: votes
 
             # Poll.start(name)
-            'start': (user, params, res, bot) =>
+            'start': (user, params, res) =>
                 {name} = params
                 unless @polls[name]?
                     return res.error "No such poll"
 
-                @startPoll name, bot
+                @startPoll name
                 res.ok()
 
             # Poll.create(name, options, start?)
-            'create': (user, params, res, bot) =>
+            'create': (user, params, res) =>
                 {name, options, start} = params
 
                 @createPoll name, options
-                @startPoll  name, bot     if start
+                @startPoll  name if start
                 res.ok()
 
             # Poll.end()
-            'end': (user, params, res, bot) =>
+            'end': (user, params, res) =>
                 unless @activePoll?
                     return res.error "No active poll"
 
@@ -96,10 +96,10 @@ class Poll extends Module
                 votes = {}
                 votes[active[opt]] = num for opt, num of @votes
                 res.send poll: @activePoll, votes: votes
-                @endPoll bot
+                @endPoll()
 
             # Poll.remove(name)
-            'remove': (user, params, res, bot) =>
+            'remove': (user, params, res) =>
                 {name} = params
                 unless @polls[name]?
                     return res.error "No such poll"
@@ -143,7 +143,7 @@ class Poll extends Module
         @regCmd 'vote'    , Sauce.Level.User, @cmdPollVote
 
 
-    cmdPollStart: (user, args, bot) =>
+    cmdPollStart: (user, args) =>
         unless args[0]?
             return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll (<name>|run) <opt1> <opt2> ...')
             
@@ -153,12 +153,12 @@ class Poll extends Module
             unless @polls[pollName]?
                 return bot.say '[Poll] ' + @str('err-unknown-poll', "!poll #{pollName} <opt1> <opt2> ...")
                 
-            @startPoll pollName, bot
+            @startPoll pollName
         else
-            @createPoll pollName, args.join(' '), bot
+            @createPoll pollName, args.join(' ')
 
 
-    cmdPollRun: (user, args, bot) =>
+    cmdPollRun: (user, args) =>
         # Need at least two options for a poll
         unless args.length > 1
             return bot.say '[Poll] ' + @str('err-usage', '!poll run <opt1> <opt2> ...')
@@ -166,72 +166,72 @@ class Poll extends Module
         options = args.join ' '
         pollName = ANONYMOUS_POLL_NAME
 
-        # Surpess the default messages by making the bot callback null
-        @createPoll pollName, options, null
-        @startPoll pollName, bot
+        # Surpess the default messages
+        @createPoll pollName, options, true
+        @startPoll pollName
 
 
     # Starts a poll.
     # * pollName: The name of the poll.
-    # * bot     : Optional bot object to send a confirmation message.
-    startPoll: (pollName, bot) ->
+    startPoll: (pollName) ->
         @reset()
         poll = @polls[pollName]
         @activePoll = pollName
         @votes = (0 for opt in poll)
         
-        bot?.say '[Poll] ' + @str('action-started', pollName, '!vote <option>', poll.join ', ')
+        bot.say '[Poll] ' + @str('action-started', pollName, '!vote <option>', poll.join ', ')
 
 
     # Creates a poll.
     # * pollName: The name of the poll.
     # * options : A space-separated list of options.
-    # * bot     : Optional bot object to send a confirmation message.
-    createPoll: (pollName, options, bot) ->
+    # * suppress: Whether to suppress the chat message
+    createPoll: (pollName, options, suppress) ->
         # Remove commas to prevent accidental usage
         options = options.toLowerCase().replace(/,/, ' ')
         @pollDTO.add pollName, options
         @updatePollList()
 
-        bot?.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
+        if not suppress
+            bot.say '[Poll] ' + @str('action-created', pollName, '!poll ' + pollName)
 
 
     # Removes a poll-definition.
     # * pollName: The name of the poll to remove.
-    # * bot     : Optional bot object to send a confirmation message.
-    removePoll: (pollName, bot) ->
+    removePoll: (pollName) ->
+        suppress = false
         if pollName is @activePoll
-            @endPoll bot
-            bot = null
+            @endPoll()
+            suppress = true
 
         @pollDTO.remove pollName
-        bot?.say '[Poll] ' + @str('action-removed', pollName)
+        if not suppress
+            bot.say '[Poll] ' + @str('action-removed', pollName)
 
 
     # Ends the active poll.
-    # * bot: Optional bot object to send a confirmation message.
-    endPoll: (bot) ->
-        bot?.say '[Poll] ' + @str('action-results', @activePoll, @getResults())
+    endPoll: ->
+        bot.say '[Poll] ' + @str('action-results', @activePoll, @getResults())
         @reset()
 
  
-    cmdPollEnd: (user, args, bot) =>
+    cmdPollEnd: (user, args) =>
         unless @activePoll?
             return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll run <opt1> <opt2> ...')
             
-        @endPoll bot
+        @endPoll()
 
-    cmdPollResults: (user, args, bot) =>
+    cmdPollResults: (user, args) =>
         unless @activePoll?
             return bot.say '[Poll] ' + @str('err-no-active-poll', '!poll run <opt1> <opt2> ...')
-        bot?.say '[Poll] ' + @str('action-results', @activePoll, @getResults())
+        bot.say '[Poll] ' + @str('action-results', @activePoll, @getResults())
 
 
-    cmdPollRemove: (user, args, bot) =>
+    cmdPollRemove: (user, args) =>
         unless args[0]?
             return bot.say '[Poll] ' + @str('err-no-poll-specified') + '. ' + @str('err-usage', '!poll remove <name>')
 
-        @removePoll args[0], bot
+        @removePoll args[0]
         
     getResults: ->
         # Take each key (option) in @votes, then sort these keys on their
@@ -251,7 +251,7 @@ class Poll extends Module
         "#{score} (#{percentage}%)"
        
         
-    cmdPollVote: (user, args, bot) =>
+    cmdPollVote: (user, args) =>
         user = user.name
         return if !@activePoll? or user in @hasVoted
 
@@ -260,10 +260,10 @@ class Poll extends Module
             @votes[idx]++
 
 
-    handle: (user, msg, bot) ->
+    handle: (user, msg) ->
         if @activePoll?
             if m = /^!?(?:vote)?\s*(\S+)/i.exec msg
-                @cmdPollVote user, [m[1]], bot
+                @cmdPollVote user, [m[1]]
 
         
 exports.New = (channel) -> new Poll channel

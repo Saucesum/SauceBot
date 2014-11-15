@@ -364,17 +364,17 @@ class Pokemon extends Module
         @regCmd 'pm fight',       @cmdFight
         @regCmd 'pm top',         @cmdTop
 
-        @regCmd 'pm modonly', Sauce.Level.Mod, (user, args, bot) =>
+        @regCmd 'pm modonly', Sauce.Level.Mod, (user, args) =>
             enable = args[0]
 
             if enable is 'on'
                 @conf.add 'modonly', 1
-                @say bot, @str('modonly-enabled')
+                @say @str('modonly-enabled')
             else if enable is 'off'
                 @conf.add 'modonly', 0
-                @say bot, @str('modonly-disabled')
+                @say @str('modonly-disabled')
             else
-                @say bot, @str('err-usage', '!pm modonly on/off')
+                @say @str('err-usage', '!pm modonly on/off')
 
 
         @regActs {
@@ -398,24 +398,24 @@ class Pokemon extends Module
         return not user.op
 
     # !pm
-    cmdPkmn: (user, args, bot) =>
+    cmdPkmn: (user, args) =>
         return if @notPermitted user
-        @say bot, @str('err-usage', '!pm <cmd>. Commands: team, throw, release, fight, stats, top, modonly')
+        @say @str('err-usage', '!pm <cmd>. Commands: team, throw, release, fight, stats, top, modonly')
 
 
     # !pm team
-    cmdTeam: (user, args, bot) =>
+    cmdTeam: (user, args) =>
         return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])?
-            return @say bot, @str('err-no-team', user) + ' ' + @str('err-catch-usage', '!pm throw')
+            return @say @str('err-no-team', user) + ' ' + @str('err-catch-usage', '!pm throw')
 
         str = (mon.str() for mon in team).join (', ')
-        @say bot, @str('action-team', user, str)
+        @say @str('action-team', user, str)
 
 
     # !pm throw [user]
-    cmdThrow: (user, args, bot) =>
+    cmdThrow: (user, args) =>
         return if @notPermitted user
         user = user.name
         mon  = createPokemon @channel
@@ -424,14 +424,14 @@ class Pokemon extends Module
             if @channel.usernames[targetName]?
                 mon.name = targetName
             else
-                return @say bot, "#{user}: " + @str('err-unknown-user', targetName)
+                return @say "#{user}: " + @str('err-unknown-user', targetName)
 
         result = try
             @catchPokemon user, mon
             @str('action-catch', mon.nature)
         catch err then err
             
-        @say bot, "#{user}: #{mon.fullStr()}! #{result}"
+        @say "#{user}: #{mon.fullStr()}! #{result}"
 
 
     catchPokemon: (user, mon) ->
@@ -450,53 +450,53 @@ class Pokemon extends Module
             
 
     # !pm release
-    cmdRelease: (user, args, bot) =>
+    cmdRelease: (user, args) =>
         return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])? and team.length > 0
-            return @say bot, @str('err-no-team', user) + ' ' + @str('err-catch-usage', '!pm throw')
+            return @say @str('err-no-team', user) + ' ' + @str('err-catch-usage', '!pm throw')
 
         mon = removeRandom team
-        @say bot, @str('action-release', user, mon.fullStr())
+        @say @str('action-release', user, mon.fullStr())
 
 
     # !pm release all
-    cmdReleaseAll: (user, args, bot) =>
+    cmdReleaseAll: (user, args) =>
         return if @notPermitted user
         user = user.name
         unless (team = teams[user.toLowerCase()])? and team.length > 0
-            return @say bot, @str('err-no-team', user)
+            return @say @str('err-no-team', user)
 
         namestr = (mon.name for mon in team).join(', ')
         removeAll user
-        @say bot, @str('action-releaseall', user, namestr)
+        @say @str('action-releaseall', user, namestr)
 
 
     # !pm stats
-    cmdStats: (user, args, bot) =>
+    cmdStats: (user, args) =>
         return if @notPermitted user
         user = user.name
         stats = statsFor user
         {won, lost, draw} = stats
         ratio = ~~((won / (won+lost+draw)) * 100)
-        @say bot, @str('action-stats', user, ratio, won, lost, draw)
+        @say @str('action-stats', user, ratio, won, lost, draw)
 
 
     # !pm top
-    cmdTop: (user, args, bot) =>
+    cmdTop: (user, args) =>
         return if @notPermitted user
         top = getSortedTopTeams(10)
         topStr = (k[0] + "(" + k[1] + ")" for k in top).join(', ')
-        @say bot, @str('action-top', topStr)
+        @say @str('action-top', topStr)
    
 
     # !pm fight (target)
-    cmdFight: (user, args, bot) =>
+    cmdFight: (user, args) =>
         return if @notPermitted user
         user = user.name
 
         unless (target = args[0])?
-            return @say bot, @str('err-usage', '!pm fight <user>')
+            return @say @str('err-usage', '!pm fight <user>')
 
         message = try
             battle = new PokeBattle user, target, (args...) => @str(args...)
@@ -504,7 +504,7 @@ class Pokemon extends Module
             battle.getResult()
         catch err then err
 
-        @say bot, message
+        @say message
         
 
 class PokeBattle

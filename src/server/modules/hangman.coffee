@@ -56,7 +56,7 @@ class Hangman extends Module
         @regVar 'hm', (user, args, cb) => cb @word
 
 
-    cmdHm: (user, args, bot) =>
+    cmdHm: (user, args) =>
         @word = randomWord @language
         bot.say @str('test-random-word', @word)
         

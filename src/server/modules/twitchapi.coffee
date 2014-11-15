@@ -59,25 +59,25 @@ class TwitchAPI extends Module
 
 
     # !game - Print current game.
-    cmdGame: (user, args, bot) =>
+    cmdGame: (user, args) =>
         @getGame @channel.name, (game) =>
             bot.say '[Game] ' + @str('show-game', @channel.name, game)
             
 
     # !viewers - Print number of viewers.
-    cmdViewers: (user, args, bot) =>
+    cmdViewers: (user, args) =>
         @getViewers @channel.name, (viewers) =>
             bot.say "[Viewers] " + @str('show-viewers', viewers)
             
 
     # !title - Print current title.
-    cmdTitle: (user, args, bot) =>
+    cmdTitle: (user, args) =>
         @getTitle @channel.name, (title) =>
             bot.say "[Title] " + @str('show-title', title)
 
 
     # !sbfollow <username> - Follows the channel (globals only)
-    cmdFollow: (user, args, bot) =>
+    cmdFollow: (user, args) =>
         return unless user.global
 
         name = args[0]
@@ -88,7 +88,7 @@ class TwitchAPI extends Module
 
 
     # !followme - Follows channel
-    cmdFollowMe: (user, args, bot) =>
+    cmdFollowMe: (user, args) =>
         if @followUser(user.name)
             bot.say "Followed #{user.name}"
         else

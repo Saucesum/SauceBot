@@ -30,7 +30,7 @@ class GiveAway extends Module
         @regCmd "giveaway", Sauce.Level.Mod, @cmdGiveaway
 
 
-    handle: (user, msg, bot) ->
+    handle: (user, msg) ->
         if @maxNumber > 0
             m = /(\d+)/.exec(msg)
             if (m and parseInt(m[1], 10) == @randomNumber)
@@ -39,7 +39,7 @@ class GiveAway extends Module
                 return bot.say @str('str-guessed', user.name, m[1])
 
 
-    cmdGiveaway: (user, args, bot) =>
+    cmdGiveaway: (user, args) =>
         unless args[0]?
             return bot.say @str('err-usage', '!giveaway <max number>')
 

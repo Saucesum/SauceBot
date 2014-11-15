@@ -51,7 +51,7 @@ class LastFM extends Module
                     cb song
         
         
-    cmdLastFM: (user, args, bot) =>
+    cmdLastFM: (user, args) =>
         unless args[0]?
             return bot.say @str('err-usage', '!lastfm <username>')
             

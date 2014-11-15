@@ -108,7 +108,7 @@ class Base extends Module
 
 
     load: ->
-        botName = (@channel.bot ? 'SauceBot').toLowerCase()
+        botName = (@channel.botName ? 'SauceBot').toLowerCase()
 
         if botName isnt 'saucebot'
             @regCmd botName,           Sauce.Level.User, @cmdBot
@@ -146,29 +146,29 @@ class Base extends Module
 
 
     # !<botname> - Prints bot name and version.
-    cmdBot: (user, args, bot) =>
-        botName = (@channel.bot ? 'SauceBot')
+    cmdBot: (user, args) =>
+        botName = (@channel.botName ? 'SauceBot')
         bot.say "[#{botName}] #{Sauce.Server.Name} v#{Sauce.Version} by @RavnTM - www.saucebot.com"
 
 
     # !<botname> join - Prints info on how to get the bot
-    cmdBotJoin: (user, args, bot) =>
-        botName = (@channel.bot ? 'SauceBot')
+    cmdBotJoin: (user, args) =>
+        botName = (@channel.botName ? 'SauceBot')
         bot.say "[#{botName}] #{user.name}: Visit www.saucebot.com to apply for #{botName}! Good luck! :-)"
 
 
     # !test - Prints test command and user level.
-    cmdTest: (user, args, bot) =>
+    cmdTest: (user, args) =>
         bot.say "[Test] #{user.name} - #{Sauce.LevelStr user.op}"
 
 
     # !saucetime - Prints the time in SauceBot's timezone.
-    cmdSaucetime: (user, args, bot) =>
+    cmdSaucetime: (user, args) =>
         bot.say "[SauceTime] #{tz.formatZone 'Europe/Oslo', '%H:%M:%S UTC %z'}"
 
 
     # !help <message> - Requests help from a SauceBot admin.
-    cmdHelp: (user, args, bot) =>
+    cmdHelp: (user, args) =>
         if args.length is 0
             bot.say "[Help] " + @str('help-basic', '!help <message>')
             return
@@ -183,7 +183,7 @@ class Base extends Module
 
 
     # !eval <expr> - Prints the result of evaluating <expr> as a var string.
-    cmdEval: (user, args, bot) =>
+    cmdEval: (user, args) =>
         return unless args
         raw = args.join ' '
         @channel.vars.parse user, raw, raw, (parsed) ->
@@ -191,7 +191,7 @@ class Base extends Module
 
 
     # !verify <code> - Attempts to verify the user.
-    cmdVerify: (user, args, bot) =>
+    cmdVerify: (user, args) =>
         unless args[0]?
             return bot.say "[Verify] " + @str('verify-syntax', '!verify <code>')
 
@@ -201,7 +201,7 @@ class Base extends Module
 
 
     # !calc <expr> - Prints the result of evaluating <expr> as a mathematical expression.
-    cmdCalc: (user, args, bot) =>
+    cmdCalc: (user, args) =>
         return unless args
         txt = args.join ''
         math = txt.replace(/[^()\d*\/+-=\w]/g, '')
@@ -212,12 +212,12 @@ class Base extends Module
 
 
     # !mode - Prints a help string for the mode commands.
-    cmdMode: (user, args, bot) =>
+    cmdMode: (user, args) =>
         bot.say "[Mode] " + @str('usage-invalid', '!mode [modonly|quiet] [on|off]')
 
 
     # !mode modonly on/off - Enables/disables mod only mode.
-    cmdModeModonly: (user, args, bot) =>
+    cmdModeModonly: (user, args) =>
         switch args[0]
             when 'on'
                 @channel.setModOnly true
@@ -230,7 +230,7 @@ class Base extends Module
 
 
     # !mode quiet on/off - Enables/disables quiet mode.
-    cmdModeQuiet: (user, args, bot) =>
+    cmdModeQuiet: (user, args) =>
         switch args[0]
             when 'on'
                 @channel.setQuiet true

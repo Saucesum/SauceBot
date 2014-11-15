@@ -85,35 +85,21 @@ specialUsers = { }
 # SauceBot Message Emitter
 class SauceEmitter
 
-    # Creates a SauceEmitter for a client.
-    constructor: (@socket) ->
+    # Creates a SauceEmitter for a channel.
+    constructor: (@channel) ->
         
-
-    # Sends an error to the active client.
-    #
-    # Error (error):
-    #  * msg: [REQ] Error message
-    #
-    error: (message) ->
-        io.say '>> '.red + message
-        graph.count 'output.error'
-
-        @socket.emit 'error',
-              msg  : message
-
 
     # Sends a 'say' message to the clients.
     #
     # Say (say):
-    #  * chan: [REQ] Target channel
     #  * msg : [REQ] Message to send
     #
-    say: (channel, message) ->
-        io.say channel, message
+    say: (message) ->
+        io.say @channel, message
         message = message.replace /\s+/g, ' '
         
         broadcastType Type.Chat, 'say',
-            chan: channel
+            chan: @channel
             msg : message
 
   
@@ -121,26 +107,34 @@ class SauceEmitter
     # - Times out the target user for 10 minutes
     #
     # Time out (timeout):
-    #  * chan: [REQ] Target channel
-    #  * msg : [REQ] Target user to time out
+    #  * msg  : [REQ] Target user to time out
+    #  * time : [OPT] Time out length in seconds
     #
-    timeout: (channel, user, time) ->
+    timeout: (user, time) ->
         broadcastType Type.Chat, 'timeout',
-            chan: channel
+            chan: @channel
             user: user
             time: time
             
+    # Sends a 'timeout' message to the clients.
+    # - Times out the target user for 2 seconds.
+    #
+    # Time out (timeout):
+    #  * msg : [REQ] Target user to time out
+    #
+    clear: (user) ->
+        @timeout user, 2
+
         
     # Sends a 'ban' message to the clients.
     # - Bans the target user
     #
     # Ban (ban):
-    #  * chan: [REQ] Target channel
     #  * msg : [REQ] Target user to ban
     #
-    ban: (channel, user) ->
+    ban: (user) ->
         broadcastType Type.Chat, 'ban',
-            chan: channel
+            chan: @channel
             user: user
 
 
@@ -148,24 +142,12 @@ class SauceEmitter
     # - Unbans the target user
     #
     # Unban (unban):
-    #  * chan: [REQ] Target channel
     #  * msg : [REQ] Target user to unban
     #
-    unban: (channel, user) ->
+    unban: (user) ->
         broadcastType Type.Chat, 'unban',
-            chan: channel
+            chan: @channel
             user: user
-
-
-    # Returns an object containing emit methods for a specific channel. 
-    forChannel: (chan) ->
-        return {
-            say       : (data)       => @say        chan, data
-            ban       : (data)       => @ban        chan, data
-            unban     : (data)       => @unban      chan, data
-            clear     : (data)       => @timeout    chan, data, 2
-            timeout   : (data, time) => @timeout    chan, data, time
-        }
 
 
 # SauceBot connection handler class
@@ -174,8 +156,6 @@ class SauceBot
     constructor: (@socket) ->
         @socket.type = Type.Web
         @socket.name = 'Unknown'
-
-        @emit = new SauceEmitter @socket
 
         @socket.on 'register', (data) =>
             {type, name} = data
@@ -194,7 +174,7 @@ class SauceBot
             try
                 @handle data
             catch error
-                @emit.error "Syntax error: #{error}"
+                @emitError "Syntax error: #{error}"
                 io.error error + "\n" + error.stack
         
         # Private message handler
@@ -203,7 +183,7 @@ class SauceBot
             try
                 @handlePM data
             catch error
-                @emit.error "Error parsing PM: #{error}"
+                @emitError "Error parsing PM: #{error}"
                 io.error error
 
                 
@@ -213,7 +193,7 @@ class SauceBot
             try
                 @handleUpdate data
             catch error
-                @emit.error "#{error}"
+                @emitError "#{error}"
                 io.error error
 
         # Handle interface requests
@@ -231,13 +211,25 @@ class SauceBot
             try
                 @handleGet data
             catch error
-                @emit.error "#{error}"
+                @emitError "#{error}"
                 io.error error
 
         # Activity list
         @socket.on 'activity', (data) =>
             activityLog.setText JSON.stringify(data.activity)
             
+
+    # Sends an error to the active client.
+    #
+    # Error (error):
+    #  * msg: [REQ] Error message
+    #
+    emitError: (message) ->
+        io.say '>> '.red + message
+        graph.count 'output.error'
+
+        @socket.emit 'error',
+              msg  : message
 
 
     # Message (msg):
@@ -253,7 +245,7 @@ class SauceBot
         json.op   = if json.op then 1 else null
 
         # Handle the message
-        chans.handle chan, json, @emit.forChannel(chan)
+        chans.handle chan, json
             
 
     # Creates a web callback result object.
@@ -366,13 +358,12 @@ class SauceBot
 
         # Create request callbacks
         res = @createRes()
-        bot = @emit.forChannel channel.name.toLowerCase()
 
         if user.global and action is 'Rejoin'
             broadcastType Type.Chat, 'rejoin', channel.name
             res.ok()
         else
-            channel.handleInterface user, module, action, data, res, bot
+            channel.handleInterface user, module, action, data, res
 
 
     # Sends a result and then closes the connection.
@@ -433,7 +424,9 @@ class SauceBot
             'user'   : user
             'type'   : type
         }
-            
+        
+
+exports.SauceEmitter = SauceEmitter;
 
 # Load data
 io.debug 'Loading users...'

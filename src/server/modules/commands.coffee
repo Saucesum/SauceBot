@@ -148,7 +148,7 @@ class Commands extends Module
 
         # Create a simple trigger that looks up a key in @commands
         @triggers[cmd] = trig.buildTrigger  this, cmd, level,
-            (user, args, bot) =>
+            (user, args) =>
                 data = @commands.get cmd
                 unless data?
                     return io.error "No such command #{cmd}"
@@ -175,7 +175,7 @@ class Commands extends Module
 
 
     # !(un)?set <command>  - Unset command
-    cmdUnset: (user, args, bot) =>
+    cmdUnset: (user, args) =>
         unless args[0]?
             return bot.say @str('err-usage', '!unset <name>') + '. ' + @str('err-only-forget-set', '!set')
 
@@ -207,13 +207,13 @@ class Commands extends Module
 
     # !set <command> <message>  - Set command
     # !set <command>            - Unset command
-    cmdSet: (user, args, bot) =>
+    cmdSet: (user, args) =>
         unless args[0]?
             return bot.say @str('err-usage', '!set <name> <message>') + '. ' + @str('err-to-forget', '!set <name>', '!unset <name>')
 
         # !set <command>
         if (args.length is 1)
-            return @cmdUnset user, args, bot
+            return @cmdUnset user, args
         else
             @cmdUnset user, args, { say: -> 0 }
 
@@ -226,13 +226,13 @@ class Commands extends Module
 
     # !setmod <command> <message>  - Set moderator-only command
     # !setmod <command>            - Unset command
-    cmdSetMod: (user, args, bot) =>
+    cmdSetMod: (user, args) =>
         unless args[0]?
             return bot.say @str('err-usage', '!setmod <name> <message>') + '. ' + @str('err-to-forget', '!setmod <name>', '!unset <name>')
 
         # !setmod <command>
         if (args.length is 1)
-            return @cmdUnset user, args, bot
+            return @cmdUnset user, args
         else
             @cmdUnset user, args, { say: -> 0 }
         
@@ -245,12 +245,12 @@ class Commands extends Module
         
 
     # !remotes - Shows remote fields
-    cmdRemotes: (user, args, bot) =>
+    cmdRemotes: (user, args) =>
         bot.say "[Remotes] " + JSON.stringify(@remotes.get()).substring(0, 400)
 
 
     # !setrem <key> <message> - Sets a remote
-    cmdSetRem: (user, args, bot) =>
+    cmdSetRem: (user, args) =>
         unless args.length >= 2
             return bot.say "Remotes set usage: !setrem <key> <message>"
 

@@ -56,7 +56,7 @@ loadUsers = ->
 
 # Loads channel data
 loadChannels = ->
-    chans.load (chanlist) ->
+    chans.load SauceEmitter, (chanlist) ->
         io.debug "Loaded #{(Object.keys chanlist).length} channels."
         updateClientChannels()
         
@@ -69,7 +69,7 @@ updateClientChannels = (socket) ->
             id    : e.id
             name  : e.name
             status: e.status
-            bot   : e.bot
+            bot   : e.botName
         }
     
     if socket?
@@ -425,8 +425,6 @@ class SauceBot
             'type'   : type
         }
         
-
-exports.SauceEmitter = SauceEmitter;
 
 # Load data
 io.debug 'Loading users...'

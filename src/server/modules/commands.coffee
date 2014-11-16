@@ -153,8 +153,8 @@ class Commands extends Module
                 unless data?
                     return io.error "No such command #{cmd}"
 
-                @channel.vars.parse user, data.message, (args.join ' '), (parsed) ->
-                    bot.say parsed
+                @channel.vars.parse user, data.message, (args.join ' '), (parsed) =>
+                    @bot.say parsed
 
         @channel.register @triggers[cmd]
         
@@ -177,14 +177,14 @@ class Commands extends Module
     # !(un)?set <command>  - Unset command
     cmdUnset: (user, args) =>
         unless args[0]?
-            return bot.say @str('err-usage', '!unset <name>') + '. ' + @str('err-only-forget-set', '!set')
+            return @bot.say @str('err-usage', '!unset <name>') + '. ' + @str('err-only-forget-set', '!set')
 
         cmd = args[0]
 
         a = @delCommandIgnoreCase cmd
         b = @delTriggerIgnoreCase cmd
 
-        bot.say @str('action-unset', cmd) if a or b
+        @bot.say @str('action-unset', cmd) if a or b
 
 
     # Removes a command (not case sensitive)
@@ -209,7 +209,7 @@ class Commands extends Module
     # !set <command>            - Unset command
     cmdSet: (user, args) =>
         unless args[0]?
-            return bot.say @str('err-usage', '!set <name> <message>') + '. ' + @str('err-to-forget', '!set <name>', '!unset <name>')
+            return @bot.say @str('err-usage', '!set <name> <message>') + '. ' + @str('err-to-forget', '!set <name>', '!unset <name>')
 
         # !set <command>
         if (args.length is 1)
@@ -221,14 +221,14 @@ class Commands extends Module
         msg  = args.join ' '
         @setCommand cmd, msg, Sauce.Level.User
 
-        return bot.say @str('action-set', cmd)
+        return @bot.say @str('action-set', cmd)
 
 
     # !setmod <command> <message>  - Set moderator-only command
     # !setmod <command>            - Unset command
     cmdSetMod: (user, args) =>
         unless args[0]?
-            return bot.say @str('err-usage', '!setmod <name> <message>') + '. ' + @str('err-to-forget', '!setmod <name>', '!unset <name>')
+            return @bot.say @str('err-usage', '!setmod <name> <message>') + '. ' + @str('err-to-forget', '!setmod <name>', '!unset <name>')
 
         # !setmod <command>
         if (args.length is 1)
@@ -241,31 +241,31 @@ class Commands extends Module
         msg  = args.join ' '
         @setCommand cmd, msg, Sauce.Level.Mod
 
-        return bot.say @str('action-mod-set', cmd)
+        return @bot.say @str('action-mod-set', cmd)
         
 
     # !remotes - Shows remote fields
     cmdRemotes: (user, args) =>
-        bot.say "[Remotes] " + JSON.stringify(@remotes.get()).substring(0, 400)
+        @bot.say "[Remotes] " + JSON.stringify(@remotes.get()).substring(0, 400)
 
 
     # !setrem <key> <message> - Sets a remote
     cmdSetRem: (user, args) =>
         unless args.length >= 2
-            return bot.say "Remotes set usage: !setrem <key> <message>"
+            return @bot.say "Remotes set usage: !setrem <key> <message>"
 
         key = (args.splice 0, 1)[0]
         msg = args.join ' '
 
         unless user.id?
-            return bot.say "Only moderators registered on the web interface may set remote commands."
+            return @bot.say "Only moderators registered on the web interface may set remote commands."
 
         @remotes.add key, {
             value: msg
             updatedby: user.id
             updatetime: ~~(Date.now()/1000)
         }
-        bot.say "Remote set."
+        @bot.say "Remote set."
 
         
     setCommand: (cmd, msg, level) ->

@@ -137,7 +137,7 @@ class Counter extends Module
                 @counterAdd ctr, 0-value
 
 
-        bot.say "[Counter] #{res}" if res?
+        @bot.say "[Counter] #{res}" if res?
 
 
     # Handles:
@@ -150,7 +150,7 @@ class Counter extends Module
         unless isNaN value
             res = @counterSet ctr, value
 
-        bot.say "[Counter] #{res}" if res?
+        @bot.say "[Counter] #{res}" if res?
 
 
     # Handles:
@@ -159,7 +159,7 @@ class Counter extends Module
     cmdBadCounter: (user, args) =>
         ctr = args[0]
 
-        bot.say "[Counter] " + @str('err-unknown-counter', ctr, '!' + ctr + ' =0')
+        @bot.say "[Counter] " + @str('err-unknown-counter', ctr, '!' + ctr + ' =0')
     
 
     # $(counter <name>)

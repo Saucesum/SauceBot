@@ -58,7 +58,7 @@ class Hangman extends Module
 
     cmdHm: (user, args) =>
         @word = randomWord @language
-        bot.say @str('test-random-word', @word)
+        @bot.say @str('test-random-word', @word)
         
             
         

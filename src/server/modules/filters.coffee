@@ -211,32 +211,32 @@ class Filters extends Module
 
     # Filter list command handlers
 
-    cmdFilterAdd: (name, dto, args) ->
+    cmdFilterAdd: (name, dto, args) =>
         value = args[0] if args[0]?
         if value?
             dto.add value.toLowerCase()
-            bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-added')
+            @bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-added')
         else
-            bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " add <value>")
+            @bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " add <value>")
     
     
-    cmdFilterRemove: (name, dto, args) ->
+    cmdFilterRemove: (name, dto, args) =>
         value = args[0] if args[0]?
         if value?
             dto.remove value.toLowerCase()
-            bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-removed')
+            @bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-removed')
         else
-            bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " remove <value>")
+            @bot.say "[Filter] " + @str('err-no-value') + ' ' + @str('err-usage', "!" + name + " remove <value>")
             
             
-    cmdFilterClear: (name, dto, args) ->
+    cmdFilterClear: (name, dto, args) =>
         dto.clear()
-        bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-cleared')
+        @bot.say "[Filter] " + @str('list-' +  name) + " - " + @str('action-cleared')
 
 
     # Filter state command handlers
 
-    cmdFilter: (filter, action) ->
+    cmdFilter: (filter, action) =>
         switch action
             when 'on'
                 @cmdFilterEnable filter
@@ -246,21 +246,21 @@ class Filters extends Module
                 @cmdFilterShow filter
 
 
-    cmdFilterEnable: (filter) ->
+    cmdFilterEnable: (filter) =>
         @states.add filter, 1
-        bot.say "[Filter] " + @str('filter-enabled', @str('filter-' + filter))
+        @bot.say "[Filter] " + @str('filter-enabled', @str('filter-' + filter))
 
     
-    cmdFilterDisable: (filter) ->
+    cmdFilterDisable: (filter) =>
         @states.add filter, 0
-        bot.say "[Filter] " + @str('filter-disabled', @str('filter-' + filter))
+        @bot.say "[Filter] " + @str('filter-disabled', @str('filter-' + filter))
 
 
-    cmdFilterShow: (filter) ->
+    cmdFilterShow: (filter) =>
         if @states.get filter
-            bot.say "[Filter] " + @str('filter-is-enabled', @str('filter-' + filter), '!filter ' + filter + ' off')
+            @bot.say "[Filter] " + @str('filter-is-enabled', @str('filter-' + filter), '!filter ' + filter + ' off')
         else
-            bot.say "[Filter] " + @str('filter-is-disabled', @str('filter-' + filter), '!filter ' + filter + ' on')
+            @bot.say "[Filter] " + @str('filter-is-disabled', @str('filter-' + filter), '!filter ' + filter + ' on')
             
     
     # Misc command handlers
@@ -268,10 +268,10 @@ class Filters extends Module
     # !regulars remove <name> - Removes a regular.
     cmdRemoveRegular: (user, args) =>
         unless (name = args[0])?
-            return bot.say "[Filter] " + @str('err-error') + ' ' + @str('err-usage', '!regulars remove <username>')
+            return @bot.say "[Filter] " + @str('err-error') + ' ' + @str('err-usage', '!regulars remove <username>')
             
         @removeRegular name
-        bot.say @str('regulars-removed', name)
+        @bot.say @str('regulars-removed', name)
 
 
     # Removes a user from the regulars list.
@@ -295,10 +295,10 @@ class Filters extends Module
     # !regulars add <name> - Adds a regular.
     cmdAddRegular: (user, args) =>
         unless (name = args[0])?
-            return bot.say @str('err-error') + ' ' + @str('err-usage', '!regulars add <username>')
+            return @bot.say @str('err-error') + ' ' + @str('err-usage', '!regulars add <username>')
             
         @addRegular name
-        bot.say @str('regulars-added', name)
+        @bot.say @str('regulars-added', name)
 
 
     # !permit <name> - Permits a user.
@@ -327,21 +327,21 @@ class Filters extends Module
             if oldPermit > time.now()
                 return
 
-            bot.say msg
+            @bot.say msg
 
             # Unban after 2 seconds to avoid the spam filter.
-            setTimeout ->
-                bot.unban target
+            setTimeout =>
+                @bot.unban target
             , 2000
 
         else
-            bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')
+            @bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!permit <username>')
 
 
     # !clearstrikes <name> - Clears strikes from a user
     cmdClearStrikes: (user, args) =>
         unless (target = args[0])?
-            bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!clearstrikes <username>')
+            @bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!clearstrikes <username>')
             return
 
         target = (target.replace /[^a-zA-Z0-9_]+/g, '').toLowerCase()
@@ -351,19 +351,19 @@ class Filters extends Module
         else
             msg = @str('clear-no-strikes', target)
 
-        bot.say '[Filter] ' + msg
+        @bot.say '[Filter] ' + msg
     
 
     # !p <name> - Purges (timeout for 1 second) user
     cmdPurge: (user, args) =>
         unless (target = args[0])?
-            bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!p <username>')
+            @bot.say "[Filter] " + @str('err-no-target') + ' ' + @str('err-usage', '!p <username>')
             return
 
         target = (target.replace /[^a-zA-Z0-9_]+/g, '').toLowerCase()
-        bot.timeout target, 1
+        @bot.timeout target, 1
         setTimeout =>
-            bot.say "[Filter] " + @str('action-purge', target)
+            @bot.say "[Filter] " + @str('action-purge', target)
         , 4000
 
 
@@ -380,21 +380,21 @@ class Filters extends Module
     handleIgnoreCommand: (user, args, key) ->
         unless (state = args[0])?
             if @config.get "ignore#{key}"
-                bot.say "[Filter] " + @str('filter-is-enabled', "ignore#{key}", "!ignore#{key} off")
+                @bot.say "[Filter] " + @str('filter-is-enabled', "ignore#{key}", "!ignore#{key} off")
             else
-                bot.say "[Filter] " + @str('filter-is-disabled', "ignore#{key}", "!ignore#{key} on")
+                @bot.say "[Filter] " + @str('filter-is-disabled', "ignore#{key}", "!ignore#{key} on")
             return
         
         if state is 'on'
             @config.add "ignore#{key}", 1
-            bot.say "[Filter] " + @str('ignore-enable-' + key)
+            @bot.say "[Filter] " + @str('ignore-enable-' + key)
 
         else if state is 'off'
             @config.add "ignore#{key}", 0
-            bot.say "[Filter] " + @str('ignore-disable-' + key)
+            @bot.say "[Filter] " + @str('ignore-disable-' + key)
 
         else
-            bot.say "[Filter] " + @str('err-usage', "!ignore#{key} on/off")
+            @bot.say "[Filter] " + @str('err-usage', "!ignore#{key} on/off")
 
 
     # Custom update handler to avoid super messy switches.
@@ -534,15 +534,15 @@ class Filters extends Module
         
         if      strikes is 1
             # First strike: verbal warning + optional clear
-            bot.clear name if clear
+            @bot.clear name if clear
             
         else if strikes is 2
             # Second strike: 10 minute timeout
-            bot.timeout name, 60 * 10
+            @bot.timeout name, 60 * 10
         
         else if strikes > 2
             # Third+ strike: 8 hour timeout
-            bot.timeout name, 8 * 60 * 60
+            @bot.timeout name, 8 * 60 * 60
             
             
         reasons.timestamp @channel.name, name, response, msg
@@ -550,8 +550,8 @@ class Filters extends Module
         return if @channel.isQuiet()
             
         # Delay the response to avoid the JTV flood filter
-        setTimeout ->
-            bot.say response
+        setTimeout =>
+            @bot.say response
         , 4250
     
     

@@ -160,38 +160,38 @@ class News extends Module
 
     cmdNewsEnable: (user, args) =>
         @config.add 'state', 1
-        bot.say '[News] ' + @str('status-enabled')
+        @bot.say '[News] ' + @str('status-enabled')
 
 
     cmdNewsDisable: (user, args) =>
         @config.add 'state', 0
-        bot.say '[News] ' + @str('status-disabled')
+        @bot.say '[News] ' + @str('status-disabled')
 
 
     cmdNewsSeconds: (user, args) =>
         @config.add 'seconds', parseInt(args[0], 10) if args[0]?
-        bot.say '[News] ' + @str('config-secs', @config.get 'seconds')
+        @bot.say '[News] ' + @str('config-secs', @config.get 'seconds')
 
 
     cmdNewsMessages: (user, args) =>
         @config.add 'messages', parseInt(args[0], 10) if args[0]?
-        bot.say '[News] ' + @str('config-messages', @config.get 'messages')
+        @bot.say '[News] ' + @str('config-messages', @config.get 'messages')
 
 
     cmdNewsClear: (user, args) =>
         @news.clear()
-        bot.say '[News] ' + @str('action-cleared')
+        @bot.say '[News] ' + @str('action-cleared')
 
 
     cmdNewsAdd: (user, args) =>
         @news.add args.join ' '
-        bot.say '[News] ' + @str('action-added')
+        @bot.say '[News] ' + @str('action-added')
 
 
     cmdNewsNext: (user, args) =>
         @getNext user, (news) =>
             news ?= '[News] ' + @str('err-no-news', '!news add <message>')
-            bot.say news
+            @bot.say news
 
     save: ->
         @news.save()
@@ -231,7 +231,7 @@ class News extends Module
     handle: (user, msg) ->
  
         # Print news if there is any
-        @tickNews (msg) -> bot.say msg if msg?
+        @tickNews (msg) -> @bot.say msg if msg?
 
 
 

@@ -164,10 +164,10 @@ class AutoCommercial extends Module
 
     cmdCancel: (user, args) =>
         if @cancelNext is null
-            return bot.say @str('error-cancel', COMMERCIAL_CANCEL_TIME)
+            return @bot.say @str('error-cancel', COMMERCIAL_CANCEL_TIME)
 
         @cancelNext = true
-        bot.say @str('action-canceled')
+        @bot.say @str('action-canceled')
 
 
     cmdCommercial: (user, args) =>
@@ -180,9 +180,9 @@ class AutoCommercial extends Module
         oauth.post "/channels/#{@channel.name}/commercial", { length: duration }, (resp, body) =>
             # "204 No Content" if successful.
             if resp.statusCode is 204
-                bot.say @str('action-commercial', @channel.name)
+                @bot.say @str('action-commercial', @channel.name)
             else
-                bot.say @str('action-failed')
+                @bot.say @str('action-failed')
         
 
     clampMinimums: (field, val) ->
@@ -241,7 +241,7 @@ class AutoCommercial extends Module
         
         return unless @messagesSinceLast() >= msgsLimit and (now - @lastTime > (delay * 60 * 1000))
 
-        bot.say @str('action-preparing', COMMERCIAL_CANCEL_TIME)
+        @bot.say @str('action-preparing', COMMERCIAL_CANCEL_TIME)
         
         setTimeout =>
             return if @cancelNext
@@ -252,9 +252,9 @@ class AutoCommercial extends Module
             oauth.post "/channels/#{@channel.name}/commercial", { length: length }, (resp, body) =>
                 # "204 No Content" if successful.
                 if resp.statusCode is 204
-                    bot.say @str('action-commercial', @channel.name)
+                    @bot.say @str('action-commercial', @channel.name)
                 else
-                    bot.say @str('action-failed')
+                    @bot.say @str('action-failed')
 
         , COMMERCIAL_CANCEL_TIME * 1000
 

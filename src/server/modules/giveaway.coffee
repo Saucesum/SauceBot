@@ -36,29 +36,29 @@ class GiveAway extends Module
             if (m and parseInt(m[1], 10) == @randomNumber)
                 @randomNumber = 0
                 @maxNumber = 0
-                return bot.say @str('str-guessed', user.name, m[1])
+                return @bot.say @str('str-guessed', user.name, m[1])
 
 
     cmdGiveaway: (user, args) =>
         unless args[0]?
-            return bot.say @str('err-usage', '!giveaway <max number>')
+            return @bot.say @str('err-usage', '!giveaway <max number>')
 
         if @maxNumber > 0 and args[0] == "stop"
             @maxNumber = 0
             @randomNumber = 0
-            return bot.say @str('str-stop-giveaway')
+            return @bot.say @str('str-stop-giveaway')
         
         num = parseInt(args[0], 10)
 
         if num < 2 or isNaN num
-            return bot.say @str('err-too-low', num)
+            return @bot.say @str('err-too-low', num)
 
         @maxNumber = num
         @randomNumber = ~~(Math.random() * num)
 
         io.debug "The number is: " + @randomNumber
 
-        return bot.say @str('str-giveaway', num)
+        return @bot.say @str('str-giveaway', num)
 
 
 

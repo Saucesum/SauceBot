@@ -58,7 +58,7 @@ class Chat extends Module
         @regCmd "users clear", Sauce.Level.Mod,
             (user, args) =>
                 @users = {}
-                bot.say "[Users] " + @str('users-cleared')
+                @bot.say "[Users] " + @str('users-cleared')
 
         @regVar 'users', (user, args, cb) =>
                 if not args[0]? then return cb Object.keys(@users).length
@@ -92,12 +92,12 @@ class Chat extends Module
         }
 
 
-    cmdPickOneUser: ->
+    cmdPickOneUser: =>
         rand  = @getRandomUser()
-        bot.say "[Users] " + @str('users-pick-one', rand)
+        @bot.say "[Users] " + @str('users-pick-one', rand)
 
 
-    cmdPickNUsers: (num) ->
+    cmdPickNUsers: (num) =>
         num = parseInt(num)
 
         if num < 2 or isNaN num
@@ -112,7 +112,7 @@ class Chat extends Module
             num = names.length
 
         picked = (names[i] for i in [0..num-1]).join ', '
-        bot.say "[Users] " + @str('users-pick-n', num, picked)
+        @bot.say "[Users] " + @str('users-pick-n', num, picked)
         
         
     getRandomUser: ->

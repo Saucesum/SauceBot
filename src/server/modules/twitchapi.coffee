@@ -61,19 +61,19 @@ class TwitchAPI extends Module
     # !game - Print current game.
     cmdGame: (user, args) =>
         @getGame @channel.name, (game) =>
-            bot.say '[Game] ' + @str('show-game', @channel.name, game)
+            @bot.say '[Game] ' + @str('show-game', @channel.name, game)
             
 
     # !viewers - Print number of viewers.
     cmdViewers: (user, args) =>
         @getViewers @channel.name, (viewers) =>
-            bot.say "[Viewers] " + @str('show-viewers', viewers)
+            @bot.say "[Viewers] " + @str('show-viewers', viewers)
             
 
     # !title - Print current title.
     cmdTitle: (user, args) =>
         @getTitle @channel.name, (title) =>
-            bot.say "[Title] " + @str('show-title', title)
+            @bot.say "[Title] " + @str('show-title', title)
 
 
     # !sbfollow <username> - Follows the channel (globals only)
@@ -82,17 +82,17 @@ class TwitchAPI extends Module
 
         name = args[0]
         if name = @followUser(name)
-            bot.say "Followed #{name}"
+            @bot.say "Followed #{name}"
         else
-            bot.say "Usage: !sbfollow <username>"
+            @bot.say "Usage: !sbfollow <username>"
 
 
     # !followme - Follows channel
     cmdFollowMe: (user, args) =>
         if @followUser(user.name)
-            bot.say "Followed #{user.name}"
+            @bot.say "Followed #{user.name}"
         else
-            bot.say "Invalid username. Please contact a SauceBot administrator."
+            @bot.say "Invalid username. Please contact a SauceBot administrator."
 
 
     followUser: (name) ->

@@ -13,7 +13,7 @@
         "date": "1.0.x",
         "docopt": "0.4.x",
         "groan": "0.0.1",
-        "mysql": "0.9.5",
+        "mysql": "2.18.1",
         "request": "2.9.x",
         "tail": "0.2.x",
         "timezone": "0.0.x"
